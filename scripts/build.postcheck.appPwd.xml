@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="postDepChecks" >
+    
+
+  <!-- 
+    snellepalli:Automatic Build Checks
+    Checks for 
+    plain text Passwords in Application XML files
+    plain text Passwords in iiq property files
+    tracing enabled in Workflow files
+
+ -->
+  <target name="sp.services.runCodeChecks">
+
+
+     <echo   file="../build/buildChecks/buildCheckPwd.log"     >
+
+======================== Password Check =======================
+    </echo> 
+ <echo   file="../build/buildChecks/buildCheckTrace.log"     >
+
+======================== Workflow Trace Check =======================
+    </echo> 
+
+<echo>
+  Checking for plain text passwords in Application XMLs...
+  Checking for trace enabled in Workflow...
+</echo> 
+
+    <for param="spAppPwdCheckFile" >
+        <path>
+            <fileset  dir="../build/extract/WEB-INF/config/custom">
+                <include name="**/*.xml"/>
+            </fileset>
+        </path>
+        <sequential>
+           
+           <var name="spWorkflowTraceMatches1" unset="true"/>
+           <var name="spWorkflowTraceMatches2" unset="true"/>
+
+           <var name="spIIQObjectType" unset="true"/>
+           <var name="grepFileContent" unset="true"/>
+           
+          <getIIQObjectName iiqFile="@{spAppPwdCheckFile}" ignoreFolderList="SSF_Tools" property="spIIQObjectType"
+            logErrors="true" />
+            <if>
+              <contains string="${spIIQObjectType}" substring="Application" />
+              <then>
+                
+                <loadfile property="grepFileContent" srcFile="@{spAppPwdCheckFile}"/>
+                <grep allmatches="no" in="${grepFileContent}" quiet="true" property="spAppPwdMatches" regex=".*&lt;entry key=&quot;password&quot;.*value=&quot;(?!(\d:.*==)).*" separator="${line.separator}"/>
+            <if>
+              <isset property="spAppPwdMatches"/>
+              <then>
+                <echo   file="../build/buildChecks/buildCheckPwd.log" append="true"    >
+                      Password does not seem to be encrypted in @{spAppPwdCheckFile} : ${spAppPwdMatches} 
+                </echo> 
+              </then>
+            </if>
+            <unset name="spAppPwdMatches"/>
+            </then>
+
+          </if>
+         <if>
+            <contains string="${spIIQObjectType}" substring="Workflow" />
+            <then>
+              
+              
+              <loadfile property="grepFileContent" srcFile="@{spAppPwdCheckFile}"/>
+              <grep allmatches="no" caseinsensitive="true" in="${grepFileContent}" quiet="true" property="spWorkflowTraceMatches1" regex=".*&lt;Variable.* initializer=&quot;(string:)?true&quot;.* name=&quot;trace&quot;" separator="${line.separator}"/>
+          <if>
+            <isset property="spWorkflowTraceMatches1"/>
+            <then>
+              <echo   file="../build/buildChecks/buildCheckTrace.log" append="true"    >
+  Workflow trace seems to be enabled in @{spAppPwdCheckFile} ${spWorkflowTraceMatches1}
+              </echo> 
+            </then>
+          </if>
+         
+          
+          <grep allmatches="no" caseinsensitive="true" in="${grepFileContent}" quiet="true" property="spWorkflowTraceMatches2" regex=".*&lt;Variable.* name=&quot;trace&quot;.* initializer=&quot;(string:)?true&quot;" separator="${line.separator}"/>
+          <if>
+            <isset property="spWorkflowTraceMatches2"/>
+            <then>
+              <echo   file="../build/buildChecks/buildCheckTrace.log" append="true"    >
+  Workflow trace seems to be enabled in @{spAppPwdCheckFile} ${spWorkflowTraceMatches2}
+              </echo> 
+            </then>
+          </if>
+          </then>
+        </if>
+    </sequential>
+  </for>
+  
+    <echo>
+  Checking for plain text passwords in property files...
+
+</echo> 
+ 
+ <for param="spPwdCheckFile" >
+        <path>
+            <fileset dir="..">
+              <include name="*.iiq.properties"/>
+          </fileset>
+        </path>
+        <sequential>
+           <var name="spPwdMatches" unset="true"/>
+          <var name="grepFileContent" unset="true"/>
+          
+    <loadfile property="grepFileContent" srcFile="@{spPwdCheckFile}"/>
+    <grep allmatches="no" in="${grepFileContent}" quiet="true" property="spPwdMatches" regex=".*dataSource.password=(?!(\d:.*==)).*" separator="${line.separator}"/>
+    <if>
+      <isset property="spPwdMatches"/>
+      <then>
+          <echo   file="../build/buildChecks/buildCheckPwd.log" append="true"   >
+Password does not seem to be encrypted in @{spPwdCheckFile} : ${spPwdMatches} 
+          </echo> 
+        </then>
+    </if>
+        </sequential>  
+    
+    </for>
+     
+     <echo   file="../build/buildChecks/buildCheckPwd.log" append="true"     >
+
+====================== End Password Check =====================
+    </echo> 
+<echo   file="../build/buildChecks/buildCheckTrace.log" append="true"     >
+
+====================== End Workflow Trace Check =====================
+    </echo> 
+
+  </target>
+   
+ 
+
+</project>

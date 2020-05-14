@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="servicestools"/>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8">
+		<attributes>
+			<attribute name="owner.project.facets" value="java"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="output" path="bin"/>
+	<!--
+    added for supporting iiqda - note the "build/extract" location won't be present until a "build main" is run with SSB
+    -->
+    <classpathentry kind="lib" path="build/extract/WEB-INF/lib/identityiq.jar">
+        <attributes>
+            <attribute name="javadoc_location" value="build/extract/doc/javadoc/"/>
+        </attributes>
+    </classpathentry>
+    <classpathentry kind="lib" path="build/extract/WEB-INF/lib/commons-logging-1.2.jar"/>
+</classpath>

@@ -1,0 +1,49 @@
+Release: SSB v6.1 GA
+Released: 8 May 2019 
+
+****************************************
+OVERVIEW OF RELEASE
+****************************************
+
+Version 6.1 of the Services Standard Build (SSB) contains several updates, fixes and 
+enhancements.
+
+****************************************
+NEW TO THIS RELEASE:
+****************************************
+
+	- Accelerator Pack Deployment with the SSB
+	     - New SSB Ant targets to support IdentityIQ deployment with the Accelerator Pack
+	     - Documentation updates to provides steps to deploy IdentityIQ with the 
+	       Accelerator Pack
+	- Compatibility with IdentityIQ 8.0
+	     - Support for environment-specific Log4j2 properties files
+	     - Support for Log4j2 in the Log4j Properties Updater
+	     - Fix for createdb target to work with MySQL in IdentityIQ 8.0
+	- Other
+	     - Change to default location of install and uninstall folders used by the SSB 
+	       Plugin Installer, to prevent browser access to any plugin installation files 
+	       left in the install location. Folder locations are now configurable in the 
+	       ServiceDefinition.
+	     - Updated to use v4.0.2 of the OWASP Dependency Check tool
+      
+Please refer to the SSB User Guide for more information on the above features. 
+
+
+****************************************
+NOTES
+****************************************
+
+JDK version 6 is no longer supported in the SSB/SSD.
+
+To assist the SailPoint Support team, the version of the SSB or SSD used to build 
+IdentityIQ can now be seen by accessing the ServicesStandardVersion.html file at the root
+of the application (e.g. http://servername:8080/ServicesStandardVersion.html).  This
+information is taken from these release notes, so please do not delete this file or move
+it from its current location, and do not delete the html file that is generated during the
+build process.  The page also includes a timestamp indicating the last time the build was
+executed.
+
+
+The SSB is part of the Services Standard Deployment (SSD).  For more details please visit:
+https://community.sailpoint.com/community/identityiq/sailpoint-toolkits/standard-services-deployment

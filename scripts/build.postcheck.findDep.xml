@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="xmlDeprecationChecks" >
+     
+<!-- 
+    snellepalli:Automatic Build Checks
+    Checks XML files for Java Deprecations
+-->
+  
+  <target   name="sp.services.runCodeChecks">
+  <echo>
+  Running Deprecation checks ...
+  </echo> 
+<mkdir dir="../build/upgradeCheck/lib" />
+
+<mkdir dir="../build/upgradeCheck/logs" />
+
+<copy todir="../build/upgradeCheck/lib">
+    <fileset dir="${build.web-inf.lib}">
+      <include name="*.jar"/>
+     <include name="*.zip"/>
+    </fileset>
+</copy>
+
+<delete quiet="true">
+      <fileset dir="../build/upgradeCheck/lib">
+         
+        <include name="guava*.jar"/>
+        <include name="reflections-*.jar"/>
+      </fileset>
+</delete>
+
+<copy todir="../build/upgradeCheck/lib">
+    <fileset dir="../lib">
+      <include name="*.jar"/>
+     <include name="*.zip"/>
+     <exclude name="bsh*.zip" />
+    </fileset>
+</copy>
+
+
+<taskdef name="findDeprecationsInXml" classname="sailpoint.services.tools.ant.DeprecationScannerTask">
+  <classpath>
+   <fileset dir="../build/upgradeCheck/lib">
+      <include name="*.jar"/>
+      <include name="*.zip"/>
+     
+    </fileset>
+    <dirset dir="${build.iiqBinaryExtract}">
+        <include name="WEB-INF/classes"/>
+        <include name="WEB-INF/classes/**/*.class"/>
+    </dirset>
+  </classpath>
+</taskdef>
+
+   <findDeprecationsInXml folderToScan="${build.iiqBinaryExtract}/WEB-INF/config/custom"  helperList="sailpoint.services.tools.upgradecheck.ObjectTypeHelper.WorkflowHelper,sailpoint.services.tools.upgradecheck.ObjectTypeHelper.RuleHelper,sailpoint.services.tools.upgradecheck.ObjectTypeHelper.FormHelper" reportLocation="../build/upgradeCheck/logs" packagesToScan="sailpoint.object.,sailpoint.api.,sailpoint.server.,sailpoint.util., sailpoint.tools.,sailpoint.rest., sailpoint.web., sailpoint.workflow., sailpoint.provisioning.,sailpoint.task." ignoreFolderList="" scannerToRun="bsh" dtdLocation="${dtd}"/>
+
+<if>
+<available file="../build/upgradeCheck/logs/BSHDeprecationCheck.log"/>
+<then>
+
+        <copy file="../build/upgradeCheck/logs/BSHDeprecationCheck.log" tofile="../build/buildChecks/buildCheckBSHDeprecationCheck.log"   />
+</then>
+</if>
+
+
+<if>
+   <available file="../build/upgradeCheck/logs/RegexDeprecationMatch.log" />
+   <then>
+<copy file="../build/upgradeCheck/logs/RegexDeprecationMatch.log" tofile="../build/buildChecks/buildCheckRegexDeprecationMatch.log"   />
+   </then>
+</if>
+
+
+<delete dir="../build/upgradeCheck"  quiet="true"/>
+  <echo>
+  Deprecation Check Completed.
+  </echo> 
+
+  </target>
+   
+   </project>
