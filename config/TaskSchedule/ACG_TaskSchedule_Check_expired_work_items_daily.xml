@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE TaskSchedule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<TaskSchedule name="Check expired work items daily">
+  <Arguments>
+    <Map>
+      <entry key="executor" value="Check Expired Work Items"/>
+    </Map>
+  </Arguments>
+  <CronExpressions>
+    <String>0 0 0 * * ?</String>
+  </CronExpressions>
+  <Description>Check for expired work items every day at midnight.</Description>
+</TaskSchedule>

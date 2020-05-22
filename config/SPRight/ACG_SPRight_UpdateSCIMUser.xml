@@ -1,0 +1,5 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE SPRight PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<SPRight displayName="right_update_scim_user" name="UpdateSCIMUser">
+  <Description>right_desc_update_scim_user</Description>
+</SPRight>

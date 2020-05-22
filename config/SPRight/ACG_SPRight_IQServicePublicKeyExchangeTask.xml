@@ -1,0 +1,5 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE SPRight PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<SPRight displayName="right_sync_iqservice_key_task" name="IQServicePublicKeyExchangeTask">
+  <Description>right_desc_sync_iqservice_key_task</Description>
+</SPRight>

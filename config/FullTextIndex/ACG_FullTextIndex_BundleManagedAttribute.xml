@@ -1,0 +1,37 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE FullTextIndex PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<FullTextIndex name="BundleManagedAttribute">
+  <Attributes>
+    <Map>
+      <entry key="fields">
+        <value>
+          <List>
+            <FullTextField indexed="true" name="objectClass" stored="true"/>
+            <FullTextField name="id" stored="true"/>
+            <FullTextField analyzed="true" indexed="true" name="name"/>
+            <FullTextField analyzed="true" indexed="true" name="displayableName"/>
+            <FullTextField analyzed="true" indexed="true" name="description"/>
+            <FullTextField indexed="true" name="assignedScope.path"/>
+            <FullTextField indexed="true" name="type"/>
+            <FullTextField indexed="true" name="owner.id"/>
+            <FullTextField indexed="true" name="owner.name"/>
+            <FullTextField name="owner.displayName" stored="true"/>
+            <FullTextField name="defaultDescription" stored="true"/>
+            <FullTextField ignored="true" name="disabled"/>
+            <FullTextField name="riskScoreWeight" stored="true"/>
+            <FullTextField indexed="true" name="application.id"/>
+            <FullTextField analyzed="true" indexed="true" name="application.name"/>
+            <FullTextField indexed="true" name="application.icon"/>
+            <FullTextField analyzed="true" indexed="true" name="application.description"/>
+            <FullTextField indexed="true" name="application.assignedScope.path"/>
+            <FullTextField indexed="true" name="application.owner.id"/>
+            <FullTextField indexed="true" name="attribute"/>
+            <FullTextField indexed="true" name="value"/>
+            <FullTextField indexed="true" name="requestable"/>
+          </List>
+        </value>
+      </entry>
+      <entry key="includeTargets" value="true"/>
+    </Map>
+  </Attributes>
+</FullTextIndex>

@@ -1,0 +1,53 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE TaskDefinition PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<TaskDefinition executor="sailpoint.task.ApplicationBuilderExecutor" formPath="/monitor/tasks/applicationBuilderTask.xhtml" name="Application Builder" resultRenderer="applicationBuilderResult.xhtml" subType="task_item_type_generic" template="true" type="Generic">
+  <Description>A task that can be used to Create, Update, Read multiple IdentityIQ applications.</Description>
+  <Signature>
+    <Inputs>
+      <Argument helpKey="help_task_application_type" name="applicationType" type="string">
+        <Prompt>task_in_application_type</Prompt>
+      </Argument>
+      <Argument helpKey="help_task_operation" name="operation" type="string">
+        <Prompt>task_in_operation</Prompt>
+      </Argument>
+      <Argument helpKey="help_task_file_path" name="filePath" type="string">
+        <Prompt>task_in_file_path</Prompt>
+      </Argument>
+      <Argument helpKey="help_task_account_aggregation" name="triggerAccountAggregation" type="boolean">
+        <Prompt>task_in_account_aggregation</Prompt>
+      </Argument>
+      <Argument helpKey="help_task_group_aggregation" name="triggerGroupAggregation" type="boolean">
+        <Prompt>task_in_group_aggregation</Prompt>
+      </Argument>
+      <Argument helpKey="help_task_applications_per_aggregation" name="applicationsPerAggregation" type="string">
+        <Prompt>task_in_applications_per_aggregation</Prompt>
+      </Argument>
+      <Argument helpKey="help_task_skip_test_connection" name="skipTestConnection" type="string">
+        <Prompt>task_in_skip_test_connection</Prompt>
+      </Argument>
+    </Inputs>
+    <Returns>
+      <Argument name="applicationsScanned" type="int">
+        <Prompt>task_out_scanned_application</Prompt>
+      </Argument>
+      <Argument name="applicationsCreated" type="int">
+        <Prompt>task_out_application_created</Prompt>
+      </Argument>
+      <Argument name="applicationsUpdated" type="int">
+        <Prompt>task_out_application_updated</Prompt>
+      </Argument>
+      <Argument name="applicationsNotFound" type="int">
+        <Prompt>task_out_application_not_found</Prompt>
+      </Argument>
+      <Argument name="applicationsFailed" type="string">
+        <Prompt>task_out_application_failed</Prompt>
+      </Argument>
+      <Argument name="applicationsExists" type="string">
+        <Prompt>task_out_application_exists</Prompt>
+      </Argument>
+      <Argument name="exportFilePath" type="string">
+        <Prompt>task_out_export_file_path</Prompt>
+      </Argument>
+    </Returns>
+  </Signature>
+</TaskDefinition>

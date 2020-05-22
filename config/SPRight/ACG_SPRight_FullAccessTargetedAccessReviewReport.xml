@@ -1,0 +1,5 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE SPRight PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<SPRight displayName="right_targeted_access_review_report" name="FullAccessTargetedAccessReviewReport">
+  <Description>right_desc_targeted_access_review_report</Description>
+</SPRight>

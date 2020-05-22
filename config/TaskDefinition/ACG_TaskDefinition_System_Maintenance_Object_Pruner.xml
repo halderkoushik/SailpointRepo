@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE TaskDefinition PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<TaskDefinition executor="sailpoint.task.PrunerTask" name="System Maintenance Object Pruner" resultAction="Delete" subType="task_item_type_system" template="true" type="System">
+  <Description>Prunes expired objects as part of the system maintenance</Description>
+  <Signature>
+    <Inputs>
+      <Argument helpKey="help_task_prune_history" name="pruneHistory" type="boolean">
+        <Prompt>task_in_perform_maintenance_prune_history</Prompt>
+      </Argument>
+      <Argument helpKey="help_task_prune_task_results" name="pruneTaskResults" type="boolean">
+        <Prompt>task_in_perform_maintenance_prune_task_results</Prompt>
+      </Argument>
+      <Argument helpKey="help_task_prune_requests" name="pruneRequests" type="boolean">
+        <Prompt>task_in_perform_maintenance_prune_requests</Prompt>
+      </Argument>
+      <Argument helpKey="help_task_prune_provisioning_transactions" name="pruneProvisioningTransactons" type="boolean">
+        <Prompt>task_in_perform_maintenance_prune_provisioning_transactions</Prompt>
+      </Argument>
+      <Argument helpKey="help_task_prune_batch_requests" name="pruneBatchRequests" type="boolean">
+        <Prompt>task_in_perform_maintenance_prune_batch_requests</Prompt>
+      </Argument>
+      <Argument helpKey="help_task_prune_syslog_events" name="pruneSyslogEvents" type="boolean">
+        <Prompt>task_in_perform_maintenance_prune_syslog_events</Prompt>
+      </Argument>
+      <Argument helpKey="help_task_prune_attachments" name="pruneAttachments" type="boolean">
+        <Prompt>task_in_perform_maintenance_prune_attachments</Prompt>
+      </Argument>
+    </Inputs>
+    <Returns>
+      <Argument name="objectsDeleted" type="int">
+        <Prompt>task_out_objects_deleted</Prompt>
+      </Argument>
+    </Returns>
+  </Signature>
+</TaskDefinition>

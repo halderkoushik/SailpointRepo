@@ -1,0 +1,5 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE SPRight PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<SPRight displayName="right_delete_scim_user" name="DeleteSCIMUser">
+  <Description>right_desc_delete_scim_user</Description>
+</SPRight>

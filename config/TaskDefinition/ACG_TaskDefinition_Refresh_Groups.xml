@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE TaskDefinition PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<TaskDefinition name="Refresh Groups" subType="task_item_type_identity" type="Identity">
+  <Attributes>
+    <Map>
+      <entry key="refreshGroups" value="true"/>
+    </Map>
+  </Attributes>
+  <Description>
+            Refresh indexes for all identity groups.
+        </Description>
+  <Parent>
+    <Reference class="sailpoint.object.TaskDefinition" name="Identity Refresh"/>
+  </Parent>
+</TaskDefinition>

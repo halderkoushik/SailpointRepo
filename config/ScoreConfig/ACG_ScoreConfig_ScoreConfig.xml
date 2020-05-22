@@ -1,0 +1,232 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE ScoreConfig PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<ScoreConfig maximumNumberOfBands="6" maximumScore="1000" name="ScoreConfig">
+  <ApplicationScores>
+    <ScoreDefinition displayName="score_def_serviceAccount_name" name="serviceAccount" scorer="sailpoint.score.LinkAttributeScorer" weight="10">
+      <Attributes>
+        <Map>
+          <entry key="attribute" value="service"/>
+          <entry key="sensitivity" value="5"/>
+          <entry key="suggestion" value="score_def_serviceAccount_suggest"/>
+          <entry key="target" value="score_def_serviceAccount_target"/>
+          <entry key="value" value="true"/>
+        </Map>
+      </Attributes>
+      <Description>score_def_serviceAccount_desc</Description>
+    </ScoreDefinition>
+    <ScoreDefinition displayName="score_def_inactiveAccount_name" name="inactiveAccount" scorer="sailpoint.score.LinkAttributeScorer" weight="10">
+      <Attributes>
+        <Map>
+          <entry key="attribute" value="inactive"/>
+          <entry key="sensitivity" value="5"/>
+          <entry key="suggestion" value="score_def_inactiveAccount_suggest"/>
+          <entry key="target" value="score_def_inactiveAccount_target"/>
+          <entry key="value" value="true"/>
+        </Map>
+      </Attributes>
+      <Description>score_def_inactiveAccount_desc</Description>
+    </ScoreDefinition>
+    <ScoreDefinition displayName="score_def_privilegedAccount_name" name="privilegedAccount" scorer="sailpoint.score.LinkAttributeScorer" weight="10">
+      <Attributes>
+        <Map>
+          <entry key="attribute" value="privileged"/>
+          <entry key="sensitivity" value="5"/>
+          <entry key="suggestion" value="score_def_privilegedAccount_suggest"/>
+          <entry key="target" value="score_def_privilegedAccount_target"/>
+          <entry key="value" value="true"/>
+        </Map>
+      </Attributes>
+      <Description>score_def_privilegedAccount_desc</Description>
+    </ScoreDefinition>
+    <ScoreDefinition displayName="score_def_dormantAccount_name" name="dormantAccount" scorer="sailpoint.score.DormantAccountScorer" weight="10">
+      <Attributes>
+        <Map>
+          <entry key="attribute" value="lastLogin"/>
+          <entry key="daysTillDormant" value="30"/>
+          <entry key="sensitivity" value="5"/>
+          <entry key="suggestion" value="score_def_dormantAccount_suggest"/>
+          <entry key="target" value="score_def_dormantAccount_target"/>
+        </Map>
+      </Attributes>
+      <Description>score_def_dormantAccount_desc</Description>
+      <Signature>
+        <Inputs>
+          <Argument helpKey="help_apprisk_attribute" name="attribute" required="true" type="string">
+            <Prompt>score_def_prompt_dormantAccount_attr_name</Prompt>
+          </Argument>
+          <Argument helpKey="help_apprisk_days_till_dormant" name="daysTillDormant" required="true" type="int">
+            <Prompt>score_def_prompt_dormantAccount_days_till_dormant</Prompt>
+          </Argument>
+          <Argument helpKey="help_apprisk_sensitivity" name="sensitivity" type="int">
+            <Prompt>score_def_prompt_dormantAccount_sensitivity</Prompt>
+          </Argument>
+        </Inputs>
+      </Signature>
+    </ScoreDefinition>
+    <ScoreDefinition displayName="score_def_riskyAccount_name" name="riskyAccount" scorer="sailpoint.score.RiskyAccountScorer" weight="10">
+      <Attributes>
+        <Map>
+          <entry key="sensitivity" value="5"/>
+          <entry key="suggestion" value="score_def_riskyAccount_suggest"/>
+          <entry key="target" value="score_def_riskyAccount_target"/>
+          <entry key="threshold" value="500"/>
+        </Map>
+      </Attributes>
+      <Description>score_def_riskyAccount_desc</Description>
+      <Signature>
+        <Inputs>
+          <Argument helpKey="help_apprisk_risk_threshold" name="threshold" required="true" type="int">
+            <Prompt>score_def_prompt_riskyAccount_risk_threshold</Prompt>
+          </Argument>
+          <Argument helpKey="help_apprisk_sensitivity" name="sensitivity" type="int">
+            <Prompt>score_def_prompt_riskyAccount_sensitivity</Prompt>
+          </Argument>
+        </Inputs>
+      </Signature>
+    </ScoreDefinition>
+    <ScoreDefinition displayName="score_def_violatorAccount_name" name="violatorAccount" scorer="sailpoint.score.ViolatorAccountScorer" weight="10">
+      <Attributes>
+        <Map>
+          <entry key="sensitivity" value="5"/>
+          <entry key="suggestion" value="score_def_violatorAccount_suggest"/>
+          <entry key="target" value="score_def_violatorAccount_target"/>
+          <entry key="threshold" value="2"/>
+        </Map>
+      </Attributes>
+      <Description>score_def_violatorAccount_desc</Description>
+      <Signature>
+        <Inputs>
+          <Argument helpKey="help_apprisk_violation_threshold" name="threshold" required="true" type="int">
+            <Prompt>score_def_prompt_violatorAccount_violation_threshold</Prompt>
+          </Argument>
+          <Argument helpKey="help_apprisk_sensitivity" name="sensitivity" type="int">
+            <Prompt>score_def_prompt_violatorAccount_sensitivity</Prompt>
+          </Argument>
+        </Inputs>
+      </Signature>
+    </ScoreDefinition>
+    <ScoreDefinition composite="true" displayName="score_def_compositeWeight_name" name="Composite" scorer="sailpoint.score.CompositeScorer">
+      <Attributes>
+        <Map>
+          <entry key="type" value="application"/>
+        </Map>
+      </Attributes>
+      <Description>score_def_compositeApp_desc</Description>
+    </ScoreDefinition>
+  </ApplicationScores>
+  <Bands>
+    <ScoreBandConfig color="low" label="risk_band_low" textColor="#FFFFFF" upperBound="333"/>
+    <ScoreBandConfig color="medium" label="risk_band_med" lowerBound="334" textColor="#000000" upperBound="667"/>
+    <ScoreBandConfig color="high" label="risk_band_high" lowerBound="668" textColor="#FFFFFF" upperBound="1000"/>
+  </Bands>
+  <IdentityScores>
+    <ScoreDefinition configPage="gotoBusinessRoleBarPage" displayName="score_def_rawBusinessRoleScore_name" name="rawBusinessRoleScore" scorer="sailpoint.score.BusinessRoleScorer">
+      <Description>score_def_rawBusinessRoleScore_desc</Description>
+    </ScoreDefinition>
+    <ScoreDefinition configPage="gotoEntitlementsBarPage" displayName="score_def_rawEntitlementScore_name" name="rawEntitlementScore" scorer="sailpoint.score.EntitlementScorer">
+      <Attributes>
+        <Map>
+          <entry key="applicationEntitlementWeights"/>
+          <entry key="defaultAttributeScore" value="1"/>
+          <entry key="defaultRightScore" value="1"/>
+        </Map>
+      </Attributes>
+      <Description>score_def_rawEntitlementScore_desc</Description>
+    </ScoreDefinition>
+    <ScoreDefinition configPage="gotoSoDBarPage" displayName="score_def_rawPolicyScore_name" name="rawPolicyScore" scorer="sailpoint.score.PolicyScorer">
+      <Attributes>
+        <Map>
+          <entry key="defaultScore" value="10"/>
+        </Map>
+      </Attributes>
+      <Description>score_def_rawPolicyScore_desc</Description>
+    </ScoreDefinition>
+    <ScoreDefinition component="true" configPage="gotoBusinessRoleCompPage" displayName="score_def_businessRoleScore_name" name="businessRoleScore" parent="rawBusinessRoleScore" scorer="sailpoint.score.BusinessRoleScorer" shortName="score_def_businessRoleScore_shortname" weight="25">
+      <Attributes>
+        <Map>
+          <entry key="activityMonitoringFactor" value="0.5"/>
+          <entry key="activityMonitoringFactorMax" value="1"/>
+          <entry key="activityMonitoringFactorMin" value="0"/>
+          <entry key="certifiedFactor" value="0"/>
+          <entry key="certifiedFactorMax" value="1"/>
+          <entry key="certifiedFactorMin" value="0"/>
+          <entry key="compensated" value="true"/>
+          <entry key="expiredFactor" value="1.5"/>
+          <entry key="expiredFactorMax" value="10"/>
+          <entry key="expiredFactorMin" value="1"/>
+          <entry key="mitigatedFactor" value="0.5"/>
+          <entry key="mitigatedFactorMax" value="1"/>
+          <entry key="mitigatedFactorMin" value="0"/>
+          <entry key="remediatedFactor" value="2"/>
+          <entry key="remediatedFactorMax" value="11"/>
+          <entry key="remediatedFactorMin" value="1"/>
+          <entry key="uncertifiedFactor" value="1"/>
+          <entry key="uncertifiedFactorMax" value="11"/>
+          <entry key="uncertifiedFactorMin" value="1"/>
+        </Map>
+      </Attributes>
+      <Description>score_def_businessRoleScore_desc</Description>
+    </ScoreDefinition>
+    <ScoreDefinition component="true" configPage="gotoEntitlementsCompPage" displayName="score_def_entitlementScore_name" name="entitlementScore" parent="rawEntitlementScore" scorer="sailpoint.score.EntitlementScorer" shortName="score_def_entitlementScore_shortname" weight="25">
+      <Attributes>
+        <Map>
+          <entry key="activityMonitoringFactor" value="0.5"/>
+          <entry key="activityMonitoringFactorMax" value="1"/>
+          <entry key="activityMonitoringFactorMin" value="0"/>
+          <entry key="certifiedFactor" value="0"/>
+          <entry key="certifiedFactorMax" value="1"/>
+          <entry key="certifiedFactorMin" value="0"/>
+          <entry key="compensated" value="true"/>
+          <entry key="expiredFactor" value="1.5"/>
+          <entry key="expiredFactorMax" value="11"/>
+          <entry key="expiredFactorMin" value="1"/>
+          <entry key="mitigatedFactor" value="0.5"/>
+          <entry key="mitigatedFactorMax" value="1"/>
+          <entry key="mitigatedFactorMin" value="0"/>
+          <entry key="remediatedFactor" value="2"/>
+          <entry key="remediatedFactorMax" value="11"/>
+          <entry key="remediatedFactorMin" value="1"/>
+          <entry key="uncertifiedFactor" value="1"/>
+          <entry key="uncertifiedFactorMax" value="11"/>
+          <entry key="uncertifiedFactorMin" value="1"/>
+        </Map>
+      </Attributes>
+      <Description>score_def_entitlementScore_desc</Description>
+    </ScoreDefinition>
+    <ScoreDefinition component="true" configPage="gotoSoDCompPage" displayName="score_def_policyScore_name" name="policyScore" parent="rawPolicyScore" scorer="sailpoint.score.PolicyScorer" shortName="score_def_policyScore_shortname" weight="25">
+      <Attributes>
+        <Map>
+          <entry key="activityMonitoringFactor" value="0.5"/>
+          <entry key="activityMonitoringFactorMax" value="1"/>
+          <entry key="activityMonitoringFactorMin" value="0"/>
+          <entry key="compensated" value="true"/>
+          <entry key="expiredFactor" value="1.5"/>
+          <entry key="expiredFactorMax" value="11"/>
+          <entry key="expiredFactorMin" value="1"/>
+          <entry key="mitigatedFactor" value="0.5"/>
+          <entry key="mitigatedFactorMax" value="1"/>
+          <entry key="mitigatedFactorMin" value="0"/>
+          <entry key="remediatedFactor" value="2"/>
+          <entry key="remediatedFactorMax" value="11"/>
+          <entry key="remediatedFactorMin" value="1"/>
+          <entry key="uncertifiedFactor" value="1"/>
+          <entry key="uncertifiedFactorMax" value="11"/>
+          <entry key="uncertifiedFactorMin" value="1"/>
+        </Map>
+      </Attributes>
+      <Description>score_def_policyScore_desc</Description>
+    </ScoreDefinition>
+    <ScoreDefinition component="true" configPage="gotoCertificationCompPage" displayName="score_def_certificationAge_name" name="certificationScore" scorer="sailpoint.score.CertificationScorer" shortName="score_def_certificationAge_shortname" weight="25">
+      <Attributes>
+        <Map>
+          <entry key="offset" value="90"/>
+          <entry key="range" value="365"/>
+        </Map>
+      </Attributes>
+      <Description>score_def_certificationAge_desc</Description>
+    </ScoreDefinition>
+    <ScoreDefinition composite="true" displayName="score_def_composite_name" name="Composite" scorer="sailpoint.score.CompositeScorer">
+      <Description>score_def_composite_desc</Description>
+    </ScoreDefinition>
+  </IdentityScores>
+</ScoreConfig>

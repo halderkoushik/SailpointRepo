@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE TaskDefinition PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<TaskDefinition executor="sailpoint.task.NewCertificationExecutor" name="New Certification Generator" progressMode="String" subType="task_item_type_certification" type="Certification">
+  <Description>
+    Task that uses the new certification generation framework.
+  </Description>
+</TaskDefinition>

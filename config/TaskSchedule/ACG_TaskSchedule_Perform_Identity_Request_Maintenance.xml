@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE TaskSchedule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<TaskSchedule name="Perform Identity Request Maintenance">
+  <Arguments>
+    <Map>
+      <entry key="executor" value="Perform Identity Request Maintenance"/>
+    </Map>
+  </Arguments>
+  <CronExpressions>
+    <String>0 0 2 * * ?</String>
+  </CronExpressions>
+  <Description>Perform Identity Request maintenance every day at 2 AM.</Description>
+</TaskSchedule>

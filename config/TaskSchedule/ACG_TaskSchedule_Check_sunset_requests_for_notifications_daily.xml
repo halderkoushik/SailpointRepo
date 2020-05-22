@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE TaskSchedule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<TaskSchedule name="Check sunset requests for notifications daily">
+  <Arguments>
+    <Map>
+      <entry key="executor" value="Check Sunset Requests"/>
+    </Map>
+  </Arguments>
+  <CronExpressions>
+    <String>0 0 0 * * ?</String>
+  </CronExpressions>
+  <Description>Check for Roles and Entitlements that are about to expire and send a notification every day at midnight</Description>
+</TaskSchedule>

@@ -1,0 +1,25 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE TaskDefinition PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<TaskDefinition name="ACG Export XML" resultAction="Delete" subType="task_item_type_generic" type="Generic">
+  <Attributes>
+    <Map>
+      <entry key="TaskSchedule.host"/>
+      <entry key="addCData" value="true"/>
+      <entry key="basePath" value="C:\MyWork\Product-Docs\SailPoint\SailpointRepo\config"/>
+      <entry key="classNames" value="default"/>
+      <entry key="namingFormat" value="ACG_$Class$_$Name$"/>
+      <entry key="removeIDs" value="true"/>
+      <entry key="stripMetadata" value="true"/>
+      <entry key="taskCompletionEmailNotify" value="Disabled"/>
+      <entry key="taskCompletionEmailRecipients"/>
+      <entry key="taskCompletionEmailTemplate"/>
+    </Map>
+  </Attributes>
+  <Description>Export XML of IIQ objects.</Description>
+  <Owner>
+    <Reference class="sailpoint.object.Identity" name="spadmin"/>
+  </Owner>
+  <Parent>
+    <Reference class="sailpoint.object.TaskDefinition" name="XML Object Exporter"/>
+  </Parent>
+</TaskDefinition>

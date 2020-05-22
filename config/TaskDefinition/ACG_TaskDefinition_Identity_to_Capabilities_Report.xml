@@ -1,0 +1,47 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE TaskDefinition PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<TaskDefinition executor="sailpoint.reporting.LiveReportExecutor" name="Identity to Capabilities Report" progressMode="Percentage" resultAction="Rename" subType="Administration Reports" template="true" type="LiveReport">
+  <Attributes>
+    <Map>
+      <entry key="report">
+        <value>
+          <LiveReport disablePreview="true" title="Identity to Capabilities Report">
+            <DataSource dataSourceClass="sailpoint.reporting.datasource.IdentityCapabilitiesObjectDataSource" type="Java">
+              <QueryParameters>
+                <Parameter argument="identities" property="id"/>
+              </QueryParameters>
+            </DataSource>
+            <ReportForm>
+              <Reference class="sailpoint.object.Form" name="Identity to Capabilities Report Form"/>
+            </ReportForm>
+            <Columns>
+              <ReportColumnConfig field="name" header="report_identity_capabilities_name" property="name" sortable="true" width="110"/>
+              <ReportColumnConfig field="displayName" header="report_identity_capabilities_display_name" property="displayName" sortable="true" width="110"/>
+              <ReportColumnConfig field="capabilities" header="report_identity_capabilities_capabilities" width="110"/>
+            </Columns>
+          </LiveReport>
+        </value>
+      </entry>
+    </Map>
+  </Attributes>
+  <Description>Displays the capabilities associated with an identity.</Description>
+  <RequiredRights>
+    <Reference class="sailpoint.object.SPRight" name="FullAccessCapabilitiesReport"/>
+  </RequiredRights>
+  <Signature>
+    <Inputs>
+      <Argument name="excludeIndirectCapabilities" type="boolean">
+        <Description>help_report_identity_capabilities_exclude_indirect_caps</Description>
+      </Argument>
+      <Argument name="excludeWorkgroups" type="boolean">
+        <Description>help_report_identity_capabilities_exclude_workgroups</Description>
+      </Argument>
+      <Argument name="includeEmptyCapabilities" type="boolean">
+        <Description>help_report_identity_capabilities_include_empty_caps</Description>
+      </Argument>
+      <Argument multi="true" name="identities" type="Identity">
+        <Description>help_report_identity_capabilities_identities</Description>
+      </Argument>
+    </Inputs>
+  </Signature>
+</TaskDefinition>

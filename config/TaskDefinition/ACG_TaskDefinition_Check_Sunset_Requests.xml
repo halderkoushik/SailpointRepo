@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE TaskDefinition PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<TaskDefinition executor="sailpoint.task.RequestNotificationScanner" name="Check Sunset Requests" subType="task_item_type_system" type="System">
+  <Description>Send notifications when a Role with a sunset is approaching expiration</Description>
+  <Signature>
+    <Returns>
+      <Argument name="sent" type="int">
+        <Prompt>task_out_notifications_sent</Prompt>
+      </Argument>
+    </Returns>
+  </Signature>
+</TaskDefinition>
