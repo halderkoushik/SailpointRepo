@@ -196,6 +196,77 @@
                 </IdentityFilter>
               </value>
             </entry>
+            <entry key="LcmPopulation">
+              <value>
+                <IdentityFilter name="LcmPopulation" order="Ascending">
+                  <FilterScript>
+                    <Script>
+                      <Source><![CDATA[
+                            import sailpoint.object.Identity;
+                            import sailpoint.service.LCMConfigService;
+    
+                            Identity identity = context.getObjectById(Identity.class, loggedInUser);
+                            LCMConfigService svc = new LCMConfigService(context);
+                            return svc.getConfiguredIdentityQueryOptions(identity, null);
+                          ]]></Source>
+                    </Script>
+                  </FilterScript>
+                  <OrderBy>
+                    <String>firstname</String>
+                    <String>lastname</String>
+                    <String>name</String>
+                    <String>id</String>
+                  </OrderBy>
+                </IdentityFilter>
+              </value>
+            </entry>
+            <entry key="LcmPopulationManager">
+              <value>
+                <IdentityFilter name="LcmPopulationManager" order="Ascending">
+                  <FilterScript>
+                    <Script>
+                      <Source><![CDATA[
+                            import sailpoint.object.Filter;
+                            import sailpoint.object.Identity;
+                            import sailpoint.object.QueryOptions;
+                            import sailpoint.service.LCMConfigService;
+                            import sailpoint.tools.Util;
+    
+                            QueryOptions qo = new QueryOptions();
+
+                            Identity identity = context.getObjectById(Identity.class, loggedInUser);
+                            LCMConfigService svc = new LCMConfigService(context);
+                            QueryOptions popQueryOptions = svc.getConfiguredIdentityQueryOptions(identity, null);
+                            
+                            // Null QueryOptions means that the logged in user can't request for any
+                            // users.  We need a way to return this from IdentityFilters.  Currently,
+                            // this is filter config is only used when we know that the logged in user
+                            // is able to request for others, so we won't worry about it yet.
+                            if ((null != popQueryOptions) && !Util.isEmpty(popQueryOptions.getRestrictions())) {
+                                List popFilters = popQueryOptions.getRestrictions();
+                                Filter subFilter =
+                                    (popFilters.size() > 0) ? Filter.and(popFilters)
+                                                            : (Filter) popFilters.get(0);
+                                Filter f = Filter.subquery("id", Identity.class, "manager.id", subFilter);
+                                qo.addFilter(f);
+                            } else {
+                                qo.addFilter(Filter.eq("managerStatus", true));
+                            }
+                              
+                            return qo;
+                          
+                          ]]></Source>
+                    </Script>
+                  </FilterScript>
+                  <OrderBy>
+                    <String>firstname</String>
+                    <String>lastname</String>
+                    <String>name</String>
+                    <String>id</String>
+                  </OrderBy>
+                </IdentityFilter>
+              </value>
+            </entry>
             <entry key="Manager">
               <value>
                 <IdentityFilter name="Manager" order="Ascending">

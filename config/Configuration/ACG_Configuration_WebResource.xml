@@ -313,6 +313,11 @@
             <WebResource rights="*" url="plugins/pluginHelperSnippet.*"/>
             <WebResource rights="FullAccessPAM" url="pam/pam.*"/>
             <WebResource rights="FullAccessCertifications,FullAccessCertificationSchedule" url="certification/schedule.*"/>
+            <WebResource rights="FullAccessIdentityRiskModel, ViewIdentity, SetIdentityPassword, SetIdentityCapability, DeleteIdentityLink, MoveIdentityLink,DeleteIdentitySnapshot, MonitorIdentityActivity" url="define/identity/identities.jsf"/>
+            <WebResource rights="*" url="accessRequest/accessRequest.jsf"/>
+            <WebResource rights="*" url="identityRequest/identityRequest.jsf"/>
+            <WebResource rights="FullAccessIdentityCorrelation" url="manage/correlation/identityAttributes.json"/>
+            <WebResource rights="*" url="manage/correlation/appAccounts.json"/>
           </List>
         </value>
       </entry>

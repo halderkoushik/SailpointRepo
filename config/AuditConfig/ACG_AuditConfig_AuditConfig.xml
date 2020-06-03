@@ -64,6 +64,42 @@
     <AuditAction displayName="audit_action_identity_workgroup_add" enabled="true" name="IdentityWorkgroupAdd"/>
     <AuditAction displayName="audit_action_identity_workgroup_remove" enabled="true" name="IdentityWorkgroupRemove"/>
     <AuditAction displayName="audit_action_login_config" name="LoginConfigurationChange"/>
+    <AuditAction displayName="audit_action_ApproveLineItem" enabled="true" name="ApproveLineItem"/>
+    <AuditAction displayName="audit_action_AccountsRequestStart" enabled="true" name="AccountsRequestStart"/>
+    <AuditAction displayName="audit_action_Comment" enabled="true" name="Comment"/>
+    <AuditAction displayName="audit_action_Create" enabled="true" name="Create"/>
+    <AuditAction displayName="audit_action_Delete" enabled="true" name="Delete"/>
+    <AuditAction displayName="audit_action_Disable" enabled="true" name="Disable"/>
+    <AuditAction displayName="audit_action_Enable" enabled="true" name="Enable"/>
+    <AuditAction displayName="audit_action_EntitlementAdd" enabled="true" name="EntitlementAdd"/>
+    <AuditAction displayName="audit_action_EntitlementRemove" enabled="true" name="EntitlementRemove"/>
+    <AuditAction displayName="audit_action_EntitlementsRequestStart" enabled="true" name="EntitlementsRequestStart"/>
+    <AuditAction displayName="audit_action_ExpirePasswordStart" enabled="true" name="ExpirePasswordStart"/>
+    <AuditAction displayName="audit_action_ForgotPasswordStart" enabled="true" name="ForgotPasswordStart"/>
+    <AuditAction displayName="audit_action_IdentityCreateRequestStart" enabled="true" name="IdentityCreateRequestStart"/>
+    <AuditAction displayName="audit_action_IdentityEditRequestStart" enabled="true" name="IdentityEditRequestStart"/>
+    <AuditAction displayName="audit_action_ManualChange" enabled="true" name="ManualChange"/>
+    <AuditAction displayName="audit_action_Modify" enabled="true" name="Modify"/>
+    <AuditAction displayName="audit_action_PasswordRequestStart" enabled="true" name="PasswordsRequestStart"/>
+    <AuditAction displayName="audit_action_PasswordChanged" enabled="true" name="PasswordChange"/>
+    <AuditAction displayName="audit_action_PasswordChangeFailure" enabled="true" name="PasswordChangeFailure"/>
+    <AuditAction displayName="audit_action_ForgotPasswordChange" enabled="true" name="ForgotPasswordChange"/>
+    <AuditAction displayName="audit_action_ExpiredPasswordChange" enabled="true" name="ExpiredPasswordChange"/>
+    <AuditAction displayName="audit_action_ProvisioningComplete" enabled="true" name="ProvisioningComplete"/>
+    <AuditAction displayName="audit_action_ProvisioningFailure" enabled="true" name="ProvisioningFailure"/>
+    <AuditAction displayName="audit_action_RegistrationStart" enabled="true" name="RegistrationStart"/>
+    <AuditAction displayName="audit_action_RejectLineItem" enabled="true" name="RejectLineItem"/>
+    <AuditAction displayName="audit_action_RoleAdd" enabled="true" name="RoleAdd"/>
+    <AuditAction displayName="audit_action_RoleRemove" enabled="true" name="RoleRemove"/>
+    <AuditAction displayName="audit_action_RolesRequestStart" enabled="true" name="RolesRequestStart"/>
+    <AuditAction displayName="audit_action_Unlock" enabled="true" name="Unlock"/>
+    <AuditAction displayName="audit_action_IdentityLocked" enabled="true" name="IdentityLocked"/>
+    <AuditAction displayName="audit_action_IdentityUnlocked" enabled="true" name="IdentityUnlocked"/>
+    <AuditAction displayName="audit_action_AuthAnswerIncorrect" enabled="true" name="AuthAnswerIncorrect"/>
+    <AuditAction displayName="audit_action_AccessRequestStart" enabled="true" name="AccessRequestStart"/>
+    <AuditAction displayName="audit_action_PasswordPolicyChange" enabled="true" name="PasswordPolicyChange"/>
+    <AuditAction displayName="audit_action_ServerUpDown" enabled="true" name="ServerUpDown"/>
+    <AuditAction displayName="audit_action_APIConfigurationChange" enabled="true" name="APIConfigurationChange"/>
   </AuditActions>
   <AuditAttributes>
     <AuditAttribute class="Identity" displayName="audit_attribute_assignedRoles" name="assignedRoles"/>

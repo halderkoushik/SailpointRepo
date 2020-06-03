@@ -7,6 +7,22 @@
       <entry key="LoginAuthDurationMillis" value="3600000"/>
       <entry key="ProtectedUserLockout" value="true"/>
       <entry key="accessRequestReminderEmailTemplate" value="Access Request Reminder"/>
+      <entry key="accessRequestTypes">
+        <value>
+          <List>
+            <String>AccessRequest</String>
+            <String>RolesRequest</String>
+            <String>EntitlementsRequest</String>
+            <String>AccountsRequest</String>
+            <String>ExpirePassword</String>
+            <String>ForgotPassword</String>
+            <String>PasswordsRequest</String>
+            <String>IdentityCreateRequest</String>
+            <String>IdentityEditRequest</String>
+            <String>Registration</String>
+          </List>
+        </value>
+      </entry>
       <entry key="activePeriodDuration">
         <value>
           <TimeDuration amount="1" scale="Month"/>
@@ -19,12 +35,16 @@
       <entry key="allowCertificationEntityBulkClearDecisions" value="true"/>
       <entry key="allowCertificationEntityBulkRevocation" value="true"/>
       <entry key="allowCreatingRolesFromCertification" value="true"/>
+      <entry key="allowGeneratePasswordDelegated" value="true"/>
+      <entry key="allowGroupManagement" value="true"/>
+      <entry key="allowIdentitySearch" value="true"/>
       <entry key="allowListViewBulkApprove" value="true"/>
       <entry key="allowListViewBulkClearDecisions" value="true"/>
       <entry key="allowListViewBulkMitigate" value="false"/>
       <entry key="allowListViewBulkReassign" value="true"/>
       <entry key="allowListViewBulkRevoke" value="true"/>
       <entry key="allowListViewSaveCustomEntityFields" value="false"/>
+      <entry key="allowPopulationSearch" value="true"/>
       <entry key="allowProvisioningMissingRequirements" value="false"/>
       <entry key="allowSelfCertification">
         <value>
@@ -52,6 +72,8 @@
           </Map>
         </value>
       </entry>
+      <entry key="authQuestionLockoutDurationMillis" value="3600000"/>
+      <entry key="authQuestionsEnabled" value="false"/>
       <entry key="automateSignOffOnReassignment" value="false"/>
       <entry key="automateSignOffPopup" value="true"/>
       <entry key="automaticClosingAction">
@@ -65,6 +87,11 @@
         </value>
       </entry>
       <entry key="automaticClosingSigner" value="spadmin"/>
+      <entry key="batchRequestAccessRequest" value="LCM Provisioning"/>
+      <entry key="batchRequestAccountsRequest" value="LCM Provisioning"/>
+      <entry key="batchRequestIdentityCreateRequest" value="LCM Create and Update"/>
+      <entry key="batchRequestIdentityEditRequest" value="LCM Create and Update"/>
+      <entry key="batchRequestPasswordsRequest" value="LCM Manage Passwords"/>
       <entry key="blockForwardWorkItemSelfCertification" value="false"/>
       <entry key="bulkReassignmentEmailTemplate" value="Bulk Reassignment"/>
       <entry key="bulkSelectionCountForConfirmation" value="25"/>
@@ -180,12 +207,15 @@
             <String>MyAccessReviews</String>
             <String>CertificationCampaigns</String>
             <String>TopFiveRisks</String>
+            <String>Approvals</String>
+            <String>Forms</String>
+            <String>DirectReports</String>
           </List>
         </value>
       </entry>
       <entry key="defaultLanguage" value="en_US"/>
       <entry key="defaultMaxReminders" value="5"/>
-      <entry key="defaultQuickLinkCards" value="Policy Violations, Access Reviews, Approvals"/>
+      <entry key="defaultQuickLinkCards" value="Policy Violations, Access Reviews, Approvals, Request Access, Track Requests"/>
       <entry key="defaultRemediator"/>
       <entry key="defaultReminderStart" value="1209600000"/>
       <entry key="defaultWakeUpInterval" value="86400000"/>
@@ -195,6 +225,7 @@
       <entry key="delegationRevocationEmailTemplate" value="Delegation Revocation"/>
       <entry key="disableDefaultToAppOwnerRemediation" value="false"/>
       <entry key="disableRoleModelerTreeView" value="false"/>
+      <entry key="displayClassificationsInAccessRequest" value="true"/>
       <entry key="emailNotifierType" value="smtp"/>
       <entry key="emailRequestDefinition" value="Email Request"/>
       <entry key="enableAuthLockout" value="false"/>
@@ -262,6 +293,21 @@
           <Boolean>true</Boolean>
         </value>
       </entry>
+      <entry key="lcmAllowAccessAttributesSearch" value="true"/>
+      <entry key="lcmAllowAccessPercentageSlider" value="false"/>
+      <entry key="lcmAllowAccessPopulationSearch" value="true"/>
+      <entry key="lcmAllowAccessSortPercentage" value="true"/>
+      <entry key="lcmAllowAccessSortPercentageCount" value="50"/>
+      <entry key="lcmAllowRequestPermits" value="true"/>
+      <entry key="lcmCreateIdentityUseByDays" value="30"/>
+      <entry key="lcmEnableFulltext" value="true"/>
+      <entry key="lcmEnabled" value="true"/>
+      <entry key="lcmManageAccountsShowAllButtons" value="false"/>
+      <entry key="lcmMobileMaxSelectableUsers" value="100"/>
+      <entry key="lcmRequirePasswordIdentityCreate" value="true"/>
+      <entry key="lcmSearchMaxResults" value="100"/>
+      <entry key="lcmShowExternalTicketId" value="false"/>
+      <entry key="lcmUserAccessFulltextIndex" value="BundleManagedAttribute"/>
       <entry key="linkMaxSearchableAttributes" value="5"/>
       <entry key="link_extension">
         <value>
@@ -279,12 +325,42 @@
       </entry>
       <entry key="loginErrorStyle" value="simple"/>
       <entry key="loginReturnsToDashboard" value="false"/>
+      <entry key="manageAccountsActions">
+        <value>
+          <List>
+            <AccountOperation>Delete</AccountOperation>
+            <AccountOperation>Disable</AccountOperation>
+            <AccountOperation>Enable</AccountOperation>
+            <AccountOperation>Unlock</AccountOperation>
+          </List>
+        </value>
+      </entry>
+      <entry key="manageAccountsDeleteSelfEnabled" value="true"/>
+      <entry key="manageAccountsDeleteSubordinateEnabled" value="true"/>
+      <entry key="manageAccountsDisableAutoRefreshStatus">
+        <value>
+          <List>
+            <String> </String>
+          </List>
+        </value>
+      </entry>
+      <entry key="manageAccountsDisableSelfEnabled" value="true"/>
+      <entry key="manageAccountsDisableSubordinateEnabled" value="true"/>
+      <entry key="manageAccountsEnableSelfEnabled" value="true"/>
+      <entry key="manageAccountsEnableSubordinateEnabled" value="true"/>
+      <entry key="manageAccountsUnlockSelfEnabled" value="true"/>
+      <entry key="manageAccountsUnlockSubordinateEnabled" value="true"/>
+      <entry key="managedAttributeStatsMaxAttributes" value="5000"/>
+      <entry key="managedAttributeStatsMaxIdentities" value="200"/>
       <entry key="maxAuthLoginFailures" value="5"/>
+      <entry key="maxAuthQuestionFailures" value="3"/>
       <entry key="mitigationExpirationAction" value="NOTHING"/>
       <entry key="mitigationExpirationActionParameters"/>
       <entry key="mitigationExpirationEmailTemplate" value="Mitigation Expiration"/>
-      <entry key="mobileQuickLinkCards" value="Mobile Access Reviews, Mobile Approvals, Forms"/>
+      <entry key="mobileQuickLinkCards" value="Request Access, Manage Passwords, Manage Accounts, Mobile Access Reviews, Mobile Approvals, Forms, Mobile Violation Reviews"/>
       <entry key="notifyRemediation" value="false"/>
+      <entry key="numAuthQuestionAnswersRequired" value="3"/>
+      <entry key="numAuthQuestionsForAuthn" value="2"/>
       <entry key="openCertsEmailTemplate" value="Open Certifications"/>
       <entry key="passwordSpecialCharacters" value="~!@#$%^*_+-={}\\][:;?,."/>
       <entry key="pendingRoleRequestDeleteEmailTemplate" value="Pending Role Request Deleted"/>
@@ -293,6 +369,7 @@
       <entry key="policyViolationDelegationEmailTemplate" value="Policy Violation Delegation"/>
       <entry key="policyViolationEmailTemplate" value="Policy Violation"/>
       <entry key="policyViolationWorkItemTemplate" value="Policy Violation Details"/>
+      <entry key="promptForAuthQuestionAnswersAfterLogin" value="false"/>
       <entry key="provisioningRequestExpirationDays" value="7"/>
       <entry key="provisioningTransactionLogLevel" value="Failure"/>
       <entry key="provisioningTransactionLogPruneAge" value="0"/>
@@ -300,11 +377,14 @@
         <value>
           <List>
             <QuickLinkCategory cssClass="quickLinkCategoryTasks" messageKey="quicklink_category_all_tasks" name="Tasks" ordering="1"/>
+            <QuickLinkCategory cssClass="quickLinkCategoryAccess" messageKey="quicklink_category_access" name="Access" ordering="2"/>
+            <QuickLinkCategory cssClass="quickLinkCategoryManage" messageKey="quicklink_category_manage" name="Manage" ordering="3"/>
           </List>
         </value>
       </entry>
       <entry key="redirectingEmailNotifierAddress" value="admin@example.com"/>
       <entry key="redirectingEmailNotifierFilename" value="/tmp/iiqmbox"/>
+      <entry key="registerForm" value="Self-service Registration Form"/>
       <entry key="remediationEmailTemplate" value="Remediation Work Item"/>
       <entry key="remediationItemAssignmentEmailTemplate" value="Remediation Item Assignment"/>
       <entry key="remediationItemAssignmentRemovalEmailTemplate" value="Remediation Item Assignment Removal"/>
@@ -321,6 +401,10 @@
       <entry key="reportingResultRowThreshold" value="200000"/>
       <entry key="requestMaxAge" value="0"/>
       <entry key="requestProcessorPoolSize" value="10"/>
+      <entry key="requestRolesAssignableSelfEnabled" value="true"/>
+      <entry key="requestRolesAssignableSubordinateEnabled" value="true"/>
+      <entry key="requestRolesPermittedSelfEnabled" value="true"/>
+      <entry key="requestRolesPermittedSubordinateEnabled" value="true"/>
       <entry key="requireBulkCertifyConfirmation" value="false"/>
       <entry key="requireDelegationCompletion" value="false"/>
       <entry key="requireOldPasswordAtChange" value="true"/>
@@ -544,6 +628,11 @@
             <SearchInputDefinition description="srch_input_def_link_instance" headerKey="srch_input_def_link_instance" ignoreCase="true" inputType="Like" matchMode="START" name="link.instance" propertyName="instance" propertyType="String" searchType="Link"/>
             <SearchInputDefinition description="srch_input_def_link_uuid" headerKey="srch_input_def_link_uuid" ignoreCase="true" inputType="Like" matchMode="START" name="link.uuid" propertyName="uuid" propertyType="String" searchType="Link"/>
             <SearchInputDefinition description="srch_input_def_link_identity" headerKey="srch_input_def_link_identity" ignoreCase="true" inputType="Equal" name="link.identity" propertyName="identity.name" propertyType="String" searchType="Link"/>
+            <SearchInputDefinition description="srch_input_def_name" filterBuilder="sailpoint.search.NameFilterBuilder" headerKey="srch_input_def_name" ignoreCase="true" inputType="Like" matchMode="START" name="lcm.name" propertyName="name" propertyType="String" searchType="LCM"/>
+            <SearchInputDefinition description="srch_input_def_manager" headerKey="srch_input_def_manager" ignoreCase="true" inputType="Equal" matchMode="START" name="lcm.manager" propertyName="manager.id" propertyType="String" searchType="LCM" suggestType="manager"/>
+            <SearchInputDefinition description="srch_input_def_application" headerKey="srch_input_def_application" ignoreCase="true" inputType="Equal" matchMode="START" name="lcm.application" propertyName="links.application.id" propertyType="Collection" searchType="LCM" suggestType="application"/>
+            <SearchInputDefinition description="srch_input_def_detected_role" headerKey="srch_input_def_detected_role" ignoreCase="true" inputType="Equal" name="lcm.detectedRole" nullPropertyName="bundleSummary" nullPropertyType="String" propertyName="bundles.id" propertyType="Collection" searchType="LCM" suggestType="role"/>
+            <SearchInputDefinition description="srch_input_def_assigned_role" headerKey="srch_input_def_assigned_role" ignoreCase="true" inputType="Equal" name="lcm.assignedRole" nullPropertyName="assignedRoleSummary" nullPropertyType="String" propertyName="assignedRoles.id" propertyType="Collection" searchType="LCM" suggestType="role"/>
           </List>
         </value>
       </entry>
@@ -563,6 +652,7 @@
           </List>
         </value>
       </entry>
+      <entry key="selfRegistrationGroup" value="SelfRegistrationWorkGroup"/>
       <entry key="serverRootPath" value="http://localhost:8080/identityiq"/>
       <entry key="showAutoRemediationDialog" value="false"/>
       <entry key="showCertificationIconTooltips" value="false"/>
@@ -625,6 +715,17 @@
       <entry key="workItemNotificationsInterval" value="300"/>
       <entry key="workflowIdentityRefresh" value="Identity Refresh"/>
       <entry key="workflowIdentityUpdate" value="Identity Update"/>
+      <entry key="workflowLCMAccessRequest" value="LCM Provisioning"/>
+      <entry key="workflowLCMAccountsRequest" value="LCM Provisioning"/>
+      <entry key="workflowLCMEntitlementsRequest" value="LCM Provisioning"/>
+      <entry key="workflowLCMExpirePassword" value="LCM Manage Passwords"/>
+      <entry key="workflowLCMForgotPassword" value="LCM Manage Passwords"/>
+      <entry key="workflowLCMIdentityCreateRequest" value="LCM Create and Update"/>
+      <entry key="workflowLCMIdentityEditRequest" value="LCM Create and Update"/>
+      <entry key="workflowLCMPasswordsRequest" value="LCM Manage Passwords"/>
+      <entry key="workflowLCMRolesRequest" value="LCM Provisioning"/>
+      <entry key="workflowLCMSelfServiceRegistrationRequest" value="LCM Registration"/>
+      <entry key="workflowLCMUnlockAccount" value="LCM Provisioning"/>
       <entry key="workflowManagedAttribute" value="Entitlement Update"/>
       <entry key="workflowPasswordIntercept" value="Password Intercept"/>
       <entry key="workflowRoleApproval" value="Role Modeler - Impact Analysis"/>
