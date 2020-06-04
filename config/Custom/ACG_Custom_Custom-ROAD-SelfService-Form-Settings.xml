@@ -1,0 +1,74 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Custom PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Custom name="Custom-ROAD-SelfService-Form-Settings">
+  <Attributes>
+    <Map>
+      <entry key="roadAggregation" value="false"/>
+      <entry key="roadAttrSync" value="false"/>
+      <entry key="roadCartRequest" value="false"/>
+      <entry key="roadConfirmation" value="false"/>
+      <entry key="roadDefineProvisioningDisableConnectors">
+        <value>
+          <List>
+            <String>LDAPConnector</String>
+          </List>
+        </value>
+      </entry>
+      <entry key="roadDefineProvisioningEnableConnectors">
+        <value>
+          <List>
+            <String>LDAPConnector</String>
+          </List>
+        </value>
+      </entry>
+      <entry key="roadDefineProvisioningLockConnectors">
+        <value>
+          <List>
+            <String>LDAPConnector</String>
+          </List>
+        </value>
+      </entry>
+      <entry key="roadDefineProvisioningPasswordConnectors">
+        <value>
+          <List>
+            <String>LDAPConnector</String>
+          </List>
+        </value>
+      </entry>
+      <entry key="roadDefineProvisioningUnLockConnectors">
+        <value>
+          <List>
+            <String>LDAPConnector</String>
+          </List>
+        </value>
+      </entry>
+      <entry key="roadJoiner" value="false"/>
+      <entry key="roadLeaver" value="false"/>
+      <entry key="roadMover" value="false"/>
+      <entry key="roadNativeChange" value="false"/>
+      <entry key="roadPSA" value="false"/>
+      <entry key="roadPassword" value="false"/>
+      <entry key="roadPolicyViolation" value="false"/>
+      <entry key="roadProvisioning" value="false"/>
+      <entry key="roadReadOnly" value="false"/>
+      <entry key="roadSSO" value="false"/>
+      <entry key="roadSupportedAggregationDisableConnectors">
+        <value>
+          <List>
+            <String>ADLDAPConnector</String>
+            <String>LoopbackConnector</String>
+          </List>
+        </value>
+      </entry>
+      <entry key="roadSupportedAggregationLockConnectors">
+        <value>
+          <List>
+            <String>ADLDAPConnector</String>
+            <String>LoopbackConnector</String>
+          </List>
+        </value>
+      </entry>
+      <entry key="roadTicketintegration" value="false"/>
+    </Map>
+  </Attributes>
+</Custom>

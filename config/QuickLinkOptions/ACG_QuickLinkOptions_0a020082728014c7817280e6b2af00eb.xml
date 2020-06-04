@@ -1,0 +1,19 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE QuickLinkOptions PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<QuickLinkOptions allowBulk="true">
+  <DynamicScopeRef>
+    <Reference class="sailpoint.object.DynamicScope" name="Manager"/>
+  </DynamicScopeRef>
+  <Attributes>
+    <Map>
+      <entry key="allowRequestEntitlements" value="true"/>
+      <entry key="allowRequestEntitlementsAdditionalAccountRequests" value="false"/>
+      <entry key="allowRequestEntitlementsRemove" value="true"/>
+      <entry key="allowRequestEntitlementsShowPopulation" value="true"/>
+      <entry key="allowRequestRoles" value="true"/>
+      <entry key="allowRequestRolesAdditionalAccountRequests" value="false"/>
+      <entry key="allowRequestRolesRemove" value="true"/>
+      <entry key="allowRequestRolesShowPopulation" value="true"/>
+    </Map>
+  </Attributes>
+</QuickLinkOptions>

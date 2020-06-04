@@ -1,0 +1,336 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule-OldValues">
+  <Source><![CDATA[
+	
+	import sailpoint.object.Field;
+	import sailpoint.object.Form;
+	import sailpoint.rapidapponboarding.rule.TriggersRuleLibrary;
+	import sailpoint.rapidapponboarding.rule.JoinerRuleLibrary;
+	//Initialize OldValues List
+	public List OldValues()
+	{
+			//BUILD ALLOWED VALUES OLD
+		    String newFieldValue=null;
+			String attrFieldValue=null;
+			Field newfield = null;
+			Field newfieldGD = null;
+			Field oldfieldGD = null;
+			Field newfieldDF=null;
+			Field newfieldDO=null;
+			Field newfieldChangeOverride=null;
+			Field newfieldCs=null;
+			Field oldfieldCs=null;
+			Field operationField=null;
+			if(form!=null && field!=null)
+			{
+				String oldfieldName=field.getName();
+				operationField=form.getField("TriggerOperation");
+				if(oldfieldName!=null && oldfieldName.contains("TriggerOldValues"))
+				{
+					String newFieldName=oldfieldName.replace("TriggerOldValues","TriggerNewValues");
+					String attributeFieldName=oldfieldName.replace("TriggerOldValues","TriggerAttr");
+					String newFieldGDName=oldfieldName.replace("TriggerOldValues","TriggerGD");
+					String oldFieldGDName=oldfieldName.replace("TriggerOldValues","TriggerGDOld");
+					String newFieldDFName=oldfieldName.replace("TriggerOldValues","TriggerDateFormat");
+					String newFieldDOName=oldfieldName.replace("TriggerOldValues","TriggerDateOperation");
+					String newFieldNameCs=oldfieldName.replace("TriggerOldValues","TriggerNewValuesCS");
+					String oldFieldNameCS=oldfieldName.replace("TriggerOldValues","TriggerOldValuesCS");
+					String changeOverrideFieldName=oldfieldName.replace("TriggerOldValues","TriggerNoChangeOverride");
+					if(newFieldNameCs!=null)
+					{
+						newfieldCs = form.getField(newFieldNameCs);
+					}
+					if(changeOverrideFieldName!=null)
+					{
+						newfieldChangeOverride = form.getField(changeOverrideFieldName);
+					}
+					if(oldFieldNameCS!=null)
+					{
+						oldfieldCs = form.getField(oldFieldNameCS);
+					}
+					if(newFieldDFName!=null)
+					{
+						newfieldDF = form.getField(newFieldDFName);
+					}
+					if(newFieldDOName!=null)
+					{
+						newfieldDO = form.getField(newFieldDOName);
+					}
+					if(newFieldGDName!=null)
+					{
+						newfieldGD = form.getField(newFieldGDName);
+					}
+					if(oldFieldGDName!=null)
+					{
+						oldfieldGD = form.getField(oldFieldGDName);
+					}
+					if(newFieldName!=null)
+					{
+						newfield = form.getField(newFieldName);
+						if(newfield!=null)
+						{
+						newFieldValue=newfield.getValue();
+						}
+					}
+					if(attributeFieldName!=null)
+					{
+						Field attrfield = form.getField(attributeFieldName);
+						if(attrfield!=null)
+						{
+						attrFieldValue=attrfield.getValue();
+						}
+					}
+				}
+			}
+			//AND OPERATION, NEW VALUE IS COMMA SEPARATED VALUES OR SINGLE VALUE or ANY 
+			if(operationField!=null && operationField.getValue()!=null && ((String)operationField.getValue()).equalsIgnoreCase("AND"))
+			{
+				   //UNHIDE
+			        if(newfieldChangeOverride!=null)
+					{
+					newfieldChangeOverride.setHidden(false);
+					}
+			}
+			else
+			{
+			        //HIDE
+			        if(newfieldChangeOverride!=null)
+					{
+					newfieldChangeOverride.setHidden(true);
+					}
+			}
+			//MAKE NEW FIELD GROUP DEFINITION AND HIDE NEW FIELD, DATE FIELD, CS FIELDS
+			if(attrFieldValue!=null && (attrFieldValue.equalsIgnoreCase(TriggersRuleLibrary.GROUPDEFINITION)||attrFieldValue.equalsIgnoreCase(TriggersRuleLibrary.POPULATION)))
+			{       
+			        //UNHIDE
+			        if(newfieldGD!=null)
+					{
+						newfieldGD.setHidden(false);
+					}
+					 //UNHIDE ONLY WHEN OLD VALUE IS MATCH NO POPULATION
+				    if(oldfieldGD!=null)
+					{
+						if(field!=null && field.getValue()!=null && field.getValue().equalsIgnoreCase("MATCH POPULATION NAME"))
+						{
+							oldfieldGD.setHidden(false);
+						}
+						else
+						{
+							oldfieldGD.setHidden(true);
+						}
+					}
+					//HIDE ALL OTHER FIELDS
+					if(newfield!=null)
+					{
+					newfield.setHidden(true);
+					newfield.setAllowedValuesDefinition(null);
+					}
+					if(newfieldDF!=null)
+					{
+					newfieldDF.setHidden(true);
+					}
+					if(newfieldDO!=null)
+					{
+					newfieldDO.setHidden(true);
+					}
+					if(newfieldCs!=null)
+					{
+					newfieldCs.setHidden(true);
+					}
+					if(oldfieldCs!=null)
+					{
+					oldfieldCs.setHidden(true);
+					}
+			}
+			//HIDE DATE FIELD, CS FIELDS
+			else if(attrFieldValue!=null && attrFieldValue.equalsIgnoreCase(JoinerRuleLibrary.JOINERATTRNEEDSJOINER))
+			{       
+					//HIDE ALL OTHER FIELDS
+					if(newfieldGD!=null)
+					{
+					newfieldGD.setHidden(true);
+					}
+					if(oldfieldGD!=null)
+					{
+					oldfieldGD.setHidden(true);
+					}
+					if(newfieldDF!=null)
+					{
+					newfieldDF.setHidden(true);
+					}
+					if(newfieldDO!=null)
+					{
+					newfieldDO.setHidden(true);
+					}
+					if(newfieldCs!=null)
+					{
+					newfieldCs.setHidden(true);
+					}
+					if(oldfieldCs!=null)
+					{
+					oldfieldCs.setHidden(true);
+					}
+			}
+			else
+			{
+				//UNHIDE DATE FORMAT FIELD
+				 if(newFieldValue!=null && newFieldValue.contains("DATE"))
+				{
+						if(newfieldDF!=null)
+						{
+						newfieldDF.setHidden(false);
+						}
+						if(newfieldDO!=null)
+						{
+						newfieldDO.setHidden(false);
+						}
+				}
+				//HIDE DATE FORMAT FIELD
+				 if(newFieldValue!=null && !newFieldValue.contains("DATE"))
+				{
+						if(newfieldDF!=null)
+						{
+						newfieldDF.setHidden(true);
+						}
+						if(newfieldDO!=null)
+						{
+						newfieldDO.setHidden(true);
+						}
+				}
+				//UNHIDE NEW COMMA SEPARATED FIELD
+				 if(newFieldValue!=null && newFieldValue.equalsIgnoreCase("COMMA SEPARATED VALUES OR SINGLE VALUE"))
+				{
+						if(newfieldCs!=null)
+						{
+						newfieldCs.setHidden(false);
+						}
+				}
+				//HIDE NEW COMMA SEPARATED FIELD
+				else if(newFieldValue!=null && !newFieldValue.equalsIgnoreCase("COMMA SEPARATED VALUES OR SINGLE VALUE"))
+				{
+						if(newfieldCs!=null)
+						{
+						newfieldCs.setHidden(true);
+						}
+				}
+				//UNHIDE NEW COMMA SEPARATED FIELD
+				if(field!=null && field.getValue()!=null && field.getValue().equalsIgnoreCase("COMMA SEPARATED VALUES OR SINGLE VALUE"))
+				{
+						if(oldfieldCs!=null)
+						{
+						oldfieldCs.setHidden(false);
+						}
+				}
+				//HIDE OLD COMMA SEPARATED FIELD
+				else if(field!=null && field.getValue()!=null && !field.getValue().equalsIgnoreCase("COMMA SEPARATED VALUES OR SINGLE VALUE"))
+				{
+						if(oldfieldCs!=null)
+						{
+						oldfieldCs.setHidden(true);
+						}
+				}
+			}
+			List allowedOldValues = new ArrayList();
+			if(attrFieldValue!=null && (attrFieldValue.equalsIgnoreCase(TriggersRuleLibrary.GROUPDEFINITION)||attrFieldValue.equalsIgnoreCase(TriggersRuleLibrary.POPULATION)))
+			{
+					List displayAllowedValues = new ArrayList();
+					displayAllowedValues.add("IGNORE");
+					displayAllowedValues.add("IGNORE");
+					allowedOldValues.add(displayAllowedValues);
+					displayAllowedValues = new ArrayList();
+					displayAllowedValues.add("MATCH POPULATION NAME");
+					displayAllowedValues.add("MATCH POPULATION NAME");
+					allowedOldValues.add(displayAllowedValues);
+			}
+			else if(attrFieldValue!=null && attrFieldValue.equalsIgnoreCase(JoinerRuleLibrary.JOINERATTRNEEDSJOINER))
+			{
+					List displayAllowedValues = new ArrayList();
+					displayAllowedValues.add("IGNORE");
+					displayAllowedValues.add("IGNORE");
+					allowedOldValues.add(displayAllowedValues);
+			}
+			else if(newFieldValue==null)
+			{
+					List displayAllowedValues = new ArrayList();
+					displayAllowedValues.add("*");
+					displayAllowedValues.add("ANY OLD VALUE");
+					allowedOldValues.add(displayAllowedValues);
+					displayAllowedValues = new ArrayList();
+				    displayAllowedValues.add("EMPTY");
+				    displayAllowedValues.add("OLD VALUE EMPTY");
+				    allowedOldValues.add(displayAllowedValues);
+				    displayAllowedValues = new ArrayList();
+					displayAllowedValues = new ArrayList();
+					displayAllowedValues.add("IGNORE");
+					displayAllowedValues.add("IGNORE");
+					allowedOldValues.add(displayAllowedValues);
+					displayAllowedValues = new ArrayList();
+					displayAllowedValues.add("DATE");
+					displayAllowedValues.add("DATE ASSIGNMENT");
+					allowedOldValues.add(displayAllowedValues);
+			}
+			else
+			{
+				if(newFieldValue!=null && newFieldValue.equalsIgnoreCase("EMPTY"))
+				{
+					List displayAllowedValues = new ArrayList();
+					displayAllowedValues.add("*");
+					displayAllowedValues.add("ANY OLD VALUE");
+					allowedOldValues.add(displayAllowedValues);
+				}
+				if(newFieldValue!=null && newFieldValue.equalsIgnoreCase("*"))
+				{
+					List displayAllowedValues = new ArrayList();
+					displayAllowedValues.add("*");
+					displayAllowedValues.add("ANY OLD VALUE");
+					allowedOldValues.add(displayAllowedValues);
+					displayAllowedValues = new ArrayList();
+				    displayAllowedValues.add("EMPTY");
+				    displayAllowedValues.add("OLD VALUE EMPTY");
+				    allowedOldValues.add(displayAllowedValues);
+				}
+				if(newFieldValue!=null && newFieldValue.equalsIgnoreCase(JoinerRuleLibrary.JOINERNEEDPROCESSING))
+				{
+					List displayAllowedValues = new ArrayList();
+					displayAllowedValues = new ArrayList();
+					displayAllowedValues.add("IGNORE");
+					displayAllowedValues.add("IGNORE");
+					allowedOldValues.add(displayAllowedValues);
+				}
+				if(newFieldValue!=null && newFieldValue.equalsIgnoreCase("DATE CLEARED"))
+				{
+					List displayAllowedValues = new ArrayList();
+					displayAllowedValues.add("IGNORE");
+					displayAllowedValues.add("IGNORE");
+					allowedOldValues.add(displayAllowedValues);
+				}
+				if(newFieldValue!=null && newFieldValue.equalsIgnoreCase("DATE"))
+				{
+					List displayAllowedValues = new ArrayList();
+					displayAllowedValues.add("DATE");
+					displayAllowedValues.add("DATE ASSIGNMENT");
+					allowedOldValues.add(displayAllowedValues);
+				}
+				if(newFieldValue!=null && newFieldValue.equalsIgnoreCase("COMMA SEPARATED VALUES OR SINGLE VALUE"))
+				{
+					List displayAllowedValues = new ArrayList();
+					displayAllowedValues.add("COMMA SEPARATED VALUES OR SINGLE VALUE");
+					displayAllowedValues.add("COMMA SEPARATED VALUES OR SINGLE VALUE");
+					allowedOldValues.add(displayAllowedValues);
+					displayAllowedValues = new ArrayList();
+					displayAllowedValues.add("*");
+					displayAllowedValues.add("ANY OLD VALUE");
+					allowedOldValues.add(displayAllowedValues);
+					displayAllowedValues = new ArrayList();
+					displayAllowedValues.add("IGNORE");
+					displayAllowedValues.add("IGNORE OLD VALUE");
+					allowedOldValues.add(displayAllowedValues);
+				}
+			}
+			return allowedOldValues;
+	}
+	 OldValues();
+	
+	]]></Source>
+</Rule>

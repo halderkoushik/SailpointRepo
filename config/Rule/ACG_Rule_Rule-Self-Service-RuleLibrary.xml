@@ -1,0 +1,1847 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule-Self-Service-RuleLibrary">
+  <Source><![CDATA[
+	
+	import org.apache.commons.logging.Log;
+	import org.apache.commons.logging.LogFactory;
+	import sailpoint.object.Custom;
+	import sailpoint.object.Application;
+	import sailpoint.object.Attributes;
+	import sailpoint.object.Form;
+	import sailpoint.object.Form.Section;
+	import sailpoint.object.QueryOptions;
+	import sailpoint.object.Filter;
+	import sailpoint.object.ObjectAttribute;
+	import sailpoint.object.ObjectConfig;
+	import sailpoint.object.ManagedAttribute;
+	import sailpoint.object.Schema;
+	import sailpoint.object.Rule;
+	import sailpoint.object.Bundle;
+	import sailpoint.object.Field;
+	import sailpoint.object.Schema;
+	import sailpoint.object.Form.Type;
+	import sailpoint.api.PersistenceManager;
+	import sailpoint.tools.Util;
+	import sailpoint.object.SailPointObject;
+	import sailpoint.tools.GeneralException;
+	import sailpoint.rapidapponboarding.rule.ROADUtil;
+	import sailpoint.rapidapponboarding.rule.ObjectConfigAttributesRuleLibrary;
+	import sailpoint.rapidapponboarding.rule.SelfServiceRuleLibrary;
+	import sailpoint.rapidapponboarding.rule.WrapperRuleLibrary;
+	import sailpoint.api.ObjectUtil;
+	import sailpoint.object.ProvisioningConfig;
+	import sailpoint.rapidapponboarding.logger.LogEnablement;
+	Log logger = LogFactory.getLog("rapidapponboarding.rules");
+	/**
+	 * Save Application Artifact
+	 * @param roadModel
+	 * @param roadApplicationselect
+	 * @param appName
+	 * @param attrSyncKeys
+	 * @param emailKeys
+	 * @param roleKeys
+	 * @param app
+	 * @param roadSectionAttributes
+	 */
+	public void saveApplication(HashMap roadModel, String roadApplicationselect, String appName, List attrSyncKeys, List emailKeys, List roleKeys,Application app, Attributes roadSectionAttributes)
+	{
+		LogEnablement.isLogDebugEnabled(logger,"Start saveApplication");
+		LogEnablement.isLogDebugEnabled(logger,"Values from Self Service Form.."+roadModel);
+		//Aggregation Fields
+		String accountCorrelationAttrExpression=null;
+		String privilegedAccountAttrExpression=null;
+		String accountDisableAttrExpression=null;
+		String accountLockAttrExpression=null;
+		String privilegedEntAttrExpression=null;
+		String birthrightEntAttrExpression=null;
+		String serviceAccountAttrExpression=null;
+		String removeEntitlementLeaverExceptionExpression=null;
+		if(roadModel!=null)
+        {
+         	 String iIQCorrelatedAttribute = roadModel.get("IIQCorrelatedAttribute");
+         	 String iIQCorrelatedOperation = roadModel.get("IIQCorrelatedOperation");
+	         String iIQCorrelatedRegexExpression =roadModel.get("IIQCorrelatedRegexExpression");
+	         if(iIQCorrelatedOperation!=null && iIQCorrelatedAttribute!=null && iIQCorrelatedRegexExpression!=null)
+		     {
+		        //Self Service Correlation
+		        accountCorrelationAttrExpression =iIQCorrelatedAttribute+"#IIQCorrelated#"+iIQCorrelatedRegexExpression+"#IIQCorrelated#"+iIQCorrelatedOperation;
+		     }
+		     else if(iIQCorrelatedAttribute!=null && iIQCorrelatedRegexExpression!=null)
+		     {
+		        //Self Service Correlation
+		        accountCorrelationAttrExpression =iIQCorrelatedAttribute+"#IIQCorrelated#"+iIQCorrelatedRegexExpression;
+		     }
+		     else if(iIQCorrelatedAttribute==null || iIQCorrelatedRegexExpression==null)
+		     {
+		     	//Self Service Correlation
+		        accountCorrelationAttrExpression="Clear";
+		     }
+		     String iIQPrivilegedAttribute = roadModel.get("IIQPrivilegedAttribute");
+	         String iIQPrivilegedOperation = roadModel.get("IIQPrivilegedOperation");
+	         String iIQPrivilegedRegexExpression =roadModel.get("IIQPrivilegedRegexExpression");
+	         if(iIQPrivilegedOperation!=null && iIQPrivilegedAttribute!=null && iIQPrivilegedRegexExpression!=null)
+		     {
+		        //Self Service Privileged Account
+		        privilegedAccountAttrExpression = iIQPrivilegedAttribute+"#IIQPrivileged#"+iIQPrivilegedRegexExpression+"#IIQPrivileged#"+iIQPrivilegedOperation;
+		     }
+		     else if(iIQPrivilegedAttribute!=null && iIQPrivilegedRegexExpression!=null)
+		     {
+		        //Self Service Privileged Account
+		        privilegedAccountAttrExpression = iIQPrivilegedAttribute+"#IIQPrivileged#"+iIQPrivilegedRegexExpression;
+		     }
+		     else if(iIQPrivilegedAttribute==null || iIQPrivilegedRegexExpression==null)
+		     {
+		        //Self Service Privileged Account
+		        privilegedAccountAttrExpression = "Clear";
+		     }
+		     String iIQDisabledAttribute = roadModel.get("IIQDisabledAttribute");
+	         String iIQDisabledOperation = roadModel.get("IIQDisabledOperation");
+	         String iIQDisabledRegexExpression =roadModel.get("IIQDisabledRegexExpression");
+	         if(iIQDisabledOperation!=null && iIQDisabledAttribute!=null && iIQDisabledRegexExpression!=null)
+		     {
+		        //Self Service Disable Account
+		        accountDisableAttrExpression = iIQDisabledAttribute+"#IIQDisabled#"+iIQDisabledRegexExpression+"#IIQDisabled#"+iIQDisabledOperation;
+		     }
+		     else if(iIQDisabledAttribute!=null && iIQDisabledRegexExpression!=null)
+		     {
+		        //Self Service Disable Account
+		        accountDisableAttrExpression = iIQDisabledAttribute+"#IIQDisabled#"+iIQDisabledRegexExpression;
+		     }
+		     else if(iIQDisabledAttribute==null || iIQDisabledRegexExpression==null)
+		     {
+		        //Self Service Disable Account
+		        accountDisableAttrExpression = "Clear";
+		     }
+		     String iIQLockedAttribute = roadModel.get("IIQLockedAttribute");
+	         String iIQLockedOperation = roadModel.get("IIQLockedOperation");
+	         String iIQLockedRegexExpression =roadModel.get("IIQLockedRegexExpression");
+	         if(iIQLockedOperation!=null && iIQLockedAttribute!=null && iIQLockedRegexExpression!=null)
+		     {
+		        //Self Service Lock Account
+		        accountLockAttrExpression = iIQLockedAttribute+"#IIQLocked#"+iIQLockedRegexExpression+"#IIQLocked#"+iIQLockedOperation;
+		     }
+		     else if(iIQLockedAttribute!=null && iIQLockedRegexExpression!=null)
+		     {
+		        //Self Service Lock Account
+		        accountLockAttrExpression = iIQLockedAttribute+"#IIQLocked#"+iIQLockedRegexExpression;
+		     }
+		     else if( iIQLockedAttribute==null || iIQLockedRegexExpression==null)
+		     {
+		        //Self Service Lock Account
+		        accountLockAttrExpression = "Clear";
+		     }
+		     String iIQServiceAttribute = roadModel.get("IIQServiceAttribute");
+		     String iIQServiceOperation = roadModel.get("IIQServiceOperation");
+	         String iIQServiceRegexExpression =roadModel.get("IIQServiceRegexExpression");
+	         if(iIQServiceOperation!=null && iIQServiceAttribute!=null && iIQServiceRegexExpression!=null)
+		     {
+		        //Self Service Service Account
+		        serviceAccountAttrExpression = iIQServiceAttribute+"#IIQService#"+iIQServiceRegexExpression+"#IIQService#"+iIQServiceOperation;
+		     }
+		     else if(iIQServiceAttribute!=null && iIQServiceRegexExpression!=null)
+		     {
+		        //Self Service Service Account
+		        serviceAccountAttrExpression = iIQServiceAttribute+"#IIQService#"+iIQServiceRegexExpression;
+		     }
+		     else if(iIQServiceAttribute==null || iIQServiceRegexExpression==null)
+		     {
+		        //Self Service Service Account
+		        serviceAccountAttrExpression = "Clear";
+		     }
+		     String iIQEntitlementPrivilegedAttribute = roadModel.get("IIQEntitlementPrivilegedAttribute");
+	         String iIQEntitlementPrivilegedOperation = roadModel.get("IIQEntitlementPrivilegedOperation");
+	         String iIQEntitlementPrivilegedRegexExpression =roadModel.get("IIQEntitlementPrivilegedRegexExpression");
+	         if(iIQEntitlementPrivilegedOperation!=null && iIQEntitlementPrivilegedAttribute!=null && iIQEntitlementPrivilegedRegexExpression!=null)
+		     {
+		        //Self Service Privileged Entitlement
+		        privilegedEntAttrExpression = iIQEntitlementPrivilegedAttribute+"#IIQEntitlementPrivileged#"+iIQEntitlementPrivilegedRegexExpression+"#IIQEntitlementPrivileged#"+iIQEntitlementPrivilegedOperation;
+		     }
+		     else if(iIQEntitlementPrivilegedAttribute!=null && iIQEntitlementPrivilegedRegexExpression!=null)
+		     {
+		        //Self Service Privileged Entitlement
+		        privilegedEntAttrExpression = iIQEntitlementPrivilegedAttribute+"#IIQEntitlementPrivileged#"+iIQEntitlementPrivilegedRegexExpression;
+		     }
+		     else if(iIQEntitlementPrivilegedAttribute==null || iIQEntitlementPrivilegedRegexExpression==null)
+		     {
+		        //Self Service Privileged Entitlement
+		        privilegedEntAttrExpression = "Clear";
+		     }
+		     String iIQEntitlementBirthrightAttribute = roadModel.get("IIQEntitlementBirthrightAttribute");
+	         String iIQEntitlementBirthrightOperation = roadModel.get("IIQEntitlementBirthrightOperation");
+	         String iIQEntitlementBirthrightRegexExpression =roadModel.get("IIQEntitlementBirthrightRegexExpression");
+	         if(iIQEntitlementBirthrightOperation!=null && iIQEntitlementBirthrightAttribute!=null && iIQEntitlementBirthrightRegexExpression!=null)
+		     {
+		        //Self Service Birthright Entitlement
+		        birthrightEntAttrExpression = iIQEntitlementBirthrightAttribute+"#IIQEntitlementBirthright#"+iIQEntitlementBirthrightRegexExpression+"#IIQEntitlementBirthright#"+iIQEntitlementBirthrightOperation;
+		     }
+		     else if(iIQEntitlementBirthrightAttribute!=null && iIQEntitlementBirthrightRegexExpression!=null)
+		     {
+		        //Self Service Birthright Entitlement
+		        birthrightEntAttrExpression = iIQEntitlementBirthrightAttribute+"#IIQEntitlementBirthright#"+iIQEntitlementBirthrightRegexExpression;
+		     }
+		     else if(iIQEntitlementBirthrightAttribute==null || iIQEntitlementBirthrightRegexExpression==null)
+		     {
+		        //Self Service Birthright Entitlement
+		        birthrightEntAttrExpression = "Clear";
+		     }
+		     String iIQEntitlementLeaverExceptionAttribute = roadModel.get("IIQEntitlementLeaverExceptionAttribute");
+	         String iIQEntitlementLeaverExceptionOperation = roadModel.get("IIQEntitlementLeaverExceptionOperation");
+	         String iIQEntitlementLeaverExceptionRegexExpression =roadModel.get("IIQEntitlementLeaverExceptionRegexExpression");
+	         if(iIQEntitlementLeaverExceptionOperation!=null && iIQEntitlementLeaverExceptionAttribute!=null && iIQEntitlementLeaverExceptionRegexExpression!=null)
+		     {
+		        //Self Service Remove Entitlement Exception
+		        removeEntitlementLeaverExceptionExpression = iIQEntitlementLeaverExceptionAttribute+"#IIQEntitlementLeaverException#"+iIQEntitlementLeaverExceptionRegexExpression+"#IIQEntitlementLeaverException#"+iIQEntitlementLeaverExceptionOperation;
+		     }
+		     else if(iIQEntitlementLeaverExceptionAttribute!=null && iIQEntitlementLeaverExceptionRegexExpression!=null)
+		     {
+		        //Self Service Remove Entitlement Exception
+		        removeEntitlementLeaverExceptionExpression = iIQEntitlementLeaverExceptionAttribute+"#IIQEntitlementLeaverException#"+iIQEntitlementLeaverExceptionRegexExpression;
+		     }
+		     else if(iIQEntitlementLeaverExceptionAttribute==null || iIQEntitlementLeaverExceptionRegexExpression==null)
+		     {
+		        //Self Service Remove Entitlement Exception
+		        removeEntitlementLeaverExceptionExpression = "Clear";
+		     }
+		    if(app!=null)
+			{
+				Attributes attrs = app.getAttributes();
+				if(attrs!=null)
+				{
+						if(privilegedAccountAttrExpression!=null)
+						{
+						   if(privilegedAccountAttrExpression.equalsIgnoreCase("Clear"))
+						   {
+						    	if(attrs.containsKey("privilegedAccountAttrExpression"))
+						   		attrs.remove("privilegedAccountAttrExpression");
+						   }
+						   else
+						   {
+						    	attrs.put("privilegedAccountAttrExpression",privilegedAccountAttrExpression);
+						   }
+						}
+						if(accountCorrelationAttrExpression!=null)
+						{
+						   if(accountCorrelationAttrExpression.equalsIgnoreCase("Clear"))
+						   {
+						       if(attrs.containsKey("accountCorrelationAttrExpression"))
+						   		attrs.remove("accountCorrelationAttrExpression");
+						   }
+						   else
+						   {
+						    	attrs.put("accountCorrelationAttrExpression",accountCorrelationAttrExpression);
+						   }
+						}
+						if(accountDisableAttrExpression!=null)
+						{
+						    if(accountDisableAttrExpression.equalsIgnoreCase("Clear"))
+						   {
+						   		if(attrs.containsKey("accountDisableAttrExpression"))
+						   		attrs.remove("accountDisableAttrExpression");
+						   }
+						   else
+						   {
+						    	attrs.put("accountDisableAttrExpression",accountDisableAttrExpression);
+						   }
+						}
+						if(accountLockAttrExpression!=null)
+						{
+						   if(accountLockAttrExpression.equalsIgnoreCase("Clear"))
+						   {
+						        if(attrs.containsKey("accountLockAttrExpression"))
+						   		attrs.remove("accountLockAttrExpression");
+						   }
+						   else
+						   {
+						    	attrs.put("accountLockAttrExpression",accountLockAttrExpression);
+						   }
+						}
+						if(serviceAccountAttrExpression!=null)
+						{
+							if(serviceAccountAttrExpression.equalsIgnoreCase("Clear"))
+						   {
+						        if(attrs.containsKey("serviceAccountAttrExpression"))
+						   		attrs.remove("serviceAccountAttrExpression");
+						   }
+						   else
+						   {
+						    	attrs.put("serviceAccountAttrExpression",serviceAccountAttrExpression);
+						   }
+						}
+						if(privilegedEntAttrExpression!=null)
+						{
+							if(privilegedEntAttrExpression.equalsIgnoreCase("Clear"))
+						   {
+						       if(attrs.containsKey("privilegedEntAttrExpression"))
+						   		attrs.remove("privilegedEntAttrExpression");
+						   }
+						   else
+						   {
+						    	attrs.put("privilegedEntAttrExpression",privilegedEntAttrExpression);
+						   }
+						}
+						if(birthrightEntAttrExpression!=null)
+						{
+							if(birthrightEntAttrExpression.equalsIgnoreCase("Clear"))
+						   {
+						       if(attrs.containsKey("birthrightEntAttrExpression"))
+						   		attrs.remove("birthrightEntAttrExpression");
+						   }
+						   else
+						   {
+						    	attrs.put("birthrightEntAttrExpression",birthrightEntAttrExpression);
+						   }
+						}
+						if(removeEntitlementLeaverExceptionExpression!=null)
+						{
+							if(removeEntitlementLeaverExceptionExpression.equalsIgnoreCase("Clear"))
+						   {
+						       if(attrs.containsKey("removeEntitlementLeaverExceptionExpression"))
+						   		attrs.remove("removeEntitlementLeaverExceptionExpression");
+						   }
+						   else
+						   {
+						    	attrs.put("removeEntitlementLeaverExceptionExpression",removeEntitlementLeaverExceptionExpression);
+						   }
+						}
+				}
+			}
+		}
+		StringBuilder builder = new StringBuilder();
+		boolean setAfterProvisioningRule=false;
+		String privilegedAccessEnabled=ObjectConfigAttributesRuleLibrary.extendedAggrPrivAcctEnabled(context);
+		boolean privAccessEnabled=false;
+		boolean createModifyProvisioningConfig=false;
+		String isDeleteToDisable=null;
+		if(privilegedAccessEnabled!=null && privilegedAccessEnabled.length()>0 && privilegedAccessEnabled.equalsIgnoreCase("TRUE"))
+		{
+			privAccessEnabled=true;
+		}
+		String joinerDisabled=ROADUtil.roadFeatureDisabledString(context,"JOINER FEATURE");
+		boolean enabledJoiner=true;
+		if(joinerDisabled!=null && joinerDisabled.length()>0 && joinerDisabled.equalsIgnoreCase("TRUE"))
+		{
+			enabledJoiner=false;
+		}
+		String businessAppEnabled=ObjectConfigAttributesRuleLibrary.extendedAttrBusAppEnabled(context);
+		boolean enabledBusinessApp=false;
+		if(businessAppEnabled!=null && businessAppEnabled.length()>0 && businessAppEnabled.equalsIgnoreCase("TRUE"))
+		{
+			enabledBusinessApp=true;
+		}
+		String logicalAppEnabled=ObjectConfigAttributesRuleLibrary.extendedAttrLogicalAppEnabled(context);
+		boolean logApp=false;
+		if(logicalAppEnabled!=null && logicalAppEnabled.length()>0 && logicalAppEnabled.equalsIgnoreCase("TRUE"))
+		{
+			logApp=true;
+		}
+		String serviceAccountEnabled = ObjectConfigAttributesRuleLibrary.extendedAttrServiceAccountEnabled(context);
+		boolean servAccEnabled=false;
+		if(serviceAccountEnabled!=null && serviceAccountEnabled.length()>0 && serviceAccountEnabled.equalsIgnoreCase("TRUE"))
+		{
+			servAccEnabled=true;
+		}
+		if(roadModel!=null && roadModel.containsKey("isDeleteToDisable"))
+		{
+			isDeleteToDisable= roadModel.get("isDeleteToDisable");
+			if(isDeleteToDisable!=null && isDeleteToDisable.equalsIgnoreCase("true"))
+			{
+				createModifyProvisioningConfig=true;
+			}
+			else if(isDeleteToDisable!=null && isDeleteToDisable.equalsIgnoreCase("false"))
+			{
+				createModifyProvisioningConfig=true;
+			}
+		}
+		//Leaver OU Logic
+		StringBuilder ouBuilder = new StringBuilder();
+		if(roadModel!=null && roadModel.containsKey("moveAccountContainer"))
+		{
+			Object moveAccountContainer= roadModel.get("moveAccountContainer");
+			if(moveAccountContainer!=null && moveAccountContainer instanceof List && ((List)moveAccountContainer).size()>0)
+			{
+				List moveAccountContainerList=moveAccountContainer;
+				for(String moveAccountContainerStr : moveAccountContainerList) 
+				{
+					ouBuilder.append("|");
+					ouBuilder.append(moveAccountContainerStr);
+				}
+			}
+		}
+		if(ouBuilder!=null && ouBuilder.length()>0 )
+		{
+			String strOUBuilder=ouBuilder.toString();
+			if(strOUBuilder!=null)
+			{
+				if(strOUBuilder.startsWith("|"))
+				{
+					int length=strOUBuilder.length();
+					CharSequence strSeqOu=strOUBuilder.subSequence(1,length);
+					if(strSeqOu!=null)
+					{ 
+						strOUBuilder=strSeqOu.toString();
+					}
+				}
+				roadModel.put("moveAccountContainer",strOUBuilder.toString());
+			}
+		}
+		//Entitlement Dependency logic	
+		if(roadModel!=null && roadModel.containsKey("ssoApp"))
+		{
+			if(roadModel.containsKey("ssoAppEnt"))
+			{
+				Object ssoApp= roadModel.get("ssoApp");
+				Object ssoAppEnt= roadModel.get("ssoAppEnt");
+				List ssoAppList=null;
+				List ssoAppEntList=null;
+				if(ssoApp instanceof List && ssoAppEnt instanceof List)
+				{
+					ssoAppList=(List)ssoApp;
+					ssoAppEntList=(List)ssoAppEnt;
+					setAfterProvisioningRule=true;
+				}
+				String existingAccountCreateEntitlements= roadModel.get("accountCreateEntitlements");
+				if((ssoApp==null || ssoAppList==null || ssoAppList.size()<=0) && (ssoAppEnt==null || ssoAppEntList==null ||  ssoAppEntList.size()<=0))
+				{
+					if(existingAccountCreateEntitlements!=null && existingAccountCreateEntitlements.length()>0)
+					{
+						//Remove Existing Entitlement Dependency
+						roadModel.put("accountCreateEntitlements",null);
+					}
+				}
+				if(ssoAppList!=null && ssoAppEntList!=null && ssoAppList.size()>0 && ssoAppEntList.size()>0)
+				{
+					for(String entValue:ssoAppEntList)
+					{
+						List props = new ArrayList();
+						QueryOptions qo = new QueryOptions();
+						qo.addFilter(Filter.ignoreCase(Filter.eq("value", entValue)));
+						props.add("application.name");		
+						props.add("attribute");		
+						props.add("value");		
+						Iterator iter = context.search(ManagedAttribute.class, qo, props);
+						if (iter != null )
+						{
+							try 
+							{	
+								while (iter.hasNext())
+								{		   
+									Object [] arrStr=(Object[]) iter.next();
+									if(arrStr!=null && arrStr.length==3)
+									{
+										String entAppName = (String)arrStr[0];
+										String entAttr = (String)arrStr[1];
+										String entValueStr = (String)arrStr[2];
+										if(ssoAppList.contains(entAppName))
+										{
+											builder.append("|");
+											builder.append(entAppName+"#"+entAttr+"#"+entValueStr);
+											break;
+										}
+									}
+								}
+							}
+							catch (Exception e) 
+							{
+								LogEnablement.isLogErrorEnabled(logger,e.getMessage());
+							}
+							finally
+							{
+								Util.flushIterator(iter);
+							}
+						}
+					}
+				}
+			}
+		}
+		if(builder!=null && builder.length()>0 )
+		{
+			String strBuilder=builder.toString();
+			if(strBuilder!=null)
+			{
+				if(strBuilder.startsWith("|"))
+				{
+					int length=strBuilder.length();
+					CharSequence strSeq=strBuilder.subSequence(1,length);
+					if(strSeq!=null)
+					{ 
+						strBuilder=strSeq.toString();
+					}
+				}
+				roadModel.put("accountCreateEntitlements",strBuilder);
+			}
+		}
+		//SAVE ROLE
+		if(roadModel!=null && roadModel.containsKey("requestorFormRole") && roadModel.get("requestorFormRole")!=null)
+		{
+			String lockMode = PersistenceManager.LOCK_TYPE_TRANSACTION;
+			Bundle bundle = ObjectUtil.lockObject(context, Bundle.class,null, ((String)roadModel.get("requestorFormRole")), lockMode);
+			if(bundle!=null)
+			{
+				bundle.setAttribute("formappName",roadApplicationselect);
+				LogEnablement.isLogDebugEnabled(logger,"Save Bundle.Requestor Form Role App Name...");
+				context.saveObject(bundle);
+				//Commit is in Final Block of Workflow Step that involes this method - Releases Transaction Lock
+			}
+		}
+		//SAVE APPLICATION
+		List appDependendcyKeys = new ArrayList();
+		appDependendcyKeys.add("ssoApp");
+		appDependendcyKeys.add("ssoAppEnt");
+		List expressionKeys = new ArrayList();
+		expressionKeys.add("IIQEntitlementLeaverExceptionAttribute");
+		expressionKeys.add("IIQEntitlementLeaverExceptionRegexExpression");
+		expressionKeys.add("IIQEntitlementLeaverExceptionOperation");
+		expressionKeys.add("IIQEntitlementLeaverExceptionJavaRegex");
+		expressionKeys.add("IIQDisabledAttribute");
+		expressionKeys.add("IIQDisabledRegexExpression");
+		expressionKeys.add("IIQDisabledOperation");
+		expressionKeys.add("IIQDisabledJavaRegex");
+		expressionKeys.add("IIQLockedAttribute");
+		expressionKeys.add("IIQLockedRegexExpression");
+		expressionKeys.add("IIQLockedOperation");
+		expressionKeys.add("IIQLockedJavaRegex");
+		expressionKeys.add("IIQEntitlementBirthrightAttribute");
+		expressionKeys.add("IIQEntitlementBirthrightRegexExpression");
+		expressionKeys.add("IIQEntitlementBirthrightOperation");
+		expressionKeys.add("IIQEntitlementBirthrightJavaRegex");
+		expressionKeys.add("IIQEntitlementPrivilegedAttribute");
+		expressionKeys.add("IIQEntitlementPrivilegedRegexExpression");
+		expressionKeys.add("IIQEntitlementPrivilegedOperation");
+		expressionKeys.add("IIQEntitlementPrivilegedJavaRegex");
+		expressionKeys.add("IIQPrivilegedAttribute");
+		expressionKeys.add("IIQPrivilegedRegexExpression");
+		expressionKeys.add("IIQPrivilegedOperation");
+		expressionKeys.add("IIQPrivilegedJavaRegex");
+		expressionKeys.add("IIQCorrelatedAttribute");
+		expressionKeys.add("IIQCorrelatedRegexExpression");
+		expressionKeys.add("IIQCorrelatedOperation");
+		expressionKeys.add("IIQCorrelatedJavaRegex");
+		expressionKeys.add("IIQServiceAttribute");
+		expressionKeys.add("IIQServiceRegexExpression");
+		expressionKeys.add("IIQServiceOperation");
+		expressionKeys.add("IIQServiceJavaRegex");
+		List additionalDisplayattrSyncKeys = new ArrayList();
+		additionalDisplayattrSyncKeys.add("identityAttrSubscription");
+		additionalDisplayattrSyncKeys.add("applicationAttrSubscription");
+		List provisioningKeys= new ArrayList();
+		provisioningKeys.add("isDeleteToDisable");
+		//BUILD IGNORE KEYS
+		List ignoreKeys = new ArrayList();
+		ignoreKeys.addAll(appDependendcyKeys);
+		ignoreKeys.addAll(emailKeys);
+		ignoreKeys.addAll(attrSyncKeys);
+		ignoreKeys.addAll(expressionKeys);
+		ignoreKeys.addAll(additionalDisplayattrSyncKeys);
+		ignoreKeys.addAll(provisioningKeys);
+		if(roadSectionAttributes!=null && (!roadSectionAttributes.containsKey("roadShowLDAPPasswordConnectorOptions") ||
+				roadSectionAttributes.get("roadShowLDAPPasswordConnectorOptions")==null ||
+				!((String)roadSectionAttributes.get("roadShowLDAPPasswordConnectorOptions")).equalsIgnoreCase("LDAPPasswordOptions")))
+		{
+			ignoreKeys.add("passwordAttr");
+		}
+		if(roadSectionAttributes!=null && (!roadSectionAttributes.containsKey("roadShowLDAPEnableConnectorOptions") ||
+				roadSectionAttributes.get("roadShowLDAPEnableConnectorOptions")==null ||
+				!((String)roadSectionAttributes.get("roadShowLDAPEnableConnectorOptions")).equalsIgnoreCase("LDAPEnableOptions")))
+		{
+			ignoreKeys.add("restoreAction");
+			ignoreKeys.add("restoreVal");
+			ignoreKeys.add("restoreAttr");
+		}
+		if(roadSectionAttributes!=null && (!roadSectionAttributes.containsKey("roadShowLDAPDisableConnectorOptions") ||
+				roadSectionAttributes.get("roadShowLDAPDisableConnectorOptions")==null ||
+				!((String)roadSectionAttributes.get("roadShowLDAPDisableConnectorOptions")).equalsIgnoreCase("LDAPDisableOptions")))
+		{
+			ignoreKeys.add("revokeAction");
+			ignoreKeys.add("revokeVal");
+			ignoreKeys.add("revokeAttr");
+		}
+		if(roadSectionAttributes!=null && (!roadSectionAttributes.containsKey("roadShowLDAPLockConnectorOptions") ||
+				roadSectionAttributes.get("roadShowLDAPLockConnectorOptions")==null ||
+				!((String)roadSectionAttributes.get("roadShowLDAPLockConnectorOptions")).equalsIgnoreCase("LDAPLockOptions")))
+		{
+			ignoreKeys.add("lockAttr");
+			ignoreKeys.add("lockVal");
+		}
+		if(roadSectionAttributes!=null && (!roadSectionAttributes.containsKey("roadShowLDAPUnLockConnectorOptions") ||
+				roadSectionAttributes.get("roadShowLDAPUnLockConnectorOptions")==null ||
+				!((String)roadSectionAttributes.get("roadShowLDAPUnLockConnectorOptions")).equalsIgnoreCase("LDAPUnLockOptions")))
+		{
+			ignoreKeys.add("unlockAction");
+			ignoreKeys.add("unlockVal");
+			ignoreKeys.add("unlockAttr");
+		}
+		Custom mappingObj = context.getObjectByName(Custom.class, "Custom-ROAD-SelfService-Form-Settings");
+		Attributes mapAttr=null;
+		if(mappingObj!=null && mappingObj.getAttributes()!=null)
+		{
+			mapAttr = mappingObj.getAttributes();	
+			context.decache(mappingObj);
+		}
+		//LIST
+		List storeAsList = new ArrayList();
+		storeAsList.add("retryableErrors");
+		//GET ROAD FIELD NAMES
+		Form formRoad=context.getObjectByName(Form.class, "ROAD-Self-Service");
+		if(formRoad!=null)
+		{  
+			List sections = formRoad.getSections();
+			List fieldNames= new ArrayList();
+			Map fieldTypes = new HashMap();
+			if(sections!=null && sections.size()>0)
+			{
+				for (Section section:sections)
+				{
+					String sectionName =section.getName();
+					//CHECK TO SEE IF SECTION IS ENABLED
+					if(sectionName!=null  && mapAttr!=null && mapAttr.containsKey(sectionName) && ((String)mapAttr.get(sectionName)).equalsIgnoreCase("FALSE"))
+					{
+						List fields = section.getFields();
+						if(fields!=null && fields.size()>0)
+						{
+							for(Field field:fields)
+							{
+								if(field.getName()!=null && !field.isHidden() )
+								{
+									fieldNames.add(field.getName());
+									//Type can be null
+									fieldTypes.put(field.getName(),field.getType());
+								}
+							}
+						}
+					}
+				}
+			}
+			LogEnablement.isLogDebugEnabled(logger,"fieldNames..."+fieldNames);
+			//SAVE APPLICATION STUFF
+			if(roadApplicationselect!=null && fieldNames!=null && fieldNames.size()>0)
+			{
+				if(app!=null)
+				{
+					Attributes attrs = app.getAttributes();
+					if(attrs!=null && roadModel!=null)
+					{
+						for (Map.Entry entry : roadModel.entrySet()) 
+						{
+							if(attrs!=null  && fieldNames.contains(entry.getKey()) && !ignoreKeys.contains(entry.getKey()))
+							{
+								//Lets see if it is not Boolean or String or null
+								String key = entry.getKey();
+								LogEnablement.isLogDebugEnabled(logger,"Saving Key..."+key);
+								Object value = entry.getValue();
+								LogEnablement.isLogDebugEnabled(logger,"value..."+value);
+								if(fieldTypes!=null && fieldTypes.containsKey(key))
+								{
+									String type = fieldTypes.get(key);
+									//Type could be any IdentityIQ Object 
+									if(type!=null && !type.equalsIgnoreCase("String") && !type.equalsIgnoreCase("Boolean") &&  
+											!type.equalsIgnoreCase("textarea") && value!=null && value instanceof List)
+									{
+										List valueList = (List)value;
+										if(storeAsList!=null && storeAsList.contains(key))
+										{
+											LogEnablement.isLogDebugEnabled(logger,"List Conversion Storing as it is...."+value);
+										}
+										else
+										{
+											LogEnablement.isLogDebugEnabled(logger,"valueList...."+valueList);
+											value=Util.listToCsv(valueList);
+										}
+									}
+								}
+								//Override Here
+								attrs.put( key ,value);
+							}
+						}
+					}
+					LogEnablement.isLogDebugEnabled(logger,"Application attrs...."+attrs);
+					//Let's Save Delete To Disable Here
+					ProvisioningConfig existingProvisioningConfig=app.getProvisioningConfig();
+					if(existingProvisioningConfig!=null && createModifyProvisioningConfig && isDeleteToDisable!=null)
+					{
+						if(isDeleteToDisable.equalsIgnoreCase("true"))
+						{
+							existingProvisioningConfig.setDeleteToDisable(true);
+						}
+						else if(isDeleteToDisable.equalsIgnoreCase("false"))
+						{
+							existingProvisioningConfig.setDeleteToDisable(false);
+						}
+						app.setProvisioningConfig(existingProvisioningConfig);
+					}
+					else if(createModifyProvisioningConfig && isDeleteToDisable!=null)
+					{
+						ProvisioningConfig newProvisioningConfig=new ProvisioningConfig();
+						if(isDeleteToDisable.equalsIgnoreCase("true"))
+						{
+							newProvisioningConfig.setDeleteToDisable(true);
+						}
+						else if(isDeleteToDisable.equalsIgnoreCase("false"))
+						{
+							newProvisioningConfig.setDeleteToDisable(false);
+						}
+						app.setProvisioningConfig(newProvisioningConfig);
+					}
+					//Let's Save ROAD Customization Rule, Creation Rule, Correlation Rule, Managed Attribute Rule, After Provisioning Rule, PreIterate Rule
+					LogEnablement.isLogDebugEnabled(logger,"Setting Rules");
+					String aggregationEnabled = ObjectConfigAttributesRuleLibrary.extendedAttrAggregationEnabled(context);
+					boolean aggregationEnab=false;
+					if(aggregationEnabled!=null && aggregationEnabled.length()>0 && aggregationEnabled.equalsIgnoreCase("TRUE"))
+					{
+						aggregationEnab=true;
+					}
+					String newAcctEntDepEnabled = ObjectConfigAttributesRuleLibrary.extendedAttrEntitlementDependencyEnabled(context);
+					boolean newAcctEntDepEnab=false;
+					if(newAcctEntDepEnabled!=null && newAcctEntDepEnabled.length()>0 && newAcctEntDepEnabled.equalsIgnoreCase("TRUE"))
+					{
+						newAcctEntDepEnab=true;
+					}
+					Rule afterProvisioningRule=null;
+					if(newAcctEntDepEnab)
+					{
+						afterProvisioningRule = context.getObjectByName(Rule.class, "Rule-AccountCreation-Dependency-Framework");
+					}
+					//If Rule Found Audit is Enabled
+					Rule auditAfterProvisioningRule=null;
+					auditAfterProvisioningRule = context.getObjectByName(Rule.class, "Rule-Audit-Framework");
+					// Joiner Needs Processing Rule
+					Rule creationRuleJoiner=null;
+					if(enabledJoiner )
+					{
+						creationRuleJoiner = context.getObjectByName(Rule.class, "Rule-FrameWork-Creation-Joiner-Authoritative-Source");
+					}
+					Rule correlationRule=null;
+					//Correlation Rule is used for primary/regular/service/privileged
+					if(aggregationEnab ||servAccEnabled)
+					{
+						correlationRule = context.getObjectByName(Rule.class, "Rule-FrameWork-Correlation");
+					}
+					Rule customizationRule = null;
+					//aggregationEnab for IIQLocked and IIQDisabled
+					//privAccessEnabled for IIQPrivileged
+					//servAccEnabled for IIQService
+					if(privAccessEnabled || servAccEnabled || aggregationEnab )
+					{
+						customizationRule=context.getObjectByName(Rule.class, "Rule-Framework-RapidAppOnBoarding-Customization-Rule");
+					}
+					Rule managedAttributeCustomizationRule = null;
+					//privAccessEnabled for IIQPrivileged
+					//enabledJoiner for IIQBirthright
+					//logApp and enabledBusinessApp for Logical Application and Is Business Application
+					if(!app.isAuthoritative() && (privAccessEnabled||enabledJoiner || (logApp && enabledBusinessApp)))
+					{
+						managedAttributeCustomizationRule=context.getObjectByName(Rule.class, "Rule-FrameWork-Promote-Managed-Attribute");
+					}
+					//aggregationEnab for Pre Iterate Rule
+					//This could be used on both authoritative and non-authoritative apps
+					if( aggregationEnab)
+					{
+						if(app.getConnector()!=null && app.getConnector().contains("DelimitedFileConnector") && app.getAttributeValue("preIterateRule")==null)
+						{
+							LogEnablement.isLogDebugEnabled(logger,"Setting Pre Iterate Rule");
+							if(app.getAttributeValue("filetransport")==null || ((String)app.getAttributeValue("filetransport")).equalsIgnoreCase("local"))
+							{
+								app.setAttribute("preIterateRule", "Rule-FrameWork-Preiterate-DelimitedFile");
+							}
+						}
+					}
+					//This could be used on both authoritative and non-authoritative apps
+					if(app.getCorrelationRule()==null && correlationRule!=null)
+					{
+						LogEnablement.isLogDebugEnabled(logger,"Setting Correlation Rule");
+						app.setCorrelationRule(correlationRule);
+					}
+					//This could be used on both authoritative and non-authoritative apps
+					if( app.getCustomizationRule()==null && customizationRule!=null)
+					{
+						LogEnablement.isLogDebugEnabled(logger,"Setting Customization Rule");
+						app.setCustomizationRule(customizationRule);
+					}
+					//Creation Rule is used only for Service Account Naming Conventions
+					if(servAccEnabled && !app.isAuthoritative())
+					{
+						Rule creationRule = context.getObjectByName(Rule.class, "Rule-FrameWork-Creation");
+						if(app.getCreationRule()==null && creationRule!=null)
+						{
+							LogEnablement.isLogDebugEnabled(logger,"Setting Creation Rule");
+							app.setCreationRule(creationRule);
+						}
+						if(creationRule!=null)
+						{
+							context.decache(creationRule);
+						}
+					}
+					if(!app.isAuthoritative() && app.getManagedAttributeCustomizationRule()==null && managedAttributeCustomizationRule!=null)
+					{
+						LogEnablement.isLogDebugEnabled(logger,"Setting Managed Attribute Customization Rule");
+						app.setManagedAttributeCustomizationRule(managedAttributeCustomizationRule);
+					}
+					//Set After provisioning Rule for New Account Dependency
+					LogEnablement.isLogDebugEnabled(logger,"Existing app.getAfterProvisioningRule().."+app.getAfterProvisioningRule());
+					if(!app.isAuthoritative() && (app.getAfterProvisioningRule()==null||app.getAfterProvisioningRule().equalsIgnoreCase("Rule-Audit-Framework")) && afterProvisioningRule!=null && setAfterProvisioningRule)
+					{
+						//Audit Rule is Merged with New Account Dependency Rule
+						LogEnablement.isLogDebugEnabled(logger,"Setting After Provisioning Rule");
+						app.setAfterProvisioningRule(afterProvisioningRule.getName());
+					}
+					else if(!app.isAuthoritative() && app.getAfterProvisioningRule()==null && auditAfterProvisioningRule!=null)
+					{
+						LogEnablement.isLogDebugEnabled(logger,"Setting After Provisioning Rule Audit");
+						app.setAfterProvisioningRule(auditAfterProvisioningRule.getName());
+					}
+					if (app.isAuthoritative() && app.getCreationRule()==null && creationRuleJoiner!=null)
+					{
+						LogEnablement.isLogDebugEnabled(logger,"Set Creation Rule..");
+						app.setCreationRule(creationRuleJoiner);
+					}
+					//Enable Accelerator Pack Property
+					app.setAttribute("acceleratorPackEnabled", "TRUE");
+					if(correlationRule!=null)
+					{
+						context.decache(correlationRule);
+					}
+					if(customizationRule!=null)
+					{
+						context.decache(customizationRule);
+					}
+					if(managedAttributeCustomizationRule!=null)
+					{
+						context.decache(managedAttributeCustomizationRule);
+					}
+					if(afterProvisioningRule!=null)
+					{
+						context.decache(afterProvisioningRule);
+					}
+					if(auditAfterProvisioningRule!=null)
+					{
+						context.decache(auditAfterProvisioningRule);
+					}
+					if(creationRuleJoiner!=null)
+					{
+						context.decache(creationRuleJoiner);
+					}
+					context.saveObject(app);
+				}
+			}
+			context.decache(formRoad);
+		}
+		LogEnablement.isLogDebugEnabled(logger,"End saveApplication");
+	}
+	/**
+	 * Add Service Account Details to Section Attributes
+	 * @param sectionAttrs
+	 * @throws GeneralException
+	 */
+	public void addServiceAccountEmailInfo(Attributes sectionAttrs) throws GeneralException
+	{
+		LogEnablement.isLogDebugEnabled(logger,"Enter addServiceAccountEmailInfo");
+		if(sectionAttrs!=null)
+		{
+			sectionAttrs.put("hideServiceAccountInfo","true");
+			String createServiceCubes=null;
+			Map entryObj = ROADUtil.getCustomGlobalMap(context);
+			if (entryObj == null) 
+			{
+				LogEnablement.isLogErrorEnabled(logger,"Not defined in Custom-Framework-Common-Settings Custom object.");
+			} 
+			else 
+			{
+				createServiceCubes = entryObj.get("createServiceCubes").toString(); 
+				if(createServiceCubes!=null && createServiceCubes.equalsIgnoreCase("TRUE"))
+				{     
+					sectionAttrs.put("hideServiceAccountInfo","false");
+				}
+				if ( entryObj.containsKey("additionalPasswordEmail") && ((String)entryObj.get("additionalPasswordEmail")).equalsIgnoreCase("TRUE"))
+				{
+					sectionAttrs.put("additionalPasswordEmail","false");
+				}
+				else
+				{
+					sectionAttrs.put("additionalPasswordEmail","true");
+				}
+			}
+		}
+		LogEnablement.isLogDebugEnabled(logger,"Exit addServiceAccountEmailInfo: ");
+	}
+	/**
+	 * Add Application Details To Section Attributes
+	 * @param sectionAttrs
+	 * @param appName
+	 * @throws Exception
+	 */
+	public void addConnectorDetailsToSectionAttributes(Attributes sectionAttrs, String appName)throws Exception
+	{
+		LogEnablement.isLogDebugEnabled(logger,"Enter addConnectorDetailsToSectionAttributes..");
+		List masterList = new ArrayList();
+		if(appName!=null && sectionAttrs!=null)
+		{
+			Application app = context.getObjectByName(Application.class, appName);
+			if(app!=null)
+			{
+				boolean isAuth=app.isAuthoritative();
+				String personaEnabled=WrapperRuleLibrary.isPersonaEnabled(context);
+				String serviceAccountEnabled = ObjectConfigAttributesRuleLibrary.extendedAttrAuthServiceAccountEnabled(context);
+				if(serviceAccountEnabled!=null && serviceAccountEnabled.length()>0 && serviceAccountEnabled.equalsIgnoreCase("TRUE"))
+				{
+					sectionAttrs.put("roadAuthServiceAccount","false");
+				}
+				else
+				{
+					sectionAttrs.put("roadAuthServiceAccount","true");
+				}
+				if(personaEnabled!=null && personaEnabled.equalsIgnoreCase("TRUE"))
+				{
+					sectionAttrs.put("roadPersona","false");
+				}
+				else
+				{
+					sectionAttrs.put("roadPersona","true");
+				}
+				String authoritativeNonEmployee=ObjectConfigAttributesRuleLibrary.extendedAttrAuthNonEmployeeEnabled(context);
+				if(authoritativeNonEmployee!=null && authoritativeNonEmployee.length()>0 && authoritativeNonEmployee.equalsIgnoreCase("TRUE"))
+				{
+					sectionAttrs.put("roadauthoritativeNonEmployee","false");
+				}
+				else
+				{
+					sectionAttrs.put("roadauthoritativeNonEmployee","true");
+				}
+				String authoritativeEmployee=ObjectConfigAttributesRuleLibrary.extendedAttrAuthEmployeeEnabled(context);
+				if(authoritativeEmployee!=null && authoritativeEmployee.length()>0 && authoritativeEmployee.equalsIgnoreCase("TRUE"))
+				{
+					sectionAttrs.put("roadauthoritativeEmployee","false");
+				}
+				else
+				{
+					sectionAttrs.put("roadauthoritativeEmployee","true");
+				}
+				if(isAuth)
+				{
+					sectionAttrs.put("roadAuthoritative","false");
+				}
+				else
+				{
+					sectionAttrs.put("roadAuthoritative","true");
+				}
+				String connectorName=app.getConnector();
+				Class className=null;
+				String simpleName=null;
+				String canonicalName=null;
+				if(connectorName!=null)
+				{
+					className = Class.forName(connectorName);
+					if(className!=null && className.toString()!=null)
+					{
+						simpleName=className.getSimpleName();
+						canonicalName=className.getCanonicalName();
+					}
+				}
+				//Removed !matchFound || acctAggregationStart==null || accountAggregationEnd==null as per RAPIDDEV-172 
+				if(app.isAuthoritative())
+				{
+					//Hide All Features
+					sectionAttrs.put("roadJoiner","true");
+					sectionAttrs.put("roadLeaver","true");
+					sectionAttrs.put("roadMover","true");
+					sectionAttrs.put("roadNativeChange","true");
+					sectionAttrs.put("roadPSA","true");
+					sectionAttrs.put("roadPassword","true");
+					sectionAttrs.put("roadPolicyViolation","true");
+					sectionAttrs.put("roadSSO","true");
+					sectionAttrs.put("roadTicketintegration","true");
+					sectionAttrs.put("roadProvisioning","true");
+					sectionAttrs.put("roadCartRequest","true");
+				}
+				//Let's see if Trigger and Extended Attributes Enabled
+				String joinDisabled=ROADUtil.roadFeatureDisabledString(context,"JOINER FEATURE");
+				if(joinDisabled!=null && joinDisabled.length()>0 && joinDisabled.equalsIgnoreCase("TRUE"))
+				{
+					sectionAttrs.put("roadJoiner","true");
+				}
+				String leaverDisabled=ROADUtil.roadFeatureDisabledString(context,"LEAVER FEATURE");
+				if(leaverDisabled!=null && leaverDisabled.length()>0 && leaverDisabled.equalsIgnoreCase("TRUE"))
+				{
+					sectionAttrs.put("roadLeaver","true");
+				}
+				String moverDisabled=ROADUtil.roadFeatureDisabledString(context,"MOVER FEATURE");
+				if(moverDisabled!=null && moverDisabled.length()>0 && moverDisabled.equalsIgnoreCase("TRUE"))
+				{
+					sectionAttrs.put("roadMover","true");
+				}
+				String ncDisabled=ROADUtil.roadFeatureDisabledString(context,"NATIVE CHANGE DETECTION FEATURE");
+				if(ncDisabled!=null && ncDisabled.length()>0 && ncDisabled.equalsIgnoreCase("TRUE"))
+				{
+					sectionAttrs.put("roadNativeChange","true");
+				}
+				String asDisabled=ROADUtil.roadFeatureDisabledString(context,"ATTRIBUTE SYNCHRONIZATION FEATURE");
+				if(asDisabled!=null && asDisabled.length()>0 && asDisabled.equalsIgnoreCase("TRUE"))
+				{
+					sectionAttrs.put("roadAttrSync","true");
+				}
+				String privNotEnabled=ObjectConfigAttributesRuleLibrary.extendedPrivPwdExpEnabled(context);
+				if(privNotEnabled==null || privNotEnabled.length()<=0 || privNotEnabled.equalsIgnoreCase("FALSE"))
+				{
+					sectionAttrs.put("roadPSA","true");
+				}
+				String passwordSyncEnabled=ObjectConfigAttributesRuleLibrary.extendedAttrPasswordSyncEnabled(context);
+				if(passwordSyncEnabled==null || passwordSyncEnabled.length()<=0 || passwordSyncEnabled.equalsIgnoreCase("FALSE"))
+				{
+					sectionAttrs.put("roadPassword","true");
+				}
+				String entDepEnabled=ObjectConfigAttributesRuleLibrary.extendedAttrEntitlementDependencyEnabled(context);
+				if(entDepEnabled==null || entDepEnabled.length()<=0 || entDepEnabled.equalsIgnoreCase("FALSE"))
+				{
+					sectionAttrs.put("roadSSO","true");
+				}
+				String aggEnabled=ObjectConfigAttributesRuleLibrary.extendedAttrAggregationEnabled(context);
+				if(aggEnabled==null || aggEnabled.length()<=0 || aggEnabled.equalsIgnoreCase("FALSE"))
+				{
+					sectionAttrs.put("roadAggregation","true");
+				}
+				String softPolicyEnabled=ObjectConfigAttributesRuleLibrary.extendedAttrSoftPolicyEnabled(context);
+				String hardPolicyEnabled=ObjectConfigAttributesRuleLibrary.extendedAttrSoftPolicyEnabled(context);
+				if(softPolicyEnabled==null || softPolicyEnabled.length()<=0 || softPolicyEnabled.equalsIgnoreCase("FALSE")
+						||hardPolicyEnabled==null || hardPolicyEnabled.length()<=0 || hardPolicyEnabled.equalsIgnoreCase("FALSE"))
+				{
+					sectionAttrs.put("roadPolicyViolation","true");
+				}
+				String approverLevelOneDisabled=ROADUtil.roadAttributeDisabled(context, "Application", "appBusApprovers");
+				String approverLevelTwoDisabled=ROADUtil.roadAttributeDisabled(context, "Application", "additionalAppBusApprovers");
+				if(approverLevelOneDisabled==null || approverLevelOneDisabled.length()<=0 || approverLevelOneDisabled.equalsIgnoreCase("TRUE") || approverLevelTwoDisabled==null || 
+						approverLevelTwoDisabled.length()<=0 ||approverLevelTwoDisabled.equalsIgnoreCase("TRUE"))
+				{
+					sectionAttrs.put("roadCartRequest","true");
+				}
+				List roadDefineProvisioningLockConnectors = new ArrayList();
+				List roadDefineProvisioningUnLockConnectors = new ArrayList();
+				List roadDefineProvisioningDisableConnectors = new ArrayList();
+				List roadDefineProvisioningEnableConnectors = new ArrayList();
+				List roadDefineProvisioningPasswordConnectors = new ArrayList();
+				if(sectionAttrs!=null && sectionAttrs.containsKey("roadDefineProvisioningLockConnectors"))
+				{
+					roadDefineProvisioningLockConnectors=sectionAttrs.get("roadDefineProvisioningLockConnectors");
+				}
+				if(sectionAttrs!=null && sectionAttrs.containsKey("roadDefineProvisioningUnLockConnectors"))
+				{
+					roadDefineProvisioningUnLockConnectors=sectionAttrs.get("roadDefineProvisioningUnLockConnectors");
+				}
+				if(sectionAttrs!=null && sectionAttrs.containsKey("roadDefineProvisioningDisableConnectors"))
+				{
+					roadDefineProvisioningDisableConnectors=sectionAttrs.get("roadDefineProvisioningDisableConnectors");
+				}
+				if(sectionAttrs!=null && sectionAttrs.containsKey("roadDefineProvisioningEnableConnectors"))
+				{
+					roadDefineProvisioningEnableConnectors=sectionAttrs.get("roadDefineProvisioningEnableConnectors");
+				}
+				if(sectionAttrs!=null && sectionAttrs.containsKey("roadDefineProvisioningPasswordConnectors"))
+				{
+					roadDefineProvisioningPasswordConnectors=sectionAttrs.get("roadDefineProvisioningPasswordConnectors");
+				}
+				if(connectorName!=null)
+				{
+					if(simpleName!=null && simpleName.toString()!=null)
+					{
+						sectionAttrs.put("roadConnectorName",simpleName);
+					}
+					if(simpleName!=null && simpleName.toString()!=null && roadDefineProvisioningLockConnectors!=null && roadDefineProvisioningLockConnectors instanceof List &&
+							roadDefineProvisioningLockConnectors.size()>0
+							&& roadDefineProvisioningLockConnectors.contains(simpleName))
+					{
+						sectionAttrs.put("roadShowLDAPLockConnectorOptions","LDAPLockOptions");
+					}
+					if(simpleName!=null && simpleName.toString()!=null && roadDefineProvisioningUnLockConnectors!=null && roadDefineProvisioningUnLockConnectors instanceof List &&
+							roadDefineProvisioningUnLockConnectors.size()>0
+							&& roadDefineProvisioningUnLockConnectors.contains(simpleName.toString()))
+					{
+						sectionAttrs.put("roadShowLDAPUnLockConnectorOptions","LDAPUnLockOptions");
+					}
+					if(simpleName!=null && simpleName.toString()!=null && roadDefineProvisioningDisableConnectors!=null && roadDefineProvisioningDisableConnectors instanceof List &&
+							roadDefineProvisioningDisableConnectors.size()>0
+							&& roadDefineProvisioningDisableConnectors.contains(simpleName.toString()))
+					{
+						sectionAttrs.put("roadShowLDAPDisableConnectorOptions","LDAPDisableOptions");
+					}
+					if(simpleName!=null && simpleName.toString()!=null && roadDefineProvisioningEnableConnectors!=null && roadDefineProvisioningEnableConnectors instanceof List &&
+							roadDefineProvisioningEnableConnectors.size()>0
+							&& roadDefineProvisioningEnableConnectors.contains(simpleName.toString()))
+					{
+						sectionAttrs.put("roadShowLDAPEnableConnectorOptions","LDAPEnableOptions");
+					}
+					if(simpleName!=null && simpleName.toString()!=null && roadDefineProvisioningPasswordConnectors!=null && roadDefineProvisioningPasswordConnectors instanceof List &&
+							roadDefineProvisioningPasswordConnectors.size()>0
+							&& roadDefineProvisioningPasswordConnectors.contains(simpleName.toString()))
+					{
+						sectionAttrs.put("roadShowLDAPPasswordConnectorOptions","LDAPPasswordOptions");
+					}
+				}
+				String mitigationExpirationDisabled=ROADUtil.roadFeatureDisabledString(context,"MANAGER CERTIFICATION ALLOW EXCEPTION FEATURE");
+				if(mitigationExpirationDisabled!=null && mitigationExpirationDisabled.length()>0 && mitigationExpirationDisabled.equalsIgnoreCase("FALSE"))
+				{
+					sectionAttrs.put("roadMitigation","false");
+				}
+				else
+				{
+					sectionAttrs.put("roadMitigation","true");
+				}
+				String leaverLoaDisabled=ROADUtil.roadFeatureDisabledString(context,"LEAVER LOA FEATURE");
+				if(leaverLoaDisabled!=null && leaverLoaDisabled.length()>0 && leaverLoaDisabled.equalsIgnoreCase("FALSE"))
+				{
+					sectionAttrs.put("roadLeaverLOA","false");
+				}
+				else
+				{
+					sectionAttrs.put("roadLeaverLOA","true");
+				}
+				String leaverLtdDisabled=ROADUtil.roadFeatureDisabledString(context,"LEAVER LTD FEATURE");
+				if(leaverLtdDisabled!=null && leaverLtdDisabled.length()>0 && leaverLtdDisabled.equalsIgnoreCase("FALSE"))
+				{
+					sectionAttrs.put("roadLeaverLTD","false");
+				}
+				else
+				{
+					sectionAttrs.put("roadLeaverLTD","true");
+				}
+				String joinerRehireDisabled=ROADUtil.roadFeatureDisabledString(context,"JOINER REHIRE FEATURE");
+				if(joinerRehireDisabled!=null && joinerRehireDisabled.length()>0 && joinerRehireDisabled.equalsIgnoreCase("FALSE"))
+				{
+					sectionAttrs.put("roadJoinerRehire","false");
+				}
+				else
+				{
+					sectionAttrs.put("roadJoinerRehire","true");
+				}
+				String joinerRtwLtdDisabled=ROADUtil.roadFeatureDisabledString(context,"JOINER LTD FEATURE");
+				if(joinerRtwLtdDisabled!=null && joinerRtwLtdDisabled.length()>0 && joinerRtwLtdDisabled.equalsIgnoreCase("FALSE"))
+				{
+					sectionAttrs.put("roadJoinerLTD","false");
+				}
+				else
+				{
+					sectionAttrs.put("roadJoinerLTD","true");
+				}
+				String joinerRtwLoaDisabled=ROADUtil.roadFeatureDisabledString(context,"JOINER LOA FEATURE");
+				if(joinerRtwLoaDisabled!=null && joinerRtwLoaDisabled.length()>0 && joinerRtwLoaDisabled.equalsIgnoreCase("FALSE"))
+				{
+					sectionAttrs.put("roadJoinerLOA","false");
+				}
+				else
+				{
+					sectionAttrs.put("roadJoinerLOA","true");
+				}
+				String joinerRtwreverLeaverDisabled=ROADUtil.roadFeatureDisabledString(context,"REVERSE LEAVER FEATURE");
+				if(joinerRtwreverLeaverDisabled!=null && joinerRtwreverLeaverDisabled.length()>0 && joinerRtwreverLeaverDisabled.equalsIgnoreCase("FALSE"))
+				{
+					sectionAttrs.put("roadLeaverReverse","false");
+				}
+				else
+				{
+					sectionAttrs.put("roadLeaverReverse","true");
+				}
+				String businessAppEnabled=ObjectConfigAttributesRuleLibrary.extendedAttrBusAppEnabled(context);
+				if(businessAppEnabled!=null && businessAppEnabled.length()>0 && businessAppEnabled.equalsIgnoreCase("TRUE"))
+				{
+					if(isAuth)
+						sectionAttrs.put("roadBusApp","true");
+					else
+						sectionAttrs.put("roadBusApp","false");
+				}
+				else
+				{
+					sectionAttrs.put("roadBusApp","true");
+				}
+				String joinerBirthrightDisabled=ObjectConfigAttributesRuleLibrary.extendedAttrJoinerBirthrightAppDisabled(context);
+				if(joinerBirthrightDisabled!=null && joinerBirthrightDisabled.length()>0 && joinerBirthrightDisabled.equalsIgnoreCase("FALSE"))
+				{
+					if(isAuth)
+						sectionAttrs.put("roadisBirthright","true");
+					else
+						sectionAttrs.put("roadisBirthright","false");
+				}
+				String privilegedAccessEnabled=ObjectConfigAttributesRuleLibrary.extendedAttrPrivilegedAppEnabled(context);
+				if(privilegedAccessEnabled!=null && privilegedAccessEnabled.length()>0 && privilegedAccessEnabled.equalsIgnoreCase("TRUE"))
+				{
+					if(isAuth)
+						sectionAttrs.put("roadPrivilegedAccount","true");
+					else
+						sectionAttrs.put("roadPrivilegedAccount","false");
+				}
+				else
+				{
+					sectionAttrs.put("roadPrivilegedAccount","true");
+				}
+				String omitmanagerPrivgaccess=ObjectConfigAttributesRuleLibrary.extendedAttrSkipManagerApprovalPrivelegedEnabled(context);
+				if(omitmanagerPrivgaccess!=null && omitmanagerPrivgaccess.length()>0 && omitmanagerPrivgaccess.equalsIgnoreCase("TRUE"))
+				{
+					sectionAttrs.put("roadomitmanagerPrivgaccess","false");
+				}
+				else
+				{
+					sectionAttrs.put("roadomitmanagerPrivgaccess","true");
+				}
+				String enablepsaValidation=ObjectConfigAttributesRuleLibrary.extendedAttrPrivAccValEnabled(context);
+				if(enablepsaValidation!=null && enablepsaValidation.length()>0 && enablepsaValidation.equalsIgnoreCase("TRUE"))
+				{
+					sectionAttrs.put("roadenablepsaValidation","false");
+				}
+				else
+				{
+					sectionAttrs.put("roadenablepsaValidation","true");
+				}
+				String privilegedEntAttrExpression=ObjectConfigAttributesRuleLibrary.extendedAggrPrivEntEnabled(context);
+				if(privilegedEntAttrExpression!=null && privilegedEntAttrExpression.length()>0 && privilegedEntAttrExpression.equalsIgnoreCase("TRUE"))
+				{
+					if(isAuth)
+						sectionAttrs.put("roadprivilegedEntAttrExpression","true");
+					else
+						sectionAttrs.put("roadprivilegedEntAttrExpression","false");
+				}
+				else
+				{
+					sectionAttrs.put("roadprivilegedEntAttrExpression","true");
+				}
+				String privilegedAccountAttrExpression=ObjectConfigAttributesRuleLibrary.extendedAggrPrivAcctEnabled(context);
+				if(privilegedAccountAttrExpression!=null && privilegedAccountAttrExpression.length()>0 && privilegedAccountAttrExpression.equalsIgnoreCase("TRUE"))
+				{
+					if(isAuth)
+						sectionAttrs.put("roadprivilegedAccountAttrExpression","true");
+					else
+						sectionAttrs.put("roadprivilegedAccountAttrExpression","false");
+				}
+				else
+				{
+					sectionAttrs.put("roadprivilegedAccountAttrExpression","true");
+				}
+				String serviceAccountAttrExpression=ObjectConfigAttributesRuleLibrary.extendedAttrServiceAccountExpressEnabled(context);
+				if(serviceAccountAttrExpression!=null && serviceAccountAttrExpression.length()>0 && serviceAccountAttrExpression.equalsIgnoreCase("TRUE"))
+				{
+					if(isAuth)
+						sectionAttrs.put("roadserviceAccountAttrExpression","true");
+					else
+						sectionAttrs.put("roadserviceAccountAttrExpression","false");
+				}
+				else
+				{
+					sectionAttrs.put("roadserviceAccountAttrExpression","true");
+				}
+				String serviceAccountCubeAttrName=ObjectConfigAttributesRuleLibrary.extendedAttrServiceAccountCubeNameAttrEnabled(context);
+				if(serviceAccountCubeAttrName!=null && serviceAccountCubeAttrName.length()>0 && serviceAccountCubeAttrName.equalsIgnoreCase("TRUE"))
+				{
+				    if(isAuth)
+						sectionAttrs.put("roadserviceAccountCubeAttrName","true");
+					else
+						sectionAttrs.put("roadserviceAccountCubeAttrName","false");
+				}
+				else
+				{
+					sectionAttrs.put("roadserviceAccountCubeAttrName","true");
+				}
+				String serviceAccountAppendAppName=ObjectConfigAttributesRuleLibrary.extendedAttrServiceAccountAppendAppNameAttrEnabled(context);
+				if(serviceAccountAppendAppName!=null && serviceAccountAppendAppName.length()>0 && serviceAccountAppendAppName.equalsIgnoreCase("TRUE"))
+				{
+					if(isAuth)
+						sectionAttrs.put("roadserviceAccountAppendAppName","true");
+					else
+						sectionAttrs.put("roadserviceAccountAppendAppName","false");
+				}
+				else
+				{
+					sectionAttrs.put("roadserviceAccountAppendAppName","true");
+				}
+				String beforemoverPrimaryaccount=ObjectConfigAttributesRuleLibrary.extendedAttrBefMoverPrimAcctEnabled(context);
+				if(beforemoverPrimaryaccount!=null && beforemoverPrimaryaccount.length()>0 && beforemoverPrimaryaccount.equalsIgnoreCase("TRUE"))
+				{
+					sectionAttrs.put("roadbeforemoverPrimaryaccount","false");
+				}
+				else
+				{
+					sectionAttrs.put("roadbeforemoverPrimaryaccount","true");
+				}
+				String primarySyncaccounts=ObjectConfigAttributesRuleLibrary.extendedAttrSyncPrimaryAcctEnabled(context);
+				if(primarySyncaccounts!=null && primarySyncaccounts.length()>0 && primarySyncaccounts.equalsIgnoreCase("TRUE"))
+				{
+					sectionAttrs.put("roadprimarySyncaccounts","false");
+				}
+				else
+				{
+					sectionAttrs.put("roadprimarySyncaccounts","true");
+				}
+				String primarypasswordSyncaccounts=ObjectConfigAttributesRuleLibrary.extendedAttrPasswordSyncPrimaryAcctEnabled(context);
+				if(primarypasswordSyncaccounts!=null && primarypasswordSyncaccounts.length()>0 && primarypasswordSyncaccounts.equalsIgnoreCase("TRUE"))
+				{
+					sectionAttrs.put("roadprimarypasswordSyncaccounts","false");
+				}
+				else
+				{
+					sectionAttrs.put("roadprimarypasswordSyncaccounts","true");
+				}
+				String rehirePrimaryaccount=ObjectConfigAttributesRuleLibrary.extendedAttrJoinerRehirePrimAcctEnabled(context);
+				if(rehirePrimaryaccount!=null && rehirePrimaryaccount.length()>0 && rehirePrimaryaccount.equalsIgnoreCase("TRUE"))
+				{
+					sectionAttrs.put("roadrehirePrimaryaccount","false");
+				}
+				else
+				{
+					sectionAttrs.put("roadrehirePrimaryaccount","true");
+				}
+				String enablepswexpNotification=ObjectConfigAttributesRuleLibrary.extendedPrivPwdExpEnabled(context);
+				if(enablepswexpNotification!=null && enablepswexpNotification.length()>0 && enablepswexpNotification.equalsIgnoreCase("TRUE"))
+				{
+					sectionAttrs.put("roadenablepswexpNotification","false");
+				}
+				else
+				{
+					sectionAttrs.put("roadenablepswexpNotification","true");
+				}
+				if(serviceAccountEnabled!=null && serviceAccountEnabled.length()>0 && serviceAccountEnabled.equalsIgnoreCase("TRUE"))
+				{
+					if(isAuth)
+						sectionAttrs.put("roadServiceAccount","true");
+					else
+						sectionAttrs.put("roadServiceAccount","false");
+				}
+				else
+				{
+					sectionAttrs.put("roadServiceAccount","true");
+				}
+				context.decache(app);
+			}
+		}
+		LogEnablement.isLogDebugEnabled(logger,"Exit addConnectorDetailsToSectionAttributes = "+sectionAttrs);
+		LogEnablement.isLogDebugEnabled(logger,"Exit addConnectorDetailsToSectionAttributes = ");
+	}
+	/**
+	 *  Get List of LDAP Operations
+	 * @return
+	 * @throws Exception
+	 */
+	public List getListLDAPOperations () throws Exception 
+	{
+		LogEnablement.isLogDebugEnabled(logger,"Enter getListLDAPOperations..");
+		List masterList = new ArrayList();
+		List displayList = new ArrayList();
+		masterList.add("add");
+		masterList.add("ADD");
+		displayList.add(masterList);
+		masterList = new ArrayList();
+		masterList.add("replace");
+		masterList.add("REPLACE");
+		displayList.add(masterList);
+		masterList = new ArrayList();
+		masterList.add("delete");
+		masterList.add("DELETE");
+		displayList.add(masterList);
+		LogEnablement.isLogDebugEnabled(logger,"Exit getListLDAPOperations = ");
+		return displayList;
+	}
+	/**
+	 * Get Application Schema Object Type Attributes
+	 * @param appName
+	 * @return
+	 * @throws Exception
+	 */
+	public List getApplicationSchemaObjectTypesAttributes (String appName) throws Exception 
+	{
+		LogEnablement.isLogDebugEnabled(logger,"Enter getApplicationSchemaAttributes..");
+		List masterList = new ArrayList();
+		if(appName!=null)
+		{
+			Application app = context.getObjectByName(Application.class, appName);
+			if(app!=null)
+			{
+				if(app.getConnector().contains("LoopbackConnector"))
+				{
+					masterList.add("workgroups.name");
+					masterList.add("capabilities.name");
+				}
+				else
+				{
+					List objectTypeSchemas=app.getGroupSchemas();
+					if(objectTypeSchemas!=null && objectTypeSchemas.size()>0)
+					{
+						for(Schema schema:objectTypeSchemas)
+						{
+							String type=schema.getObjectType();
+							if(type==null || type.length()<=0)
+							{
+								type="group";
+							}
+							List attrNames= schema.getAttributeNames();
+							String nativeIdentifier=schema.getIdentityAttribute();
+							if(nativeIdentifier!=null)
+							{
+								masterList.add(type+"."+nativeIdentifier);
+							}
+							if(attrNames!=null && attrNames.size()>0)
+							{
+								for(String attrName:attrNames)
+								{
+									masterList.add(type+"."+attrName);
+								}
+							}
+							Util.removeDuplicates(masterList);
+						}
+					}
+				}
+				context.decache(app);
+			}
+		}
+		LogEnablement.isLogDebugEnabled(logger,"Exit getApplicationSchemaAttributes = ");
+		return masterList;
+	}
+	/**
+	 * Get Application Schema Attributes
+	 * @param appName
+	 * @return
+	 * @throws Exception
+	 */
+	public List getApplicationSchemaAttributes (String appName) throws Exception 
+	{
+		LogEnablement.isLogDebugEnabled(logger,"Enter getApplicationSchemaAttributes..");
+		List masterList = new ArrayList();
+		if(appName!=null)
+		{
+			Application app = context.getObjectByName(Application.class, appName);
+			if(app!=null)
+			{
+				Schema schema = app.getAccountSchema();
+				if(schema!=null)
+				{
+					masterList=schema.getAttributeNames();
+				}
+				context.decache(app);
+			}
+		}
+		LogEnablement.isLogDebugEnabled(logger,"Exit getApplicationSchemaAttributes = ");
+		return masterList;
+	}
+	/**
+	 * Get List Of String Operations
+	 * @return
+	 */
+	public List identificationOperations()
+	{
+		List operationsList = new ArrayList();
+		List displayList = new ArrayList();
+		displayList.add("STARTSWITH");
+		displayList.add("STARTS WITH");
+		operationsList.add(displayList);
+		displayList = new ArrayList();
+		displayList.add("ENDSWITH");
+		displayList.add("ENDS WITH");
+		operationsList.add(displayList);
+		displayList = new ArrayList();
+		displayList.add("CONTAINS");
+		displayList.add("CONTAINS");
+		operationsList.add(displayList);
+		displayList = new ArrayList();
+		displayList.add("EQUALS");
+		displayList.add("EQUALS");
+		operationsList.add(displayList);
+		return operationsList;
+	}
+	/**
+	 * Get Object Config Attribute Display Names
+	 * @return
+	 * @throws Exception
+	 */
+	public List getIdentityAttributeNameList() throws Exception 
+	{
+		LogEnablement.isLogDebugEnabled(logger,"Enter getIdentityAttributeNameList ");
+		List result= ROADUtil.getCubeAttributesList(context,false,true,false,false);
+		LogEnablement.isLogDebugEnabled(logger,"End getIdentityAttributeNameList ");
+		return result;
+	}
+	/**
+	 * Save Attribute Sync Mappings
+	 * @param roadModel
+	 * @param roadApplicationselect
+	 * @param appName
+	 * @param attrSyncKeys
+	 */
+	public void saveAttributeSyncMappings(HashMap roadModel, String roadApplicationselect, String appName, List attrSyncKeys)
+	{
+		LogEnablement.isLogDebugEnabled(logger,"Start saveAttributeSyncMappings");
+		//SAVE ATTRIBUTE SYNC MAPPINGS
+		List attrSyncSubscriptionList = new ArrayList();
+		Custom customAttrSync = ObjectUtil.transactionLock(context,Custom.class, "Custom-FrameworkAttributeSyncMapping");
+		if(customAttrSync!=null)
+		{
+			Attributes attributeSyncAttrs  = customAttrSync.getAttributes();
+			if(attributeSyncAttrs==null)
+			{
+				attributeSyncAttrs= new Attributes();
+				customAttrSync.setAttributes(attributeSyncAttrs);
+			}
+			for (Map.Entry entry : roadModel.entrySet()) 
+			{
+				if(attrSyncKeys!=null  && attrSyncKeys.contains(entry.getKey()))
+				{
+					attrSyncSubscriptionList=entry.getValue();
+				}
+			}
+			List targetAttrs = new ArrayList();
+			List sourceAttrs = new ArrayList();
+			//START COLLECT SOURCE AND TARGET ATTRIBUTES
+			if(attrSyncSubscriptionList!=null && attrSyncSubscriptionList.size()>0)
+			{
+				for (String attrSourceTarget:attrSyncSubscriptionList)
+				{
+					if(attrSourceTarget!=null && attrSourceTarget.contains(":"))
+					{
+						String[] attrSourceTargetArr = attrSourceTarget.split(":");
+						if(attrSourceTargetArr!=null && attrSourceTargetArr.length==2)
+						{
+							String source = attrSourceTargetArr[0];
+							String target = attrSourceTargetArr[1];
+							if(target!=null && target.length()>0)
+							{
+								targetAttrs.add(target);
+							}
+							if(source!=null && source.length()>0)
+							{
+								sourceAttrs.add(source);
+							}
+						}
+					}
+				}
+			}
+			//END COLLECT SOURCE AND TARGET ATTRIBUTES
+			//REMOVE MAPPING LOGIC START COLLECT KEYS
+			List removalKeys = new ArrayList();
+			if(attributeSyncAttrs!=null)
+			{
+				for (Map.Entry entry : attributeSyncAttrs.entrySet()) 
+				{
+					String key=entry.getKey();
+					Object value =entry.getValue();
+					if(value!=null && value instanceof List)
+					{
+						List existingList =(List)value;
+						if(existingList!=null && existingList.size()>0)
+						{ 
+							for (String existingMapping:existingList)
+							{
+								if(existingMapping!=null && existingMapping.contains(":"))
+								{
+									String[] existingMappingArr = existingMapping.split(":");
+									if(existingMappingArr!=null && existingMappingArr.length==2)
+									{
+										String appSource = existingMappingArr[0];
+										String existingTarget = existingMappingArr[1];
+										if(appSource!=null &&  appName!=null && appSource.equalsIgnoreCase(appName))
+										{
+											if(existingTarget!=null && targetAttrs!=null && !targetAttrs.contains(existingTarget))
+											{
+												//App Name + Target
+												removalKeys.add(appName+":"+existingTarget);
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+			//REMOVE MAPPING LOGIC END COLLECT KEYS
+			//START REMOVE MAPPINGS HERE
+			if(attributeSyncAttrs!=null)
+			{
+				for (Map.Entry entry : attributeSyncAttrs.entrySet()) 
+				{
+					String key=entry.getKey();
+					Object value =entry.getValue();
+					if(value!=null && value instanceof List)
+					{
+						List existingList =(List)value;
+						if(existingList!=null && existingList.size()>0)
+						{ 
+							if(removalKeys!=null && removalKeys.size()>0)
+							{
+								for (String removalKey:removalKeys)
+								{
+									if(existingList!=null && existingList.contains(removalKey))
+									{
+										existingList.remove(removalKey);
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+			//END REMOVE MAPPINGS HERE
+			//START ADD MAPPINGS
+			if(attrSyncSubscriptionList!=null && attrSyncSubscriptionList.size()>0)
+			{
+				for (String attrSourceTarget:attrSyncSubscriptionList)
+				{
+					if(attrSourceTarget!=null && attrSourceTarget.contains(":"))
+					{
+						String[] attrSourceTargetArr = attrSourceTarget.split(":");
+						if(attrSourceTargetArr!=null && attrSourceTargetArr.length==2)
+						{
+							String source = attrSourceTargetArr[0];
+							String target = attrSourceTargetArr[1];
+							if(appName!=null && source!=null && target!=null && source.length()>0 && target.length()>0 && attributeSyncAttrs!=null)
+							{
+								List sourceList = new ArrayList();
+								Object obj = attributeSyncAttrs.get(source);
+								if(obj==null)
+								{
+									LogEnablement.isLogDebugEnabled(logger,"Addition to Source/Target Mappings....");
+									sourceList.add(appName+":"+target);
+									attributeSyncAttrs.put(source,sourceList);
+								}
+								else if(obj instanceof List)
+								{
+									List objList= (List)obj;
+									if(!objList.contains(appName+":"+target))
+									{
+										LogEnablement.isLogDebugEnabled(logger,"Modification to Source/Target Mappings....");
+										objList.add(appName+":"+target);
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+			//END ADD MAPPINGS
+			context.saveObject(customAttrSync);
+		}
+		LogEnablement.isLogDebugEnabled(logger,"End saveAttributeSyncMappings");
+	}
+	/**
+	 * Save Joiner and Rehire Email Instructions
+	 * @param roadModel
+	 * @param roadApplicationselect
+	 * @param appName
+	 * @param emailKeys
+	 */
+	public void saveEmailMappings(HashMap roadModel, String roadApplicationselect, String appName, List emailKeys)
+	{
+		LogEnablement.isLogDebugEnabled(logger,"Start saveEmailMappings");
+		String valuejoinerVelocityText=null;
+		String valuejoinerPasswordVelocityText=null;
+		String valuejoinerRehireVelocityText=null;
+		String valuejoinerRehirePasswordVelocityText=null;
+		for (Map.Entry entry : roadModel.entrySet()) 
+		{
+			if(emailKeys!=null  && emailKeys.contains(entry.getKey()))
+			{
+				if(((String)entry.getKey()).equalsIgnoreCase("joinerVelocityText"))
+				{
+					valuejoinerVelocityText=entry.getValue();
+				}
+				if(((String)entry.getKey()).equalsIgnoreCase("joinerPasswordVelocityText"))
+				{
+					valuejoinerPasswordVelocityText=entry.getValue();
+					valuejoinerPasswordVelocityText=SelfServiceRuleLibrary.appendPasswordtoRehireJoinerEmails(context,valuejoinerPasswordVelocityText,appName);
+					//Add Password to the Text
+				}
+				if(((String)entry.getKey()).equalsIgnoreCase("joinerRehireVelocityText"))
+				{
+					valuejoinerRehireVelocityText=entry.getValue();
+				}
+				if(((String)entry.getKey()).equalsIgnoreCase("joinerRehirePasswordVelocityText"))
+				{
+					valuejoinerRehirePasswordVelocityText=entry.getValue();
+					//Add Password to the Text
+					valuejoinerRehirePasswordVelocityText=SelfServiceRuleLibrary.appendPasswordtoRehireJoinerEmails(context,valuejoinerRehirePasswordVelocityText,appName);
+				}
+			}
+		}
+		Custom customEmail =ObjectUtil.transactionLock(context,Custom.class,"Custom-Framework-EmailTextMapping");
+		Map entryObj = ROADUtil.getCustomGlobalMap(context);
+		String joinerRehireTemplateName=null;
+		String joinerRehirePasswordTemplateName=null;
+		if (entryObj != null && entryObj.containsKey("JoinerManager")) 
+		{
+			joinerRehireTemplateName=entryObj.get("JoinerManager");
+		}
+		if (entryObj != null && entryObj.containsKey("PasswordJoinerManager")) 
+		{
+			joinerRehirePasswordTemplateName=entryObj.get("PasswordJoinerManager");
+		}
+		LogEnablement.isLogDebugEnabled(logger,"joinerRehireTemplateName.."+joinerRehireTemplateName);
+		LogEnablement.isLogDebugEnabled(logger,"joinerRehirePasswordTemplateName.."+joinerRehirePasswordTemplateName);
+		Map requestTypeJoinerMap= new HashMap();
+		Map requestTypeRehireMap = new HashMap();
+		Map templateJoinerMap = new HashMap();
+		Map templatePasswordJoinerMap = new HashMap();
+		Map appJoinerMap = new HashMap();
+		Map appPasswordJoinerMap = new HashMap();
+		Map templateRehireMap = new HashMap();
+		Map templatePasswordRehireMap = new HashMap();
+		Map appRehireMap = new HashMap();
+		Map appPasswordRehireMap = new HashMap();
+		if(customEmail!=null)
+		{
+			Attributes emailAttrs  = customEmail.getAttributes();
+			if(emailAttrs==null)
+			{
+				emailAttrs= new Attributes();
+				customEmail.setAttributes(emailAttrs);
+				emailAttrs.put("JOINER FEATURE",requestTypeJoinerMap);
+				emailAttrs.put("JOINER REHIRE FEATURE",requestTypeRehireMap);
+			}
+			if(emailAttrs!=null && emailAttrs.containsKey("JOINER FEATURE"))
+			{
+				//JOINER
+				requestTypeJoinerMap=emailAttrs.get("JOINER FEATURE");
+				if(requestTypeJoinerMap==null)
+				{
+					requestTypeJoinerMap=new HashMap();
+					emailAttrs.put("JOINER FEATURE",requestTypeJoinerMap);
+				}
+				//MAKE SURE TEMPLATE EXISTS, IF NOT CREATE ONE
+				if(joinerRehireTemplateName!=null && requestTypeJoinerMap.containsKey(joinerRehireTemplateName))
+				{
+					//Template Defined
+					templateJoinerMap=requestTypeJoinerMap.get(joinerRehireTemplateName);
+				}
+				else if(joinerRehireTemplateName!=null)
+				{
+					requestTypeJoinerMap.put(joinerRehireTemplateName,templateJoinerMap);
+				}
+				if(joinerRehirePasswordTemplateName!=null && requestTypeJoinerMap.containsKey(joinerRehirePasswordTemplateName))
+				{
+					//Template Defined
+					templatePasswordJoinerMap=requestTypeJoinerMap.get(joinerRehirePasswordTemplateName);
+				}
+				else if (joinerRehirePasswordTemplateName!=null)
+				{
+					requestTypeJoinerMap.put(joinerRehirePasswordTemplateName,templatePasswordJoinerMap);
+				}
+				//MAKE SURE APP EXISTS, IF NOT CREATE ONE
+				if(templateJoinerMap==null && joinerRehireTemplateName!=null)
+				{
+					templateJoinerMap=new HashMap();
+					requestTypeJoinerMap.put(joinerRehireTemplateName,templateJoinerMap);
+				}
+				if(templateJoinerMap.containsKey(appName))
+				{
+					//App defined
+					appJoinerMap = templateJoinerMap.get(appName);
+				}
+				else
+				{
+					//There is no app defined for joiner
+					templateJoinerMap.put(appName,appJoinerMap);
+				}
+				if(joinerRehirePasswordTemplateName!=null && templatePasswordJoinerMap==null)
+				{
+					templatePasswordJoinerMap=new HashMap();
+					requestTypeJoinerMap.put(joinerRehirePasswordTemplateName,templatePasswordJoinerMap);
+				}
+				if(templatePasswordJoinerMap.containsKey(appName))
+				{
+					//App defined
+					appPasswordJoinerMap = templatePasswordJoinerMap.get(appName);
+				}
+				else
+				{
+					//There is no app defined for joiner password
+					templatePasswordJoinerMap.put(appName,appPasswordJoinerMap);
+				}
+				//Everything is defined
+				if(appJoinerMap==null)
+				{
+					appJoinerMap=new HashMap();
+					templateJoinerMap.put(appName,appJoinerMap);
+				}
+				if(appPasswordJoinerMap==null)
+				{
+					appPasswordJoinerMap=new HashMap();
+					templatePasswordJoinerMap.put(appName,appPasswordJoinerMap);
+				}
+				appJoinerMap.put("Create", valuejoinerVelocityText);
+				appPasswordJoinerMap.put("Create", valuejoinerPasswordVelocityText);
+			}
+			//REHIRE
+			if(emailAttrs!=null && emailAttrs.containsKey("JOINER REHIRE FEATURE"))
+			{
+				requestTypeRehireMap=emailAttrs.get("JOINER REHIRE FEATURE");
+				if(requestTypeRehireMap==null)
+				{
+					requestTypeRehireMap=new HashMap();
+					emailAttrs.put("JOINER REHIRE FEATURE",requestTypeRehireMap);
+				}
+				//MAKE SURE TEMPLATE EXISTS, IF NOT CREATE ONE
+				if(joinerRehireTemplateName!=null && requestTypeRehireMap.containsKey(joinerRehireTemplateName))
+				{
+					//Template Defined
+					templateRehireMap=requestTypeRehireMap.get(joinerRehireTemplateName);
+				}
+				else if(joinerRehireTemplateName!=null)
+				{
+					requestTypeRehireMap.put(joinerRehireTemplateName,templateRehireMap);
+				}
+				if(joinerRehirePasswordTemplateName!=null && requestTypeRehireMap.containsKey(joinerRehirePasswordTemplateName))
+				{
+					//Template Defined
+					templatePasswordRehireMap=requestTypeRehireMap.get(joinerRehirePasswordTemplateName);
+				}
+				else if(joinerRehirePasswordTemplateName!=null)
+				{
+					requestTypeRehireMap.put(joinerRehirePasswordTemplateName,templatePasswordRehireMap);
+				}
+				//MAKE SURE APP EXISTS, IF NOT CREATE ONE
+				if(templateRehireMap==null && joinerRehireTemplateName!=null)
+				{
+					templateRehireMap=new HashMap();
+					requestTypeRehireMap.put(joinerRehireTemplateName,templateRehireMap);
+				}
+				if(templateRehireMap.containsKey(appName))
+				{
+					//App defined
+					appRehireMap = templateRehireMap.get(appName);
+				}
+				else
+				{
+					//There is no app defined for rehire
+					templateRehireMap.put(appName,appRehireMap);
+				}
+				if(joinerRehirePasswordTemplateName!=null && templatePasswordRehireMap==null)
+				{
+					templatePasswordRehireMap=new HashMap();
+					requestTypeRehireMap.put(joinerRehirePasswordTemplateName,templatePasswordRehireMap);
+				}
+				if(templatePasswordRehireMap.containsKey(appName))
+				{
+					//App defined
+					appPasswordRehireMap = templatePasswordRehireMap.get(appName);
+				}
+				else
+				{
+					//There is no app defined for rehire password
+					templatePasswordRehireMap.put(appName,appPasswordRehireMap);
+				}
+				//Everything is defined
+				if(appRehireMap==null)
+				{
+					appRehireMap=new HashMap();
+					templateRehireMap.put(appName,appRehireMap);
+				}
+				if(appPasswordRehireMap==null)
+				{
+					appPasswordRehireMap=new HashMap();
+					templatePasswordRehireMap.put(appName,appPasswordRehireMap);
+				}
+				appRehireMap.put("Create", valuejoinerRehireVelocityText);
+				appRehireMap.put("Enable", valuejoinerRehireVelocityText);
+				appRehireMap.put("Unlock", valuejoinerRehireVelocityText);
+				appRehireMap.put("Modify", valuejoinerRehireVelocityText);
+				appPasswordRehireMap.put("Create", valuejoinerRehirePasswordVelocityText);
+				appPasswordRehireMap.put("Enable", valuejoinerRehirePasswordVelocityText);
+				appPasswordRehireMap.put("Unlock", valuejoinerRehirePasswordVelocityText);
+				appPasswordRehireMap.put("Modify", valuejoinerRehirePasswordVelocityText);
+			}
+			context.saveObject(customEmail);
+		}
+		LogEnablement.isLogDebugEnabled(logger,"End saveEmailMappings");
+	}
+	
+	]]></Source>
+</Rule>

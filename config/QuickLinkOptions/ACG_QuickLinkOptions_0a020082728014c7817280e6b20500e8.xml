@@ -1,0 +1,14 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE QuickLinkOptions PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<QuickLinkOptions allowOther="true">
+  <DynamicScopeRef>
+    <Reference class="sailpoint.object.DynamicScope" name="Manager"/>
+  </DynamicScopeRef>
+  <Attributes>
+    <Map>
+      <entry key="allowAccountOnlyRequests" value="false"/>
+      <entry key="allowManageAccountsAdditionalAccountRequests" value="false"/>
+      <entry key="allowManageExistingAccounts" value="true"/>
+    </Map>
+  </Attributes>
+</QuickLinkOptions>

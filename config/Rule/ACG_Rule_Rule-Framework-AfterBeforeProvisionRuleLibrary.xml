@@ -1,0 +1,527 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule-Framework-AfterBeforeProvisionRuleLibrary">
+  <Description>A rule used by a Workflow to determine a step action or variable value.
+	Note that an Attributes map of all variables from the current WorkflowContext,
+	merged with the arguments from the  Step, is also passed into the workflow rule .</Description>
+  <Signature returnType="Object">
+    <Inputs>
+      <Argument name="log">
+        <Description>
+          The log object associated with the SailPointContext.
+        </Description>
+      </Argument>
+      <Argument name="context">
+        <Description>
+          A sailpoint.api.SailPointContext object that can be used to query the database if necessary.
+        </Description>
+      </Argument>
+      <Argument name="wfcontext">
+        <Description>
+          The current WorkflowContext.
+        </Description>
+      </Argument>
+      <Argument name="handler">
+        <Description>
+          The workflow handler associated with the current WorkflowContext.
+        </Description>
+      </Argument>
+      <Argument name="workflow">
+        <Description>
+          The current Workflow definition.
+        </Description>
+      </Argument>
+      <Argument name="step">
+        <Description>
+          The current Step.
+        </Description>
+      </Argument>
+      <Argument name="approval">
+        <Description>
+          The current Approval.
+        </Description>
+      </Argument>
+      <Argument name="item">
+        <Description>
+          The WorkItem being processed.
+        </Description>
+      </Argument>
+    </Inputs>
+    <Returns>
+      <Argument name="Object">
+        <Description>
+          The result of the workflow rule; dependent on the rule itself.
+        </Description>
+      </Argument>
+    </Returns>
+  </Signature>
+  <Source><![CDATA[
+	
+		import java.util.ArrayList;
+		import java.util.Date;
+		import java.util.HashMap;
+		import java.util.List;
+		import java.util.Map;
+		import java.util.concurrent.TimeUnit;
+		import org.apache.commons.logging.Log;
+		import org.apache.commons.logging.LogFactory;
+		import sailpoint.api.RequestManager;
+		import sailpoint.api.SailPointContext;
+		import sailpoint.object.Application;
+		import sailpoint.object.Attributes;
+		import sailpoint.object.Bundle;
+		import sailpoint.object.Custom;
+		import sailpoint.object.Form;
+		import sailpoint.object.Identity;
+		import sailpoint.object.ProvisioningPlan;
+		import sailpoint.object.ProvisioningPlan.AccountRequest;
+		import sailpoint.object.ProvisioningPlan.AttributeRequest;
+		import sailpoint.object.ProvisioningProject;
+		import sailpoint.object.Request;
+		import sailpoint.object.ApprovalSet;
+		import sailpoint.object.RequestDefinition;
+		import sailpoint.object.Rule;
+		import sailpoint.object.Workflow;
+		import sailpoint.tools.GeneralException;
+		import sailpoint.tools.Util;	
+		import sailpoint.rapidapponboarding.rule.WrapperRuleLibrary;
+		import sailpoint.rapidapponboarding.rule.AuditRuleLibrary;
+		import sailpoint.rapidapponboarding.rule.ObjectConfigAttributesRuleLibrary;
+		import sailpoint.rapidapponboarding.rule.ROADUtil;
+		import sailpoint.rapidapponboarding.rule.JoinerRuleLibrary;
+		import sailpoint.rapidapponboarding.rule.WorkflowUtil;
+		import sailpoint.rapidapponboarding.logger.LogEnablement;
+		Log fwLogger = LogFactory.getLog("rapidapponboarding.rules");
+	/**
+     * Return true if the specified application has an extended attribute called
+     * displayFormRule, and this rule returns a map entry formRequired=true.
+     * Otherwise returns false
+     *
+     * @param appName
+     * @throws GeneralException 
+     */
+    public boolean isDisplayFormRequired(String appName) throws GeneralException 
+    {
+       boolean result=false;
+       LogEnablement.isLogDebugEnabled(fwLogger,"Start isDisplayFormRequired");
+        if (Util.isNotNullOrEmpty(appName)) 
+        {
+            Application requestedApp = context.getObjectByName(Application.class, appName);
+            if (requestedApp != null && requestedApp.getExtendedAttribute("displayFormRule") != null) 
+            {
+                String displayFormRuleName = (String) requestedApp.getExtendedAttribute("displayFormRule");
+                if(displayFormRuleName!=null && displayFormRuleName.length()>0)
+                {
+	                Rule displayFormRule = context.getObjectByName(Rule.class, displayFormRuleName);
+	                if (displayFormRule != null ) 
+	                {
+	                    Map returnValue = (Map) context.runRule(displayFormRule, null);
+	                    if (returnValue != null && returnValue.containsKey("formRequired")) 
+	                    {
+	                        String required = (String) returnValue.get("formRequired");
+	                        //If the formRequired key contains a value, parse it into a boolean
+	                        if (Util.isNotNullOrEmpty(required)) 
+	                        {
+	                            result= Boolean.parseBoolean(required);
+	                        } //Else, if the key contains no value, return true
+	                        else 
+	                        {
+	                            result=true;
+	                        }
+	                    }
+	                    context.decache(displayFormRule);
+	                }
+	                else 
+	                {
+	                    Form displayForm = context.getObjectByName(Form.class, displayFormRuleName);
+		                if(displayForm!=null)
+		                {
+		                 context.decache(displayForm);
+		                 result =true;
+		                }
+	                }
+                }
+            }
+            if(requestedApp != null)
+            {
+              context.decache(requestedApp);
+            }
+        }
+  	    LogEnablement.isLogDebugEnabled(fwLogger,"End isDisplayFormRequired result");
+        return result;
+    }
+      /**
+     * Return true if a custom form step is required during the approval
+     * process. Otherwise returns false. The form step is required if the
+     * ProvisioningPlan contains either: 1) A business role that doesn't have
+     * any IT roles/profiles and application on business role has
+     * displayFormRule defined OR 2) A business role that is under organization
+     * role "Form Roles" and application on business role has displayFormRule
+     * defined
+     * @paraam workflow
+     * @param plan
+     * @throws GeneralException 
+     */
+    public boolean goToFormStep(Workflow workflow, ProvisioningPlan plan) throws GeneralException {
+    	LogEnablement.isLogDebugEnabled(fwLogger,"Start goToFormStep...");
+        int count=0;
+        boolean result=false;
+        if (plan != null) {
+            List accountReqList = plan.getAccountRequests();
+            String requestedAppName = "";
+            if (accountReqList != null) {
+                for (AccountRequest accReq : accountReqList) {
+                    List attrReqList = accReq.getAttributeRequests();
+                    if (attrReqList != null) {
+                        for (AttributeRequest attrReq : attrReqList) 
+                        {
+            				if (attrReq.getName().equalsIgnoreCase(ProvisioningPlan.ATT_IIQ_ASSIGNED_ROLES) || attrReq.getName().equalsIgnoreCase(ProvisioningPlan.ATT_IIQ_DETECTED_ROLES)) {
+                                String roleName = "";
+                                if (attrReq.getValue() instanceof List) 
+                                {
+                                	 result=false;
+                                }
+                                else 
+                                {
+                                	roleName = (String) attrReq.getValue();
+                                }
+                                Bundle bundle = context.getObjectByName(Bundle.class, roleName);
+                                LogEnablement.isLogDebugEnabled(fwLogger,"Get Bundle...");
+                                if (bundle != null && bundle.getAttribute("formappName") != null) 
+                                {
+                                    requestedAppName = (String) bundle.getAttribute("formappName");
+                                    //If this is a Business role with no IT role or a Business role that is under organization role "Form Roles"
+	                                //and the requested app has the displayFormRule extended attr
+	                                if (isBusinessRole(bundle) && (!isBusinessRoleWithItRole(bundle) || isBusinessRoleInFormRole(bundle)) && isDisplayFormRequired(requestedAppName)) 
+	                                {
+	                                    workflow.put("requestedAppName", requestedAppName);
+	                                    count=count+1;
+	                                    result=true;
+	                                }
+                                }
+                                if (bundle != null)
+                                {
+                                 LogEnablement.isLogDebugEnabled(fwLogger,"Decache Bundle...");
+                                 context.decache(bundle);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+			if(count>1)
+	        {
+	        LogEnablement.isLogDebugEnabled(fwLogger,"validateMultipleForms = Fail");
+	        workflow.put("validateMultipleForms", "Fail");
+	        }
+        }
+        LogEnablement.isLogDebugEnabled(fwLogger,"Display Form  Required "+result);
+        return result;
+    }
+    /**
+     * If the specified application has an extended attribute called
+     * displayFormRule, it executes the rule and returns a Form object which is
+     * returned by the rule. If the extended attribute doesn't exist or if the
+     * rule doesn't return any Form, then null is returned.
+     *
+     * @param appName
+     * @throws GeneralException 
+     */
+    public Form getDynamicForm(String appName) throws GeneralException {
+        Form dynamicForm = null;
+        Application requestedApp=null;
+        if (Util.isNotNullOrEmpty(appName)) 
+        {
+             requestedApp = context.getObjectByName(Application.class, appName);
+            if (requestedApp != null && requestedApp.getExtendedAttribute("displayFormRule") != null) 
+            {
+                String displayFormRuleName = (String) requestedApp.getExtendedAttribute("displayFormRule");
+                if(displayFormRuleName!=null && displayFormRuleName.length()>0)
+                {
+	                Rule displayFormRule = context.getObjectByName(Rule.class, displayFormRuleName);
+	                if (displayFormRule != null) 
+	                {
+	                    Map returnValue = (Map) context.runRule(displayFormRule, null);
+	                    if (returnValue != null && returnValue.containsKey("dynamicForm")) 
+	                    {
+	                        dynamicForm = (Form) returnValue.get("dynamicForm");
+	                    }
+	                     context.decache(displayFormRule);
+	                }
+	                else 
+	                {
+	                    Form displayForm = context.getObjectByName(Form.class, displayFormRuleName);
+		                if(displayForm!=null)
+		                {
+		                 context.decache(displayForm);
+		                 return displayForm;
+		                }
+	                }
+                }
+            }
+        }
+        if(requestedApp!=null)
+        {
+        context.decache(requestedApp);
+        }
+        //Force the approval work items to show OLD UI, new UI doesn't support form display
+        if(dynamicForm!=null)
+        {
+       // workflow.put("forceClassicApprovalUI",true);
+        }
+        return dynamicForm;
+    }
+     /**
+     * Prepare Plan to remove display form role
+     *
+     * @param workflow
+     */
+    public ProvisioningPlan createRoleRemovalPlan(SailPointContext context, Workflow workflow) throws GeneralException {
+    	boolean removeRole = false;
+    	ProvisioningPlan plan = null;
+		ProvisioningPlan wfPlan = (ProvisioningPlan) workflow.get("plan");
+		List accountReqList = wfPlan.getAccountRequests();
+   		String requestedAppName = "";
+   		String attrName = "";
+   		String attrValue = "";
+   		if(accountReqList != null) {
+   			for(AccountRequest accReq : accountReqList) 
+   			{
+   				List attrReqList = accReq.getAttributeRequests();
+   				if(attrReqList != null) 
+   				{	
+   				    for(AttributeRequest attrReq : attrReqList) 
+    				{
+    					if(attrReq.getName() != null && attrReq.getName().equalsIgnoreCase(ProvisioningPlan.ATT_IIQ_ASSIGNED_ROLES) || attrReq.getName().equalsIgnoreCase(ProvisioningPlan.ATT_IIQ_DETECTED_ROLES)) {
+    						String roleName = (String) attrReq.getValue();
+    						Bundle bundle = context.getObjectByName(Bundle.class, roleName);
+	    					if(bundle != null && bundle.getAttribute("formappName") != null) 
+    						{
+    							requestedAppName = (String) bundle.getAttribute("formappName");
+    							//If this is a Business role with no IT role or a Business role that is under organization role "Form Roles"
+	    						//and the requested app has the displayFormRule extended attr
+	    						if( isBusinessRole(bundle) && (!isBusinessRoleWithItRole(bundle) || isBusinessRoleInFormRole(bundle)) && isDisplayFormRequired(requestedAppName)) {
+	    							removeRole = true;
+	    							attrName = attrReq.getName();
+	    							attrValue = (String) attrReq.getValue();
+	    						}
+    						}
+    						if(bundle!=null)
+    						{
+    						context.decache(bundle);
+    						}
+    					}
+	    			}
+	    		}
+	    	}
+	    }
+	  if(removeRole && Util.isNotNullOrEmpty(attrName) && Util.isNotNullOrEmpty(attrValue)) {
+			LogEnablement.isLogDebugEnabled(fwLogger,"The original plan contains a Business Form Role. Now generating a new plan to remove it from the cube");
+			plan = new ProvisioningPlan();
+			AccountRequest acctReq = new AccountRequest();
+			acctReq.setTargetIntegration(ProvisioningPlan.APP_IIQ);
+			acctReq.setApplication(ProvisioningPlan.APP_IIQ);
+			acctReq.setOperation(ProvisioningPlan.AccountRequest.Operation.Modify);
+			AttributeRequest attrReq = new AttributeRequest();
+			attrReq.setName(attrName);
+			attrReq.setValue(attrValue);
+			attrReq.setOp(ProvisioningPlan.Operation.Remove);
+			Attributes args = new Attributes();
+			args.putClean("deassignEntitlements", new Boolean(true));
+			args.putClean("negativeAssignment", new Boolean(true));
+			attrReq.setArguments(args);
+			acctReq.add(attrReq);
+			plan.add(acctReq);
+		}
+		return plan;
+    }
+    /**
+     * Return true if the specified bundle is a Business role which inherits
+     * from an Organization role named Form Roles. Otherwise returns false
+     *
+     * @param bundle
+     */
+    public boolean isBusinessRoleInFormRole(Bundle bundle) 
+    {
+    	LogEnablement.isLogDebugEnabled(fwLogger,"Start isBusinessRoleInFormRole");
+        if (bundle != null && bundle.getType().equalsIgnoreCase("business")) {
+            List rolesList = bundle.getInheritance();
+            if (rolesList != null && !rolesList.isEmpty()) {
+                for (Bundle topRole : rolesList) {
+                    //Check if the business role inherits from an Organization role named Form Roles
+                    if (topRole.getType().equalsIgnoreCase("organizational") && topRole.getName().equalsIgnoreCase("Form Roles")) 
+                    {
+                     LogEnablement.isLogDebugEnabled(fwLogger,"End isBusinessRoleInFormRole true");
+                        return true;
+                    }
+                }
+            }
+        }
+       LogEnablement.isLogDebugEnabled(fwLogger,"End isBusinessRoleInFormRole false");
+        return false;
+    }
+	/**
+     * Return true if the specified bundle is a Business role which contains a
+     * required or permitted IT role. Otherwise returns false
+     *
+     * @param bundle
+     */
+    public boolean isBusinessRoleWithItRole(Bundle bundle) {
+     LogEnablement.isLogDebugEnabled(fwLogger,"Start isBusinessRoleWithItRole");
+        if (bundle != null && bundle.getType().equalsIgnoreCase("business")) {
+            List rolesList = new ArrayList();
+            rolesList.addAll(bundle.getRequirements());
+            rolesList.addAll(bundle.getPermits());
+            if (!rolesList.isEmpty()) {
+                for (Bundle reqRole : rolesList) {
+                    //Check if the business role has a required or permitted IT role
+                    if (reqRole.getType().equalsIgnoreCase("it")) 
+                    {
+                    	LogEnablement.isLogDebugEnabled(fwLogger,"End isBusinessRoleWithItRole true");
+                        return true;
+                    }
+                }
+            }
+        }
+		LogEnablement.isLogDebugEnabled(fwLogger,"End isBusinessRoleWithItRole false");
+        return false;
+    }
+	/**
+     * Return true if the specified bundle is a Business role 
+     * @param bundle
+     */
+    public boolean isBusinessRole(Bundle bundle) 
+    {
+        LogEnablement.isLogDebugEnabled(fwLogger,"Start isBusinessRole");
+        if (bundle != null && bundle.getType().equalsIgnoreCase("business")) 
+        {
+          	LogEnablement.isLogDebugEnabled(fwLogger,"End isBusinessRole true");
+            return true;
+        }
+		LogEnablement.isLogDebugEnabled(fwLogger,"End isBusinessRole false");
+        return false;
+    }
+	/**
+	 * Launch After Provisioning Workflow to remove form roles and after ticket provisinion Rule
+	 * @param context
+	 * @param workflow
+	 * @param identityName
+	 * @param project
+	 * @param approvalSet
+	 * @throws GeneralException
+	 */
+	public void afterProvisionRule(SailPointContext context, Workflow workflow, String identityName,ProvisioningProject project,ApprovalSet approvalSet) throws Exception {
+    	LogEnablement.isLogDebugEnabled(fwLogger,"Start afterProvisionRule after cube refresh");
+   		String requestType = (String) workflow.get("requestType");
+   		LogEnablement.isLogDebugEnabled(fwLogger,"Start  requestType "+requestType);
+   		ProvisioningPlan afterProvPlan = new ProvisioningPlan();
+   		String serviceAccountEnabled = ObjectConfigAttributesRuleLibrary.extendedAttrServiceAccountEnabled(context);
+	    List authRepos=null;
+	    String identityTypeEnabled = ObjectConfigAttributesRuleLibrary.extendedAttrIdentityTypeEnabled(context);
+		boolean identityTypeEnab=false;
+		if(identityTypeEnabled!=null && identityTypeEnabled.length()>0 && identityTypeEnabled.equalsIgnoreCase("TRUE"))
+		{
+			identityTypeEnab=true;
+		}
+		if(Util.isNotNullOrEmpty(requestType)) 
+        {
+            if(identityName!=null)
+            {
+                Identity identityCube=context.getObjectByName(Identity.class,identityName);
+                if(approvalSet!=null && !approvalSet.isAllRejected())
+                {
+                	LogEnablement.isLogDebugEnabled(fwLogger,"approvalSet is rejected "+approvalSet.isAllRejected());
+	                if(requestType.equalsIgnoreCase("CREATE IDENTITY FEATURE")) 
+			        {
+			              afterProvPlan.setIdentity(identityCube);
+					      if(serviceAccountEnabled !=null && serviceAccountEnabled.equalsIgnoreCase("TRUE") && identityCube!=null && identityCube.getAttribute(WrapperRuleLibrary.SERVICE_CUBE_ATTR) != null
+			              && ((String) identityCube.getAttribute(WrapperRuleLibrary.SERVICE_CUBE_ATTR)).equalsIgnoreCase("TRUE"))
+			              {
+			                   //Create Provisioning Policy Must Set Attributes
+			                    authRepos=ROADUtil.getRepositories(context,"authoritativeServiceAccount");
+			              }
+			             else if(identityTypeEnab)
+						 {
+							// Must not be a service cube
+							if (identityCube != null && identityCube.getType()!=null && identityCube.getType().equalsIgnoreCase("service"))
+							{
+								//Create Provisioning Policy Must Set Attributes
+			                    authRepos=ROADUtil.getRepositories(context,"authoritativeServiceAccount");
+							}
+							// Must not be a service cube
+							else if (identityCube != null && identityCube.getType()!=null && identityCube.getType().equalsIgnoreCase("contractor"))
+							{
+								//Create Provisioning Policy Must Set Attributes
+			                   authRepos=ROADUtil.getRepositories(context,"authoritativeNonEmployee");
+							}
+						  }
+			        }
+			        if(requestType.equalsIgnoreCase("EDIT IDENTITY FEATURE")) 
+			        {
+			         	  afterProvPlan.setIdentity(identityCube);
+			         	  if(serviceAccountEnabled !=null && serviceAccountEnabled.equalsIgnoreCase("TRUE") && identityCube!=null && identityCube.getAttribute(WrapperRuleLibrary.SERVICE_CUBE_ATTR) != null
+			              && ((String) identityCube.getAttribute(WrapperRuleLibrary.SERVICE_CUBE_ATTR)).equalsIgnoreCase("TRUE"))
+			              {
+			             		//Update Provisioning Policy Must Set Attributes
+			                    authRepos=ROADUtil.getRepositories(context,"authoritativeServiceAccount");
+			              }
+			             else if(identityTypeEnab)
+						 {
+							// Must not be a service cube
+							if (identityCube != null && identityCube.getType()!=null && identityCube.getType().equalsIgnoreCase("service"))
+							{
+								//Create Provisioning Policy Must Set Attributes
+			                    authRepos=ROADUtil.getRepositories(context,"authoritativeServiceAccount");
+							}
+							// Must not be a service cube
+							else if (identityCube != null && identityCube.getType()!=null && identityCube.getType().equalsIgnoreCase("contractor"))
+							{
+								//Create Provisioning Policy Must Set Attributes
+			                   authRepos=ROADUtil.getRepositories(context,"authoritativeNonEmployee");
+							}
+						  }
+			        }
+		        }
+		        if(authRepos!=null && authRepos.size()>0)
+                {
+                   	for (String authRep:authRepos)
+                   	{
+                   		List accountRequests=JoinerRuleLibrary.createOrUpdateNewAccountProvisioningPlanExternalRepo( context,  authRep,  identityCube);
+                   		if(accountRequests!=null && accountRequests.size()>0)
+                   		{
+                   			if (!(accountRequests.isEmpty() && afterProvPlan != null)) 
+							{
+				               	for (AccountRequest acctReq : accountRequests) 
+				               	{
+				               		afterProvPlan.add(acctReq);
+				               	}
+			            	}
+                   		}
+                   	}
+               }
+	     	}
+        	//If a Form Role was requested and provisioned, then it needs to be removed at the end
+        	if(requestType.equalsIgnoreCase("CART REQUEST FEATURE")) 
+        	{
+        		//Create plan for removing Form Role
+        		afterProvPlan = createRoleRemovalPlan(context, workflow);
+        	}
+        }
+		//Launch the Wrapper WF to process the plan for removing the Form Role
+        if(Util.isNotNullOrEmpty(requestType) && !requestType.equalsIgnoreCase("REQUEST MANAGER FEATURE") && afterProvPlan != null && afterProvPlan.getAllRequests() != null && afterProvPlan.getAllRequests().size() != 0 && identityName != null) 
+        {
+            	WorkflowUtil.launchRequestManagerWorkflow(context,identityName, afterProvPlan,"false","",5,null, null, null,null,null);
+        }
+        //Let's interrorgate compiled provisioning project and launch after ticket provisioning rule 
+        String ticketEnabled = ObjectConfigAttributesRuleLibrary.extendedAttrTicketEnabled(context);
+      	if(ticketEnabled!=null && ticketEnabled.length()>0 && ticketEnabled.equalsIgnoreCase("TRUE"))
+     	{
+			WrapperRuleLibrary.ticketIntegrationAfterProvisioningRule(context,project,requestType);
+      	}
+      	//Let's Log Audit Events for Ticketing Applications and IIQ/IdentityManager Application
+	    AuditRuleLibrary.logRoadAuditEvents( context, project,null, null,identityName, null, null,null);
+		LogEnablement.isLogDebugEnabled(fwLogger,"Exit afterProvisionRule after cube refresh");
+    }
+   	
+	]]></Source>
+</Rule>

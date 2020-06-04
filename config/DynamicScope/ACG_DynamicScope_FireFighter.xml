@@ -1,0 +1,17 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE DynamicScope PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<DynamicScope name="FireFighter">
+  <ApplicationRequestControl>
+    <Reference class="sailpoint.object.Rule" name="Objects in Requestor's Authorized Scopes"/>
+  </ApplicationRequestControl>
+  <PopulationRequestAuthority>
+    <MatchConfig customControl="(correlated == true &amp;&amp; capabilities.name==&quot;FireFighter&quot;)" enableCustomControl="true" matchAll="true"/>
+  </PopulationRequestAuthority>
+  <Selector>
+    <IdentitySelector>
+      <MatchExpression>
+        <MatchTerm name="capabilities" type="Entitlement" value="FireFighterAdmin"/>
+      </MatchExpression>
+    </IdentitySelector>
+  </Selector>
+</DynamicScope>

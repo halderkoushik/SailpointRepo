@@ -1,0 +1,1328 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule-Configure-Triggers-RuleLibrary">
+  <Source><![CDATA[
+	
+	import org.apache.commons.logging.Log;
+	import org.apache.commons.logging.LogFactory;
+	import sailpoint.object.Custom;
+	import sailpoint.object.Workflow;
+	import sailpoint.object.Attributes;
+	import sailpoint.object.Form;
+	import sailpoint.object.Form.Section;
+	import sailpoint.object.Form.Button;
+	import sailpoint.object.Field;
+	import sailpoint.object.Rule;
+	import sailpoint.tools.Util;
+	import sailpoint.object.ObjectConfig;
+	import sailpoint.object.ObjectAttribute;
+	import sailpoint.object.DynamicValue;
+	import sailpoint.object.Filter;
+	import sailpoint.object.Identity;
+	import sailpoint.object.Application;
+	import sailpoint.object.QueryOptions;
+	import sailpoint.object.Resolver;
+	import sailpoint.object.Rule;
+	import sailpoint.api.PersistenceManager;
+	import sailpoint.rapidapponboarding.rule.ROADUtil;
+	import sailpoint.rapidapponboarding.rule.WrapperRuleLibrary;
+	import sailpoint.rapidapponboarding.rule.TriggersRuleLibrary;
+	import sailpoint.rapidapponboarding.rule.JoinerRuleLibrary;
+	import sailpoint.api.ObjectUtil;
+	import sailpoint.rapidapponboarding.logger.LogEnablement;
+	Log triggerLogger = LogFactory.getLog("rapidapponboarding.rules");
+	/**
+	 * Initialize Form Model	
+	 * @param workflow
+	 * @param roadFieldTriggerSelect
+	 */
+	public void intializeConfigureTriggersRoadModel(Workflow workflow, String roadFieldTriggerSelect)
+	{
+		LogEnablement.isLogDebugEnabled(triggerLogger,"intializeConfigureTriggersRoadModel.."+roadFieldTriggerSelect);
+		LinkedHashMap configureTriggersRoadModelMap= new LinkedHashMap();
+		configureTriggersRoadModelMap.put("transformerClass", "sailpoint.transformer.IdentityTransformer");
+		configureTriggersRoadModelMap.put("transformerOptions", null);
+		Custom custom = context.getObjectByName(Custom.class, TriggersRuleLibrary.CUSTOMTRIGGERS);
+		Map map = new HashMap();
+		//Common Configuration
+		if(custom!=null && custom.getAttributes()!=null && custom.getAttributes().containsKey(TriggersRuleLibrary.TRIGGERS))
+		{
+			map = (HashMap) custom.getAttributes().get(TriggersRuleLibrary.TRIGGERS);
+			if(map!=null && map.containsKey(TriggersRuleLibrary.AUTHORITATIVE_SOURCE_TRIGGERS))
+			{
+				HashMap triggersMap =  map.get(TriggersRuleLibrary.AUTHORITATIVE_SOURCE_TRIGGERS);
+				if(triggersMap!=null && roadFieldTriggerSelect!=null && triggersMap.containsKey(roadFieldTriggerSelect))
+				{
+					List listOfMaps=triggersMap.get(roadFieldTriggerSelect);
+					int countTriggers=0;
+					if(listOfMaps!=null && listOfMaps.size()>0)
+					{
+						for(HashMap listMap:listOfMaps)
+						{
+							//Increment Triggers - Only if Map Contains TriggerAttr
+							if(listMap!=null && listMap.containsKey("Attribute"))
+							{
+								countTriggers=countTriggers+1;
+							}
+							if(listMap!=null)
+							{
+								for (Map.Entry entry : listMap.entrySet()) 
+								{  
+									if(((String)entry.getKey()).equalsIgnoreCase("Operation"))
+									{
+										configureTriggersRoadModelMap.put( "TriggerOperation",entry.getValue());
+										//Only If Key for Operations Map is required, Break
+										break;
+									}
+									else if(((String)entry.getKey()).equalsIgnoreCase("HighWaterMarkThreshold"))
+									{
+										configureTriggersRoadModelMap.put( "TriggerHighWaterMarkThreshold",entry.getValue());
+									}
+									else if(((String)entry.getKey()).equalsIgnoreCase("HighWaterMarkPopulation"))
+									{
+										configureTriggersRoadModelMap.put( "TriggerHighWaterMarkPopulation",entry.getValue());
+									}
+									else if(entry.getKey()!=null && ((String)entry.getKey()).equalsIgnoreCase("Attribute") && entry.getValue()!=null)
+									{
+										configureTriggersRoadModelMap.put("TriggerAttr"+countTriggers,entry.getValue());
+									}
+									else if(entry.getKey()!=null && ((String)entry.getKey()).equalsIgnoreCase("NewValues") && entry.getValue()!=null)
+									{
+										if(((String)entry.getValue()).contains(","))
+										{
+											List list= Util.csvToList(((String)entry.getValue()));
+											configureTriggersRoadModelMap.put("TriggerNewValues"+countTriggers,list);
+										}
+										else
+										{
+											configureTriggersRoadModelMap.put("TriggerNewValues"+countTriggers,entry.getValue());
+										}
+									}
+									else if(entry.getKey()!=null && ((String)entry.getKey()).equalsIgnoreCase("OldValues") && entry.getValue()!=null)
+									{
+										if(((String)entry.getValue()).contains(","))
+										{
+											List list= Util.csvToList(((String)entry.getValue()));
+											configureTriggersRoadModelMap.put("TriggerOldValues"+countTriggers,list);
+										}
+										else
+										{
+											configureTriggersRoadModelMap.put("TriggerOldValues"+countTriggers,entry.getValue());
+										}
+									}
+									else if(entry.getKey()!=null && ((String)entry.getKey()).equalsIgnoreCase("DateFormat") && entry.getValue()!=null)
+									{
+										configureTriggersRoadModelMap.put("TriggerDateFormat"+countTriggers,entry.getValue());
+									}
+									else if(entry.getKey()!=null && ((String)entry.getKey()).equalsIgnoreCase("DateOperation") && entry.getValue()!=null)
+									{
+										configureTriggersRoadModelMap.put("TriggerDateOperation"+countTriggers,entry.getValue());
+									}
+									else if(entry.getKey()!=null && ((String)entry.getKey()).equalsIgnoreCase("noChangeDetectedOverrideANDOperation") && entry.getValue()!=null)
+									{
+										configureTriggersRoadModelMap.put("TriggerNoChangeOverride"+countTriggers,entry.getValue());
+									}
+									else
+									{
+										//FEATURE DEFINITION IN MAP
+										continue;
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		workflow.put("configureTriggersRoadModel",configureTriggersRoadModelMap);
+		LogEnablement.isLogDebugEnabled(triggerLogger,"End intializeConfigureTriggersRoadModel.."+configureTriggersRoadModelMap);
+		if(custom!=null)
+		{
+			context.decache(custom);
+		}
+	}
+	/**
+	 * Initialize Form Section Attributes
+	 * @param workflow
+	 */
+	public void intializeConfigureTriggersSectionAttributes(Workflow workflow)
+	{
+	    LogEnablement.isLogDebugEnabled(triggerLogger,"Enter intializeConfigureTriggersSectionAttributes..");
+		Attributes mapAttr = new Attributes();
+		Custom mappingObj = context.getObjectByName(Custom.class, TriggersRuleLibrary.CUSTOMTRIGGERSFORM);
+		if(mappingObj!=null && mappingObj.getAttributes()!=null)
+		{
+			mapAttr = mappingObj.getAttributes();	
+			if( mapAttr!=null)
+			{
+				for (Map.Entry entry : mapAttr.entrySet()) 
+				{ 
+					String value=entry.getValue();
+					String key=entry.getKey();
+					if(value!=null)
+					{
+						boolean featureDisable=ROADUtil.roadFeatureDisabled(context,value);
+						if(!featureDisable)
+						{
+						    //Show
+							mapAttr.put(key,"False");
+						}
+						else
+						{
+						    //Hide
+							mapAttr.put(key,"True");
+						}
+					}
+					else
+					{
+					    //Hide
+						mapAttr.put(key,"True");
+					}
+				}
+			}
+			context.decache(mappingObj);
+		}
+		LogEnablement.isLogDebugEnabled(triggerLogger,"mapAttr.."+mapAttr);
+		LogEnablement.isLogDebugEnabled(triggerLogger,"End intializeConfigureTriggersSectionAttributes..");
+		workflow.put("roadSectionAttributes",mapAttr);
+	}
+	/**
+	 * Save Triggers
+	 * @param configureTriggersRoadModel
+	 * @param roadFieldTriggerSelect
+	 * @param confirmationForm
+	 */
+	public void saveTriggers(HashMap configureTriggersRoadModel, String roadFieldTriggerSelect, Form confirmationForm)
+	{
+		LogEnablement.isLogDebugEnabled(triggerLogger,"Start saveTriggers..."+roadFieldTriggerSelect);
+		LogEnablement.isLogDebugEnabled(triggerLogger,"Start saveTriggers...configureTriggersRoadModel.."+configureTriggersRoadModel);
+		Custom custom=ObjectUtil.transactionLock(context,Custom.class, TriggersRuleLibrary.CUSTOMTRIGGERS);
+		Map mapFromCustom = new HashMap();
+		HashMap triggersMap = new HashMap();
+		boolean needsProcessing=false;
+		if(custom!=null)
+		{
+			mapFromCustom = (HashMap) custom.getAttributes().get(TriggersRuleLibrary.TRIGGERS);
+			if(mapFromCustom!=null && mapFromCustom.containsKey(TriggersRuleLibrary.AUTHORITATIVE_SOURCE_TRIGGERS) && configureTriggersRoadModel!=null)
+			{
+				triggersMap =  mapFromCustom.get("Authoritative Sources Triggers");
+				List existinglistOfMaps = new ArrayList();
+				//Intialize New List
+				List overrideListOfMap = new ArrayList();
+				if(roadFieldTriggerSelect!=null && (triggersMap==null ||!triggersMap.containsKey(roadFieldTriggerSelect)))
+				{
+					triggersMap.put(roadFieldTriggerSelect,overrideListOfMap);
+					mapFromCustom.put("Authoritative Sources Triggers",triggersMap);
+				}
+				else if(roadFieldTriggerSelect!=null && triggersMap!=null && triggersMap.containsKey(roadFieldTriggerSelect))
+				{
+					//Existing Values
+					existinglistOfMaps=triggersMap.get(roadFieldTriggerSelect);
+					triggersMap.put(roadFieldTriggerSelect,overrideListOfMap);
+				}
+				if(roadFieldTriggerSelect!=null && configureTriggersRoadModel!=null)
+				{   
+					// Start Count Of Triggers 
+					List countTriggersList = new ArrayList();
+					if(confirmationForm!=null && confirmationForm.getSections()!=null)
+					{
+						for(Section sec:confirmationForm.getSections())
+						{
+							if(sec!=null && sec.getName()!=null && sec.getName().contains("TriggerSection") && ! sec.getName().contains("TriggerSectionRemove"))
+							{
+								String strCount= sec.getName().replace("TriggerSection","");
+								countTriggersList.add(strCount);
+							}
+						}
+					}
+					// End Count Of Triggers 
+					//Let's Build Operation Map
+					HashMap overrideOperationMap = new HashMap();
+					int countTriggers=0;
+					if(configureTriggersRoadModel.containsKey("TriggerOperation"))
+					{
+						overrideOperationMap.put("Operation",configureTriggersRoadModel.get("TriggerOperation"));
+						overrideListOfMap.add(overrideOperationMap);
+					}
+					LogEnablement.isLogDebugEnabled(triggerLogger," overrideOperationMap..."+overrideOperationMap);
+					//End Building Operation Map
+					//Let's Build HighwaterMark Map
+					HashMap highwaterMarkMap = new HashMap();
+					if(configureTriggersRoadModel.containsKey("TriggerHighWaterMarkThreshold"))
+					{
+						highwaterMarkMap.put("HighwaterMarkThreshold",configureTriggersRoadModel.get("TriggerHighWaterMarkThreshold"));
+					}
+					if(configureTriggersRoadModel.containsKey("TriggerHighWaterMarkPopulation"))
+					{
+						highwaterMarkMap.put("HighwaterMarkPopulation",configureTriggersRoadModel.get("TriggerHighWaterMarkPopulation"));
+					}
+					LogEnablement.isLogDebugEnabled(triggerLogger," highwaterMarkMap..."+highwaterMarkMap);
+					if(configureTriggersRoadModel.containsKey("TriggerHighWaterMarkThreshold")||configureTriggersRoadModel.containsKey("TriggerHighWaterMarkPopulation"))
+					{
+						overrideListOfMap.add(highwaterMarkMap);
+					}
+					//End Building HighwaterMark Map
+					//Start Building Remaining Maps, Iterate through all counters
+					HashMap overrideMap = new HashMap();
+					for(String countTriger:countTriggersList)
+					{
+						countTriggers=countTriggers+1;
+						String countTriggersStr=""+countTriggers;
+						//Every Map Should have Attribute
+						if(configureTriggersRoadModel.containsKey("TriggerAttr"+countTriggers))
+						{
+							overrideMap = new HashMap();
+							overrideMap.put("Attribute",configureTriggersRoadModel.get("TriggerAttr"+countTriggers));
+							if(configureTriggersRoadModel.containsKey("TriggerRemove"+countTriggers) && configureTriggersRoadModel.get("TriggerRemove"+countTriggers)!=null)
+							{
+								if(configureTriggersRoadModel.get("TriggerRemove"+countTriggers) instanceof Boolean)
+								{
+									Boolean remove=configureTriggersRoadModel.get("TriggerRemove"+countTriggers);
+									if(remove!=null && remove.booleanValue())
+									{
+										continue;
+									}
+								}
+							}
+							//Find Corresponding Attribute Counter Fields
+							//SET NEW VALUES
+							if(configureTriggersRoadModel.containsKey("TriggerGD"+countTriggers) && configureTriggersRoadModel.get("TriggerGD"+countTriggers)!=null)
+							{
+								//New Value is Group Definition
+								overrideMap.put("NewValues",configureTriggersRoadModel.get("TriggerGD"+countTriggers));
+								LogEnablement.isLogDebugEnabled(triggerLogger," Write Population New Values..."+configureTriggersRoadModel.get("TriggerGD"+countTriggers));
+							}
+						   else if(configureTriggersRoadModel.containsKey("TriggerNewValues"+countTriggers) && 
+									configureTriggersRoadModel.get("TriggerNewValues"+countTriggers)!=null &&
+									configureTriggersRoadModel.get("TriggerNewValues"+countTriggers) instanceof String &&
+									(!((String)configureTriggersRoadModel.get("TriggerNewValues"+countTriggers)).equalsIgnoreCase("COMMA SEPARATED VALUES OR SINGLE VALUE"))
+									)
+							{
+								//Update Existing Triggers New Values
+								Object newValues=configureTriggersRoadModel.get("TriggerNewValues"+countTriggers);
+								overrideMap.put("NewValues",newValues);
+								//Add Joiner Rule to Authoritative App - IMPLICIT JOINER
+								if(newValues!=null && ((String)newValues).equalsIgnoreCase(JoinerRuleLibrary.JOINERNEEDPROCESSING))
+								{
+									needsProcessing=true;
+								}
+							}
+							else if(configureTriggersRoadModel.containsKey("TriggerNewValues"+countTriggers) && 
+									configureTriggersRoadModel.get("TriggerNewValues"+countTriggers)!=null &&
+									configureTriggersRoadModel.get("TriggerNewValues"+countTriggers) instanceof List &&
+									(!((List)configureTriggersRoadModel.get("TriggerNewValues"+countTriggers)).contains("COMMA SEPARATED VALUES OR SINGLE VALUE"))
+									)
+							{
+								//Update Existing Triggers New Values
+								Object newValues=configureTriggersRoadModel.get("TriggerNewValues"+countTriggers);
+								if(newValues instanceof List)
+								{
+									List newValuesL=(List)newValues;
+									newValues=Util.listToCsv(newValuesL);
+								}
+								overrideMap.put("NewValues",newValues);
+							}
+							else if(configureTriggersRoadModel.containsKey("TriggerNewValuesCS"+countTriggers) && configureTriggersRoadModel.get("TriggerNewValuesCS"+countTriggers)!=null)
+							{
+								//Add New Trigger New Values
+								Object newValues=configureTriggersRoadModel.get("TriggerNewValuesCS"+countTriggers);
+								if(newValues instanceof List)
+								{
+									List newValuesL=(List)newValues;
+									newValues=Util.listToCsv(newValuesL);
+								}
+								overrideMap.put("NewValues",newValues);
+							}
+							//SET OLD VALUES
+							if(configureTriggersRoadModel.containsKey("TriggerGDOld"+countTriggers) && configureTriggersRoadModel.get("TriggerGDOld"+countTriggers)!=null)
+							{
+								//Old Value is Group Definition
+								overrideMap.put("OldValues",configureTriggersRoadModel.get("TriggerGDOld"+countTriggers));
+								LogEnablement.isLogDebugEnabled(triggerLogger," Write Population Old Values..."+configureTriggersRoadModel.get("TriggerGDOld"+countTriggers));
+							}
+							else if(configureTriggersRoadModel.containsKey("TriggerOldValues"+countTriggers) && configureTriggersRoadModel.get("TriggerOldValues"+countTriggers)!=null && 
+									configureTriggersRoadModel.get("TriggerOldValues"+countTriggers) instanceof String && 
+									(!((String)configureTriggersRoadModel.get("TriggerOldValues"+countTriggers)).equalsIgnoreCase("COMMA SEPARATED VALUES OR SINGLE VALUE"))
+									)
+							{
+								//Update Existing Triggers Old Values
+								Object oldValues=configureTriggersRoadModel.get("TriggerOldValues"+countTriggers);
+								overrideMap.put("OldValues",oldValues);
+							}
+							else if(configureTriggersRoadModel.containsKey("TriggerOldValues"+countTriggers) && configureTriggersRoadModel.get("TriggerOldValues"+countTriggers)!=null && 
+									configureTriggersRoadModel.get("TriggerOldValues"+countTriggers) instanceof List && 
+									(!((List)configureTriggersRoadModel.get("TriggerOldValues"+countTriggers)).contains("COMMA SEPARATED VALUES OR SINGLE VALUE"))
+									)
+							{
+								//Update Existing Triggers Old Values
+								Object oldValues=configureTriggersRoadModel.get("TriggerOldValues"+countTriggers);
+								if(oldValues instanceof List)
+								{
+									List oldValuesL=(List)oldValues;
+									oldValues=Util.listToCsv(oldValuesL);
+								}
+								overrideMap.put("OldValues",oldValues);
+							}
+							else if(configureTriggersRoadModel.containsKey("TriggerOldValuesCS"+countTriggers) && configureTriggersRoadModel.get("TriggerOldValuesCS"+countTriggers)!=null )
+							{
+								//Add New Trigger Old Values
+								Object oldValues=configureTriggersRoadModel.get("TriggerOldValuesCS"+countTriggers);
+								if(oldValues instanceof List)
+								{
+									List oldValuesL=(List)oldValues;
+									oldValues=Util.listToCsv(oldValuesL);
+								}
+								overrideMap.put("OldValues",oldValues);
+							}
+							if(configureTriggersRoadModel.containsKey("TriggerDateFormat"+countTriggers)  && configureTriggersRoadModel.get("TriggerDateFormat"+countTriggers)!=null)
+							{
+								overrideMap.put("DateFormat",configureTriggersRoadModel.get("TriggerDateFormat"+countTriggers));
+							}
+							if(configureTriggersRoadModel.containsKey("TriggerDateOperation"+countTriggers)  && configureTriggersRoadModel.get("TriggerDateOperation"+countTriggers)!=null)
+							{
+								overrideMap.put("DateOperation",configureTriggersRoadModel.get("TriggerDateOperation"+countTriggers));
+							}
+							if(configureTriggersRoadModel.containsKey("TriggerNoChangeOverride"+countTriggers) && configureTriggersRoadModel.get("TriggerNoChangeOverride"+countTriggers)!=null)
+							{
+								overrideMap.put("noChangeDetectedOverrideANDOperation",configureTriggersRoadModel.get("TriggerNoChangeOverride"+countTriggers));
+							}
+							overrideListOfMap.add(overrideMap);
+						}
+					}
+				}
+			}
+			context.saveObject(custom);
+			//Let's save IMPLICIT JOINER 
+			String joinerDisabled=ROADUtil.roadAttributeDisabled(context, "Identity", JoinerRuleLibrary.JOINERATTRNEEDSJOINER);
+			boolean joinerEnabled=false;
+			//JOINER is ENABLED
+			if(joinerDisabled!=null && joinerDisabled.length()>0 && joinerDisabled.equalsIgnoreCase("FALSE"))
+			{
+				joinerEnabled=true;
+			}
+			if(joinerEnabled && needsProcessing)
+			{
+				//Find All Authoritative Sources
+				Filter filter= Filter.eq("authoritative", true );
+				QueryOptions qo = new QueryOptions();
+				qo.addFilter(filter);
+				List propsApp = new ArrayList();
+				propsApp.add("id");
+				Iterator iterApp = context.search(Application.class, qo, propsApp);
+				if (iterApp != null)
+				{
+					try 
+					{
+						while (iterApp.hasNext()) 
+						{
+							Object[] rowApp = iterApp.next();
+							if(rowApp!=null && rowApp.length==1)
+							{
+								String appId = (String)rowApp[0];
+								if(appId!=null)
+								{
+									String lockMode = PersistenceManager.LOCK_TYPE_TRANSACTION;
+									LogEnablement.isLogDebugEnabled(triggerLogger,"saveTriggers....Lock App..");
+									Application appObj = ObjectUtil.lockObject(context, Application.class, appId, null, lockMode);
+									if(appObj!=null )
+									{
+										try
+										{
+											Rule creationRule = context.getObjectByName(Rule.class, "Rule-FrameWork-Creation-Joiner-Authoritative-Source");
+											if (appObj.getCreationRule()==null && creationRule!=null)
+											{
+												appObj.setCreationRule(creationRule);
+												context.saveObject(appObj);
+											}
+										}
+										finally 
+										{
+										//commit
+										LogEnablement.isLogDebugEnabled(triggerLogger,"saveTriggers....Unlock App..");
+										ObjectUtil.unlockObject(context, appObj, lockMode);
+										}
+									}
+								}
+							}			            
+						}
+					}
+					catch (Exception e) 
+					{
+						LogEnablement.isLogErrorEnabled(triggerLogger,"...Application Error "+e.getMessage());
+					}
+					Util.flushIterator(iterApp);
+				}
+			}// If Joiner Enabled
+		}
+		//Force Load Triggers
+		TriggersRuleLibrary.forceLoadTriggers(context);
+		LogEnablement.isLogDebugEnabled(triggerLogger,"saveTriggers....End..");
+	}
+	/**
+	 * Get ObjectConfig Identity Attribute Name
+	 * @param triggerName
+	 * @param addTriggerAction
+	 * @return
+	 * @throws Exception
+	 */
+	public List getObjectConfigOptions(String triggerName,String addTriggerAction) throws Exception 
+	{
+		LogEnablement.isLogDebugEnabled(triggerLogger,"Enter getObjectConfigOptions ");
+		List result= new ArrayList();
+		List objAttrList= ROADUtil.getCubeAttributesList(context,true,true,false,false);
+		if(objAttrList!=null && objAttrList.size()>0)
+		{
+			for( String objAttr:objAttrList)
+			{
+				//Add Everything Except needsJoiner
+				if(!objAttr.equalsIgnoreCase(JoinerRuleLibrary.JOINERATTRNEEDSJOINER))
+				{
+					result.add(objAttr);
+				}
+				//Only Add "needsJoiner" if it is a joiner process
+				else if( triggerName!=null && triggerName.equalsIgnoreCase("joinerProcess") )
+				{
+					result.add(objAttr);
+				}
+				else
+				{
+					continue;
+				}
+			}
+		}
+		LogEnablement.isLogDebugEnabled(triggerLogger,"End getObjectConfigOptions "+result);
+		return result;
+	}
+	/**
+	 * Get ObjectConfig Identity Attribute Display Name
+	 * @param triggerName
+	 * @param addTriggerAction
+	 * @return
+	 * @throws Exception
+	 */
+	public HashMap getObjectConfigOptionsDisplayNames(String triggerName,String addTriggerAction) throws Exception 
+	{
+		LogEnablement.isLogDebugEnabled(triggerLogger,"Enter getObjectConfigOptionsDisplayNames ");
+		HashMap map= new HashMap();
+		ObjectConfig objectConfig=Identity.getObjectConfig();
+		if(objectConfig!=null)
+		{
+			List objAttrList=objectConfig.getObjectAttributes();
+			if(objAttrList!=null && objAttrList.size()>0)
+			{
+				for( ObjectAttribute objAttr:objAttrList)
+				{
+					if(objAttr!=null && objAttr.getName()!=null)
+					{
+						if(objAttr.getDisplayName()==null || objAttr.getDisplayName().contains("att_"))
+						{
+							map.put(objAttr.getName(),objAttr.getName());
+						}
+						else
+						{
+							map.put(objAttr.getName(),objAttr.getDisplayName());
+						}
+					}
+				}
+			}
+		}
+		return map;
+	}
+	/**
+	 * Initialize Triggers Form
+	 * @param workflow
+	 * @param triggerName
+	 * @param formName
+	 * @param saveTriggersAction
+	 * @param addTriggerAction
+	 * @param changeLCEAction
+	 */
+	public void initializebuildTriggersForm(Workflow workflow, String triggerName, String formName, String saveTriggersAction, String addTriggerAction, String changeLCEAction)
+	{
+		LogEnablement.isLogDebugEnabled(triggerLogger,"initializebuildTriggersForm.triggerName."+triggerName);
+		LogEnablement.isLogDebugEnabled(triggerLogger,"initializebuildTriggersForm.formName."+formName);
+		LogEnablement.isLogDebugEnabled(triggerLogger,"initializebuildTriggersForm.saveTriggersAction."+saveTriggersAction);
+		LogEnablement.isLogDebugEnabled(triggerLogger,"initializebuildTriggersForm.addTriggerAction."+addTriggerAction);
+		LogEnablement.isLogDebugEnabled(triggerLogger,"initializebuildTriggersForm.changeLCEAction."+changeLCEAction);
+		boolean readOnly = false;
+		boolean readOnlyHighWaterMark = false;
+		boolean readOnlyRemoveTrigger = false;
+		boolean andOrOperationExists=false;
+		boolean highWaterMarkExists=false;
+		String buttonLabel="";
+		String buttonUpdateRemoveLabel="UPDATE OR REMOVE TRIGGER DEFINITIONS";
+		String buttonSaveLabel="SAVE NEW TRIGGER ATTRIBUTE";
+		String buttonAddLabel="ADD NEW TRIGGER DEFINITIONS";
+		if(addTriggerAction!=null && addTriggerAction.equalsIgnoreCase("ADDTRIGGER"))
+		{
+			readOnly=true;
+			readOnlyRemoveTrigger=true;
+			readOnlyHighWaterMark=true;
+			buttonLabel=buttonSaveLabel;
+		}
+		else
+		{
+			buttonLabel=buttonUpdateRemoveLabel;
+		}
+		//Allowed Attribute List
+		List attrNames=getObjectConfigOptions( triggerName, addTriggerAction);
+		//CREATE FORM
+		Form form = new Form();
+		Form existingform=context.getObjectByName(Form.class,"Triggers");
+		Button addButton=null;
+		Button updateRemoveButton=null;
+		if(existingform!=null)
+		{
+			form=existingform.deepCopy((Resolver)context);
+			List buttons=form.getButtons();
+			if(buttons!=null && buttons.size()>0)
+			{
+				for (Button button:buttons)
+				{
+					if ( button!=null)
+					{
+						if(button.getLabel()!=null && button.getLabel().equalsIgnoreCase(buttonUpdateRemoveLabel))
+						{
+							button.setLabel(buttonLabel);
+							updateRemoveButton=button;
+						}
+						if(button.getValue()!=null && button.getValue().equalsIgnoreCase("ADDTRIGGER"))
+						{
+							addButton=button;
+						}
+					}
+				}
+			}
+			//Hide Add Button if action is add trigger
+			if(buttonLabel!=null && buttonLabel.equalsIgnoreCase(buttonSaveLabel) && addButton!=null && buttons!=null && buttons.size()>0)
+			{
+				buttons.remove(addButton);
+				form.setButtons(buttons);
+			}
+			//BUILD ALLOWED OPERATORS
+			List allowedOperators = new ArrayList();
+			List displayAllowedValuesAndOr = new ArrayList();
+			displayAllowedValuesAndOr.add("OR");
+			displayAllowedValuesAndOr.add("OR CONDITION");
+			allowedOperators.add(displayAllowedValuesAndOr);
+			displayAllowedValuesAndOr = new ArrayList();
+			displayAllowedValuesAndOr.add("AND");
+			displayAllowedValuesAndOr.add("AND CONDITION");
+			allowedOperators.add(displayAllowedValuesAndOr);
+			//BUILD ALLOWED VALUES NEW - 5
+			List newConstants = new ArrayList();
+			List allowedNewValues = new ArrayList();
+			List displayAllowedValues = new ArrayList();
+			displayAllowedValues.add("*");
+			displayAllowedValues.add("ANY NEW VALUE");
+			newConstants.add("*");
+			allowedNewValues.add(displayAllowedValues);
+			displayAllowedValues = new ArrayList();
+			displayAllowedValues.add("EMPTY");
+			displayAllowedValues.add("NEW VALUE EMPTY");
+			newConstants.add("EMPTY");
+			allowedNewValues.add(displayAllowedValues);
+			displayAllowedValues = new ArrayList();
+			displayAllowedValues.add(JoinerRuleLibrary.JOINERNEEDPROCESSING);
+			displayAllowedValues.add("IMPLICIT JOINER");
+			newConstants.add(JoinerRuleLibrary.JOINERNEEDPROCESSING);
+			allowedNewValues.add(displayAllowedValues);
+			displayAllowedValues = new ArrayList();
+			displayAllowedValues.add("DATE CLEARED");
+			displayAllowedValues.add("ASSIGNED DATE RECALL");
+			newConstants.add("DATE CLEARED");
+			allowedNewValues.add(displayAllowedValues);
+			displayAllowedValues = new ArrayList();
+			displayAllowedValues.add("DATE");
+			displayAllowedValues.add("DATE ASSIGNMENT");
+			newConstants.add("DATE");
+			allowedNewValues.add(displayAllowedValues);
+			//LIST OF DATE OPERATION
+			List displayDateOperationValues = new ArrayList();
+			List allowedDateOperationValues = new ArrayList();
+			allowedDateOperationValues.add("GREATEREQUAL");
+			allowedDateOperationValues.add("GREATER THAN EQUAL CURRENT DATE");
+			displayDateOperationValues.add(allowedDateOperationValues);
+			allowedDateOperationValues = new ArrayList();
+			allowedDateOperationValues.add("LESSEQUAL");
+			allowedDateOperationValues.add("LESS THAN EQUAL CURRENT DATE");
+			displayDateOperationValues.add(allowedDateOperationValues);
+			allowedDateOperationValues = new ArrayList();
+			allowedDateOperationValues.add("EQUAL");
+			allowedDateOperationValues.add("CURRENT DATE");
+			displayDateOperationValues.add(allowedDateOperationValues);
+			//BUILD ALLOWED VALUES OLD - 4
+			List oldConstants = new ArrayList();
+			List allowedOldValues = new ArrayList();
+			displayAllowedValues = new ArrayList();
+			displayAllowedValues.add("*");
+			displayAllowedValues.add("ANY OLD VALUE");
+			oldConstants.add("*");
+			allowedOldValues.add(displayAllowedValues);
+			displayAllowedValues = new ArrayList();
+			displayAllowedValues.add("EMPTY");
+			displayAllowedValues.add("OLD VALUE EMPTY");
+			oldConstants.add("EMPTY");
+			allowedOldValues.add(displayAllowedValues);
+			displayAllowedValues = new ArrayList();
+			displayAllowedValues.add("DATE");
+			displayAllowedValues.add("DATE ASSIGNMENT");
+			oldConstants.add("DATE");
+			allowedOldValues.add(displayAllowedValues);
+			displayAllowedValues = new ArrayList();
+			displayAllowedValues.add("IGNORE");
+			displayAllowedValues.add("IGNORE");
+			oldConstants.add("IGNORE");
+			allowedOldValues.add(displayAllowedValues);
+			displayAllowedValues = new ArrayList();
+			displayAllowedValues.add("SAME");
+			displayAllowedValues.add("SAME");
+			oldConstants.add("SAME");
+			allowedOldValues.add(displayAllowedValues);
+			//INitialize Trigger Count
+			int countTriggers=0;
+			//Get Custom Artifact
+			Custom custom = context.getObjectByName(Custom.class, TriggersRuleLibrary.CUSTOMTRIGGERS);
+			Map map = new HashMap();
+			//Common Configuration
+			if(custom!=null && custom.getAttributes()!=null && custom.getAttributes().containsKey(TriggersRuleLibrary.TRIGGERS))
+			{
+				map = (HashMap) custom.getAttributes().get(TriggersRuleLibrary.TRIGGERS);
+				if(map!=null && map.containsKey(TriggersRuleLibrary.AUTHORITATIVE_SOURCE_TRIGGERS))
+				{
+					HashMap triggersMap =  map.get(TriggersRuleLibrary.AUTHORITATIVE_SOURCE_TRIGGERS);
+					if(triggersMap!=null && triggerName!=null && triggersMap.containsKey(triggerName))
+					{
+						Object mapListOb=triggersMap.get(triggerName);
+						List mapList=(List)mapListOb;
+						if(mapList!=null && mapList instanceof List && mapList.size()>0)
+						{
+							for(HashMap subMaps:mapList)
+							{
+								//Increment Triggers
+								if(subMaps!=null && subMaps.containsKey("Attribute"))
+								{
+									countTriggers=countTriggers+1;
+								}
+								if(subMaps!=null)
+								{
+									//CREATE SECTION FOR EACH MAP
+									Section sectionTrigger = new Section();
+									sectionTrigger.setName("TriggerSection"+countTriggers);
+									//sectionTrigger.setSubtitle("TriggerSection"+countTriggers);
+									if(subMaps!=null && subMaps.containsKey("Attribute") && subMaps.get("Attribute")!=null &&
+									 (((String)subMaps.get("Attribute")).equalsIgnoreCase(TriggersRuleLibrary.GROUPDEFINITION)||
+									 ((String)subMaps.get("Attribute")).equalsIgnoreCase(TriggersRuleLibrary.POPULATION)))
+									{
+									    if(subMaps.get("OldValues")!=null && !((String)subMaps.get("OldValues")).equalsIgnoreCase("IGNORE"))
+									    {
+									    sectionTrigger.setLabel("Trigger on Identity Population"+" "+subMaps.get("NewValues") + " AND "+subMaps.get("OldValues"));
+									    }
+									    else
+									    {
+										sectionTrigger.setLabel("Trigger on Identity Population"+" "+subMaps.get("NewValues"));
+										}
+										List displayList = new ArrayList();
+										displayList.add("TriggerSection"+countTriggers);
+										displayList.add("Trigger on Identity Population"+" "+subMaps.get("NewValues")+" "+subMaps.get("OldValues")+" TriggerSection"+countTriggers);
+									}
+									else if(subMaps!=null && subMaps.containsKey("Attribute") && subMaps.get("Attribute")!=null)
+									{
+										HashMap displaMap = getObjectConfigOptionsDisplayNames(triggerName,addTriggerAction);
+										if(displaMap!=null && displaMap.containsKey(subMaps.get("Attribute")))
+										{
+											sectionTrigger.setLabel("Trigger on Identity Attribute "+displaMap.get(subMaps.get("Attribute")));
+											List displayList = new ArrayList();
+											displayList.add("TriggerSection"+countTriggers);
+											displayList.add("Trigger on Identity Attribute "+displaMap.get(subMaps.get("Attribute"))+" "+subMaps.get("NewValues")+" "+subMaps.get("OldValues")+" TriggerSection"+countTriggers);
+										}
+										else
+										{
+											sectionTrigger.setLabel("Trigger on Identity Attribute "+displaMap.get(subMaps.get("Attribute")));
+											List displayList = new ArrayList();
+											displayList.add("TriggerSection"+countTriggers);
+											displayList.add("Trigger on Identity Attribute "+displaMap.get(subMaps.get("Attribute"))+" "+subMaps.get("NewValues")+" "+subMaps.get("OldValues")+" TriggerSection"+countTriggers);
+										}
+									}
+									//INITIALIZE FIELD VALUES
+									Field fieldOperation=null;
+									Field fieldThreshold=null;
+									Field fieldPopulation=null;
+									Field fieldAttributeTrigger=null;
+									Field fieldNewValuesTrigger=null;
+									Field fieldOldValuesTrigger=null;
+									Field fieldDateFormatTrigger=null;
+									Field fieldDateOperationTrigger=null;
+									Field fieldnoChangeDetectedOverrideANDOperationTrigger=null;
+									String attributeValue=null;
+									String newValue=null;
+									String oldValue=null;
+									String operationValue=null;
+									TreeMap sortedSubMaps = new TreeMap(subMaps);
+									for (Map.Entry entry : sortedSubMaps.entrySet()) 
+									{ 
+										LogEnablement.isLogDebugEnabled(triggerLogger,"entry.getKey()..."+entry.getKey());
+										LogEnablement.isLogDebugEnabled(triggerLogger,"entry.getValue()..."+entry.getValue());
+										if(entry.getKey()!=null && (((String)entry.getKey()).equalsIgnoreCase("HighWaterMarkThreshold")
+										||((String)entry.getKey()).equalsIgnoreCase("HighWaterMarkPopulation")))
+										{
+											highWaterMarkExists=true;
+											LogEnablement.isLogDebugEnabled(triggerLogger,"highWaterMarkExists..."+highWaterMarkExists);
+										}
+										if(entry.getKey()!=null && ((String)entry.getKey()).equalsIgnoreCase("Operation"))
+										{
+											sectionTrigger.setName("Operation");
+											sectionTrigger.setLabel("Logical Operation On Triggers");
+											//BUILD OPERATION FIELD
+											fieldOperation = new Field();
+											fieldOperation.setName("TriggerOperation");
+											fieldOperation.setDisplayName("Triggers Operator");
+											fieldOperation.setDynamic(false);
+											fieldOperation.setRequired(true);
+											fieldOperation.setType("String");
+											fieldOperation.setPostBack(true);
+											LogEnablement.isLogDebugEnabled(triggerLogger,"readOnly.Operation.."+readOnly);
+											fieldOperation.setReadOnly(readOnly);
+											operationValue=entry.getValue();
+											fieldOperation.setAllowedValues(allowedOperators);
+											//ADD FIELD TO SECTION
+											sectionTrigger.add(fieldOperation);
+											LogEnablement.isLogDebugEnabled(triggerLogger,"Added Operation To Section.");
+											andOrOperationExists=true;
+											break;
+										}
+										if(entry.getKey()!=null && ((String)entry.getKey()).equalsIgnoreCase("HighWaterMarkThreshold"))
+										{
+											sectionTrigger.setName("HighWaterMarks");
+											sectionTrigger.setLabel("High-Water Marks on Lifecycle Event");
+											//BUILD OPERATION FIELD
+											fieldThreshold = new Field();
+											fieldThreshold.setName("TriggerHighWaterMarkThreshold");
+											fieldThreshold.setDisplayName("Threshold");
+											fieldThreshold.setDynamic(false);
+											fieldThreshold.setRequired(false);
+											fieldThreshold.setType("String");
+											fieldThreshold.setPostBack(true);
+											Rule ruleWaterMark = context.getObjectByName(Rule.class, "Rule-Validate-HighWaterMarkThreshold");
+											if(ruleWaterMark!=null)
+											{
+												fieldThreshold.setValidationRule(ruleWaterMark);
+												context.decache(ruleWaterMark);
+											}
+											LogEnablement.isLogDebugEnabled(triggerLogger,"readOnlyHighWaterMark.Operation.."+readOnlyHighWaterMark);
+											fieldThreshold.setReadOnly(readOnlyHighWaterMark);
+											//ADD FIELD TO SECTION
+											sectionTrigger.add(fieldThreshold);
+											LogEnablement.isLogDebugEnabled(triggerLogger,"Added Threshold To Section.");
+										}
+										if(entry.getKey()!=null && ((String)entry.getKey()).equalsIgnoreCase("HighWaterMarkPopulation"))
+										{
+											sectionTrigger.setName("HighWaterMarks");
+											sectionTrigger.setLabel("High-Water Marks on Lifecycle Event");
+											//BUILD OPERATION FIELD
+											fieldPopulation = new Field();
+											fieldPopulation.setName("TriggerHighWaterMarkPopulation");
+											fieldPopulation.setDisplayName("Population");
+											fieldPopulation.setDynamic(false);
+											fieldPopulation.setRequired(false);
+											fieldPopulation.setType("GroupDefinition");
+											fieldPopulation.setPostBack(true);
+											LogEnablement.isLogDebugEnabled(triggerLogger,"readOnlyHighWaterMark.Operation.."+readOnlyHighWaterMark);
+											fieldPopulation.setReadOnly(readOnlyHighWaterMark);
+											Attributes valueMap = new Attributes();
+											valueMap.put("valueProperty", "name");
+											fieldPopulation.setAttributes(valueMap);
+											//ADD FIELD TO SECTION
+											sectionTrigger.add(fieldPopulation);
+											LogEnablement.isLogDebugEnabled(triggerLogger,"Added Population To Section.");
+										}
+										else if(entry.getKey()!=null && ((String)entry.getKey()).equalsIgnoreCase("Attribute") && entry.getValue()!=null)
+										{
+											//BUILD ATTRIBUTE FIELD
+											fieldAttributeTrigger = new Field();
+											fieldAttributeTrigger.setName("TriggerAttr"+countTriggers);
+											fieldAttributeTrigger.setDisplayName("Attribute Name");
+											fieldAttributeTrigger.setDynamic(false);
+											fieldAttributeTrigger.setRequired(true);
+											fieldAttributeTrigger.setType("String");
+											fieldAttributeTrigger.setReadOnly(readOnly);
+											attributeValue=entry.getValue();
+											if(subMaps!=null && subMaps.containsKey("OldValues") && subMaps.containsKey("Attribute") && subMaps.containsKey("NewValues") )
+											{
+												String oldValueSub=subMaps.get("OldValues");
+												String attributeSub=subMaps.get("Attribute");
+												String newValueSub=subMaps.get("NewValues");
+												if(oldValueSub!=null  && attributeSub!=null && newValueSub!=null && (!attributeSub.equalsIgnoreCase(TriggersRuleLibrary.GROUPDEFINITION) &&
+												!attributeSub.equalsIgnoreCase(TriggersRuleLibrary.POPULATION)))
+												{
+													if(attrNames!=null && attrNames.size()>0)
+													{
+														fieldAttributeTrigger.setAllowedValues(attrNames);
+													}
+												}
+												if(oldValueSub!=null && attributeSub!=null && newValueSub!=null &&  (oldValueSub.equalsIgnoreCase("IGNORE")||oldValueSub.equalsIgnoreCase("SAME") 
+												|| attributeSub.equalsIgnoreCase(TriggersRuleLibrary.GROUPDEFINITION)|| attributeSub.equalsIgnoreCase(TriggersRuleLibrary.POPULATION)))
+												{
+													fieldAttributeTrigger.setReadOnly(true);
+												}
+											}
+											//ADD FIELD TO SECTION
+											sectionTrigger.add(fieldAttributeTrigger);
+										}
+										else if(entry.getKey()!=null && ((String)entry.getKey()).equalsIgnoreCase("NewValues") && entry.getValue()!=null)
+										{
+											//BUILD NEW FIELD
+											fieldNewValuesTrigger = new Field();
+											fieldNewValuesTrigger.setName("TriggerNewValues"+countTriggers);
+											fieldNewValuesTrigger.setDisplayName("New Values");
+											fieldNewValuesTrigger.setDynamic(false);
+											fieldNewValuesTrigger.setRequired(true);
+											fieldNewValuesTrigger.setType("String");
+											newValue=(String)entry.getValue();
+											fieldNewValuesTrigger.setReadOnly(true);
+											if(subMaps!=null && subMaps.containsKey("OldValues") && subMaps.containsKey("Attribute") &&  subMaps.containsKey("NewValues"))
+											{
+												String attributeSub=subMaps.get("Attribute");
+												if(attributeSub!=null && (attributeSub.equalsIgnoreCase(TriggersRuleLibrary.GROUPDEFINITION)||
+												attributeSub.equalsIgnoreCase(TriggersRuleLibrary.POPULATION)))
+												{
+													fieldNewValuesTrigger.setReadOnly(readOnly);
+													fieldNewValuesTrigger.setType("GroupDefinition");
+													fieldNewValuesTrigger.setHelpKey("Members of this population will not be eligible for trigger");
+													Attributes valueMap = new Attributes();
+													valueMap.put("valueProperty", "name");
+													fieldNewValuesTrigger.setAttributes(valueMap);
+												}
+											}
+											if(((String)entry.getValue()).contains(","))
+											{
+												fieldNewValuesTrigger.setMulti(true);
+												fieldNewValuesTrigger.setReadOnly(readOnly);
+											}
+											//Single Attribute Value Can be Edited. As a result running through constants
+											else if(newValue!=null && newValue.length()>0 && newConstants!=null && newConstants.size()>0 && !newConstants.contains(newValue))
+											{
+												fieldNewValuesTrigger.setReadOnly(readOnly);
+											}
+											else if(newValue!=null && newValue.length()>0 && newConstants!=null && newConstants.size()>0 && newConstants.contains(newValue))
+											{
+												fieldNewValuesTrigger.setAllowedValues(allowedNewValues);
+											}
+											//ADD FIELD TO SECTION
+											sectionTrigger.add(fieldNewValuesTrigger);
+										}
+										else if(entry.getKey()!=null && ((String)entry.getKey()).equalsIgnoreCase("OldValues") && entry.getValue()!=null)
+										{
+											//BUILD OLD FIELD
+											fieldOldValuesTrigger = new Field();
+											fieldOldValuesTrigger.setName("TriggerOldValues"+countTriggers);
+											fieldOldValuesTrigger.setDisplayName("Old Values");
+											fieldOldValuesTrigger.setDynamic(false);
+											fieldOldValuesTrigger.setRequired(true);
+											fieldOldValuesTrigger.setType("String");
+											oldValue=(String)entry.getValue();
+											fieldOldValuesTrigger.setReadOnly(true);
+											if(subMaps!=null && subMaps.containsKey("OldValues") && subMaps.containsKey("Attribute") &&  subMaps.containsKey("NewValues"))
+											{
+												String attributeSub=subMaps.get("Attribute");
+												String oldValueSub=subMaps.get("OldValues");
+												if(attributeSub!=null && (attributeSub.equalsIgnoreCase(TriggersRuleLibrary.GROUPDEFINITION)||
+												attributeSub.equalsIgnoreCase(TriggersRuleLibrary.POPULATION)) && oldValueSub!=null && !oldValueSub.equalsIgnoreCase("IGNORE"))
+												{
+													fieldOldValuesTrigger.setReadOnly(readOnly);
+													fieldOldValuesTrigger.setType("GroupDefinition");
+													fieldOldValuesTrigger.setHelpKey("Members of this population will be eligible for trigger");
+													Attributes valueMap = new Attributes();
+													valueMap.put("valueProperty", "name");
+													fieldOldValuesTrigger.setAttributes(valueMap);
+												}
+											}
+											if(((String)entry.getValue()).contains(","))
+											{
+												fieldOldValuesTrigger.setMulti(true);
+												fieldOldValuesTrigger.setReadOnly(readOnly);
+											}
+											//Single Attribute Value Can be Edited. As a result running through constants
+											if(oldValue!=null && oldValue.length()>0 && oldConstants!=null && oldConstants.size()>0 && !oldConstants.contains(oldValue))
+											{
+												fieldOldValuesTrigger.setReadOnly(readOnly);
+											}
+											else if(oldValue!=null && oldValue.length()>0 && oldConstants!=null && oldConstants.size()>0 && oldConstants.contains(oldValue))
+											{
+												fieldOldValuesTrigger.setAllowedValues(allowedOldValues);
+											}
+											//ADD FIELD TO SECTION
+											sectionTrigger.add(fieldOldValuesTrigger);
+										}
+										else if(entry.getKey()!=null && ((String)entry.getKey()).equalsIgnoreCase("DateFormat") && entry.getValue()!=null)
+										{
+											//BUILD DATE FORMAT FIELD
+											fieldDateFormatTrigger = new Field();
+											fieldDateFormatTrigger.setName("TriggerDateFormat"+countTriggers);
+											fieldDateFormatTrigger.setDisplayName("Date Format");
+											fieldDateFormatTrigger.setHelpKey("Please use Java SimpleDateFormat.");
+											fieldDateFormatTrigger.setDynamic(false);
+											fieldDateFormatTrigger.setRequired(true);
+											fieldDateFormatTrigger.setType("String");
+											Rule rule = context.getObjectByName(Rule.class, "Rule-Validate-DateFormat");
+											if(rule!=null)
+											{
+												fieldDateFormatTrigger.setValidationRule(rule);
+												context.decache(rule);
+											}
+											fieldDateFormatTrigger.setReadOnly(readOnly);
+											//ADD FIELD TO SECTION
+											sectionTrigger.add(fieldDateFormatTrigger);
+										}
+										else if(entry.getKey()!=null && ((String)entry.getKey()).equalsIgnoreCase("DateOperation") && entry.getValue()!=null)
+										{
+											//BUILD DATE OPERATION FIELD
+											fieldDateOperationTrigger = new Field();
+											fieldDateOperationTrigger.setName("TriggerDateOperation"+countTriggers);
+											fieldDateOperationTrigger.setDisplayName("Date Operation");
+											fieldDateOperationTrigger.setAllowedValues(displayDateOperationValues);
+											fieldDateOperationTrigger.setDynamic(false);
+											fieldDateOperationTrigger.setRequired(true);
+											fieldDateOperationTrigger.setType("String");
+											fieldDateOperationTrigger.setReadOnly(readOnly);
+											//ADD FIELD TO SECTION
+											sectionTrigger.add(fieldDateOperationTrigger);
+										}
+										else if(entry.getKey()!=null && ((String)entry.getKey()).equalsIgnoreCase("noChangeDetectedOverrideANDOperation") && entry.getValue()!=null)
+										{
+											//BUILD NO CHANGE AND OVERRIDE FOR COMMA SEPARATED AND DATE FIELD
+											fieldnoChangeDetectedOverrideANDOperationTrigger = new Field();
+											fieldnoChangeDetectedOverrideANDOperationTrigger.setName("TriggerNoChangeOverride"+countTriggers);
+											fieldnoChangeDetectedOverrideANDOperationTrigger.setDisplayName("Override And Operator");
+											fieldnoChangeDetectedOverrideANDOperationTrigger.setDynamic(false);
+											fieldnoChangeDetectedOverrideANDOperationTrigger.setRequired(false);
+											fieldnoChangeDetectedOverrideANDOperationTrigger.setType("String");
+											fieldnoChangeDetectedOverrideANDOperationTrigger.setReadOnly(readOnly);
+											List allowedValues = new ArrayList();
+											allowedValues.add("YES");
+											allowedValues.add("NO");
+											fieldnoChangeDetectedOverrideANDOperationTrigger.setAllowedValues(allowedValues);
+											//ADD FIELD TO SECTION
+											sectionTrigger.add(fieldnoChangeDetectedOverrideANDOperationTrigger);
+										}
+										else
+										{
+											//FEATURE DEFINITION IN MAP
+											continue;
+										}
+									}// END EACH MAP ENTRY LOOP
+									//ADD REMOVE CHECK BOX HERE
+									Field fieldRemoveTrigger = new Field();
+									fieldRemoveTrigger.setName("TriggerRemove"+countTriggers);
+									fieldRemoveTrigger.setDisplayName("Remove Trigger");
+									fieldRemoveTrigger.setRequired(false);
+									fieldRemoveTrigger.setType("boolean");
+									LogEnablement.isLogDebugEnabled(triggerLogger,"readOnlyRemoveTrigger..."+readOnlyRemoveTrigger);
+									fieldRemoveTrigger.setReadOnly(readOnlyRemoveTrigger);
+									//ADD FIELD TO SECTION
+									if(sectionTrigger!=null)
+									{
+										LogEnablement.isLogDebugEnabled(triggerLogger,"sectionTrigger.getName()..."+sectionTrigger.getName());
+										if(!sectionTrigger.getName().equals("Operation") && !sectionTrigger.getName().equals("HighWaterMarks"))
+										{
+											sectionTrigger.add(fieldRemoveTrigger);
+										}
+									}
+									//ADD TRIGGER SECTION TO FORM
+									form.add(sectionTrigger);
+								}// END IF NULL CHECK
+							}//END EACH MAP
+						}
+					}
+				}
+				context.decache(custom);
+			}// End Custom Trigger Iteration
+			//Make Operation Field Not Required, if there is only one Trigger
+			if(countTriggers==1 && andOrOperationExists && form!=null)
+			{
+				LogEnablement.isLogDebugEnabled(triggerLogger,"countTriggers..."+countTriggers);
+				LogEnablement.isLogDebugEnabled(triggerLogger,"andOrOperationExists..."+andOrOperationExists);
+				Section sectionOperation=form.getSection("Operation");
+				if(sectionOperation!=null)
+				{
+					Field opField=sectionOperation.getField("TriggerOperation");
+					if(opField!=null)
+					{
+						opField.setRequired(false);
+						LogEnablement.isLogDebugEnabled(triggerLogger,"Make Operation Field Not Required...");
+					}
+				}
+			}
+			//BUILD OPERATION SECTION
+			Section sectionTriggerOperation=null;
+			Section sectionTriggerHighWaterMarks=null;
+			//ADD this only when we have atleast one trigger  and it doesn't exists
+			if(!andOrOperationExists)
+			{
+				LogEnablement.isLogDebugEnabled(triggerLogger,"Adding New Operations To LCE..");
+				LogEnablement.isLogDebugEnabled(triggerLogger,"andOrOperationExists.."+andOrOperationExists);
+				LogEnablement.isLogDebugEnabled(triggerLogger,"countTriggers.."+countTriggers);
+				//BUILD OPERATION FIELD
+				sectionTriggerOperation = new Section();
+				sectionTriggerOperation.setName("Operation");
+				sectionTriggerOperation.setLabel("Logical Operation On Triggers");
+				sectionTriggerOperation.setPriority(1);
+				Field fieldOperation = new Field();
+				fieldOperation.setName("TriggerOperation");
+				fieldOperation.setDisplayName("Triggers Operator");
+				fieldOperation.setDynamic(false);
+				if(countTriggers==0)
+				{
+					fieldOperation.setRequired(false);
+				}
+				else
+				{
+					fieldOperation.setRequired(true);
+				}
+				fieldOperation.setType("String");
+				fieldOperation.setPostBack(true);
+				fieldOperation.setAllowedValues(allowedOperators);
+				//ADD FIELD TO SECTION
+				sectionTriggerOperation.add(fieldOperation);
+			}
+			//BUILD HIGHWATERMARK SECTION
+			//ADD this only when we don't have one
+			if(!highWaterMarkExists)
+			{
+				LogEnablement.isLogDebugEnabled(triggerLogger,"Adding New HighWaterMarks To LCE..");
+				LogEnablement.isLogDebugEnabled(triggerLogger,"highWaterMarkExists.."+highWaterMarkExists);
+				LogEnablement.isLogDebugEnabled(triggerLogger,"countTriggers.."+countTriggers);
+				//BUILD HIGHWATERMARKS FIELD
+				sectionTriggerHighWaterMarks = new Section();
+				sectionTriggerHighWaterMarks.setName("HighWaterMarks");
+				sectionTriggerHighWaterMarks.setLabel("High-Water Marks on Lifecycle Event");
+				sectionTriggerHighWaterMarks.setPriority(2);
+				Field fieldThreshold = new Field();
+				fieldThreshold.setName("TriggerHighWaterMarkThreshold");
+				fieldThreshold.setDisplayName("Threshold");
+				fieldThreshold.setDynamic(false);
+				fieldThreshold.setRequired(false);
+				fieldThreshold.setType("String");
+				fieldThreshold.setPostBack(true);
+				fieldThreshold.setReadOnly(false);
+				Rule ruleWaterMark = context.getObjectByName(Rule.class, "Rule-Validate-HighWaterMarkThreshold");
+				if(ruleWaterMark!=null)
+				{
+					fieldThreshold.setValidationRule(ruleWaterMark);
+					context.decache(ruleWaterMark);
+				}
+				//ADD FIELD TO SECTION
+				sectionTriggerHighWaterMarks.add(fieldThreshold);
+				Field fieldPopulation = new Field();
+				fieldPopulation.setName("TriggerHighWaterMarkPopulation");
+				fieldPopulation.setDisplayName("Population");
+				fieldPopulation.setDynamic(false);
+				fieldPopulation.setRequired(false);
+				fieldPopulation.setType("GroupDefinition");
+				fieldPopulation.setPostBack(true);
+				fieldPopulation.setReadOnly(false);
+				Attributes valueMap = new Attributes();
+				valueMap.put("valueProperty", "name");
+				fieldPopulation.setAttributes(valueMap);
+				//ADD FIELD TO SECTION
+				sectionTriggerHighWaterMarks.add(fieldPopulation);
+			}
+			//ADD NEW SECTION OPERATION TO FORM
+			if(sectionTriggerOperation!=null)
+			{
+				form.add(sectionTriggerOperation);
+			}
+			//ADD NEW SECTION HIGHWATERMARK TO FORM
+			if(sectionTriggerHighWaterMarks!=null)
+			{
+				form.add(sectionTriggerHighWaterMarks);
+			}
+			//Hide Add Button if triggers is 0
+			//Add label to Update Remove Button
+			if(countTriggers==0)
+			{
+			   if(addButton!=null)
+			    {
+					buttons.remove(addButton);
+					form.setButtons(buttons);
+				}
+				if(updateRemoveButton!=null)
+				{
+					updateRemoveButton.setLabel(buttonAddLabel);
+				}
+			}
+			//ADD TRIGGER
+			if(addTriggerAction!=null && addTriggerAction.equalsIgnoreCase("ADDTRIGGER")||countTriggers==0)
+			{
+				//BUILD TRIGGER SECTION
+				//Increment Trigger for New Ones
+				countTriggers=countTriggers+1;
+				Section sectionTrigger = new Section();
+				sectionTrigger.setLabel("Trigger on Identity Attribute ");
+				sectionTrigger.setName("TriggerSection"+countTriggers);
+				//sectionTrigger.setSubtitle("TriggerSection"+countTriggers);
+				LogEnablement.isLogDebugEnabled(triggerLogger,"Adding New Trigger.."+countTriggers);
+				//ADD ATTRIBUTE
+				Field fieldAttributeTrigger = new Field();
+				fieldAttributeTrigger.setName("TriggerAttr"+countTriggers);
+				fieldAttributeTrigger.setDisplayName("Attribute Name");
+				fieldAttributeTrigger.setDynamic(false);
+				fieldAttributeTrigger.setRequired(true);
+				fieldAttributeTrigger.setType("String");
+				fieldAttributeTrigger.setPostBack(true);
+				if(attrNames!=null)
+				{
+					attrNames.add(TriggersRuleLibrary.POPULATION);
+					//attrNames.add(TriggersRuleLibrary.GROUPDEFINITION);
+					fieldAttributeTrigger.setAllowedValues(attrNames);
+				}
+				//ADD FIELD TO SECTION
+				sectionTrigger.add(fieldAttributeTrigger);
+				//ADD NEW VALUES
+				Field fieldNewValuesTrigger = new Field();
+				fieldNewValuesTrigger.setName("TriggerNewValues"+countTriggers);
+				fieldNewValuesTrigger.setDisplayName("New Values");
+				fieldNewValuesTrigger.setRequired(true);
+				fieldNewValuesTrigger.setType("String");
+				fieldNewValuesTrigger.setPostBack(true);
+				fieldNewValuesTrigger.setDisplayType("radio");
+				//Set Allowed Values
+				Rule rule = context.getObjectByName(Rule.class,"Rule-NewValues");
+				if(rule!=null)
+				{
+					DynamicValue def = new DynamicValue();
+					def.setRule(rule);
+					context.decache(rule);
+					fieldNewValuesTrigger.setAllowedValuesDefinition(def);
+				}
+				else
+				{
+					fieldNewValuesTrigger.setAllowedValues(allowedNewValues);
+				}
+				//ADD FIELD TO SECTION
+				sectionTrigger.add(fieldNewValuesTrigger);
+				//ADD HIDDEN NEW GROUP DEFINITION or POPULATION
+				Field fieldNewGDTrigger = new Field();
+				fieldNewGDTrigger.setName("TriggerGD"+countTriggers);
+				fieldNewGDTrigger.setDisplayName("No Match Population Name");
+				fieldNewGDTrigger.setRequired(true);
+				fieldNewGDTrigger.setType("GroupDefinition");
+				fieldNewGDTrigger.setHelpKey("Members of this population will not be eligible for trigger");
+				fieldNewGDTrigger.setHidden(true);
+				Attributes valueMap = new Attributes();
+				valueMap.put("valueProperty", "name");
+				fieldNewGDTrigger.setAttributes(valueMap);
+				//ADD FIELD TO SECTION
+				sectionTrigger.add(fieldNewGDTrigger);
+				//ADD HIDDEN NEW GROUP DEFINITION or POPULATION
+				Field fieldOldGDTrigger = new Field();
+				fieldOldGDTrigger.setName("TriggerGDOld"+countTriggers);
+				fieldOldGDTrigger.setDisplayName("Match Population Name");
+				fieldOldGDTrigger.setRequired(true);
+				fieldOldGDTrigger.setType("GroupDefinition");
+				fieldOldGDTrigger.setHelpKey("Members of this population will be eligible for trigger");
+				fieldOldGDTrigger.setHidden(true);
+				valueMap = new Attributes();
+				valueMap.put("valueProperty", "name");
+				fieldOldGDTrigger.setAttributes(valueMap);
+				//ADD FIELD TO SECTION
+				sectionTrigger.add(fieldOldGDTrigger);
+				//ADD HIDDEN COMMA NEW SEPARATED VALUES
+				Field fieldNewValuesCommaSepTrigger = new Field();
+				fieldNewValuesCommaSepTrigger.setName("TriggerNewValuesCS"+countTriggers);
+				fieldNewValuesCommaSepTrigger.setDisplayName("New Comma Separated Values or Single Value");
+				fieldNewValuesCommaSepTrigger.setRequired(true);
+				fieldNewValuesCommaSepTrigger.setType("String");
+				fieldNewValuesCommaSepTrigger.setHidden(true);
+				fieldNewValuesCommaSepTrigger.setMulti(true);
+				//ADD FIELD TO SECTION
+				sectionTrigger.add(fieldNewValuesCommaSepTrigger);
+				//ADD OLD VALUES
+				Field fieldOldValuesTrigger = new Field();
+				fieldOldValuesTrigger.setName("TriggerOldValues"+countTriggers);
+				fieldOldValuesTrigger.setDisplayName("Old Values");
+				fieldOldValuesTrigger.setRequired(true);
+				fieldOldValuesTrigger.setType("String");
+				fieldOldValuesTrigger.setDisplayType("radio");
+				fieldOldValuesTrigger.setPostBack(true);
+				//Set Allowed Values
+				rule = context.getObjectByName(Rule.class,"Rule-OldValues");
+				if(rule!=null)
+				{
+					DynamicValue def = new DynamicValue();
+					def.setRule(rule);
+					context.decache(rule);
+					fieldOldValuesTrigger.setAllowedValuesDefinition(def);
+					//fieldOldValuesTrigger.setAllowedValuesDynamic(true);
+					//fieldOldValuesTrigger.setDynamic(true);
+				}
+				else
+				{
+					fieldOldValuesTrigger.setAllowedValues(allowedOldValues);
+				}
+				//ADD FIELD TO SECTION
+				sectionTrigger.add(fieldOldValuesTrigger);
+				//ADD HIDDEN COMMA OLD SEPARATED VALUES
+				Field fieldOldValuesCommaSepTrigger = new Field();
+				fieldOldValuesCommaSepTrigger.setName("TriggerOldValuesCS"+countTriggers);
+				fieldOldValuesCommaSepTrigger.setDisplayName("Old Comma Separated Values or Single Value");
+				fieldOldValuesCommaSepTrigger.setRequired(true);
+				fieldOldValuesCommaSepTrigger.setType("String");
+				fieldOldValuesCommaSepTrigger.setHidden(true);
+				fieldOldValuesCommaSepTrigger.setMulti(true);
+				//ADD FIELD TO SECTION
+				sectionTrigger.add(fieldOldValuesCommaSepTrigger);
+				//ADD FIELD DATE FORMAT
+				Field fieldDateFormatTrigger = new Field();
+				fieldDateFormatTrigger.setName("TriggerDateFormat"+countTriggers);
+				fieldDateFormatTrigger.setDisplayName("Date Format");
+				fieldDateFormatTrigger.setHelpKey("Please use Java SimpleDateFormat.");
+				fieldDateFormatTrigger.setDynamic(false);
+				fieldDateFormatTrigger.setRequired(true);
+				fieldDateFormatTrigger.setType("String");
+				fieldDateFormatTrigger.setHidden(true);
+				fieldDateFormatTrigger.setRequired(true);
+				Rule ruleFormat = context.getObjectByName(Rule.class, "Rule-Validate-DateFormat");
+				if(ruleFormat!=null)
+				{
+					fieldDateFormatTrigger.setValidationRule(ruleFormat);
+					context.decache(ruleFormat);
+				}
+				//ADD FIELD TO SECTION
+				sectionTrigger.add(fieldDateFormatTrigger);
+				//ADD FIELD DATE OPERATION
+				Field fieldDateOperationTrigger = new Field();
+				fieldDateOperationTrigger.setName("TriggerDateOperation"+countTriggers);
+				fieldDateOperationTrigger.setDisplayName("Date Operation");
+				fieldDateOperationTrigger.setDynamic(false);
+				fieldDateOperationTrigger.setRequired(true);
+				fieldDateOperationTrigger.setType("String");
+				fieldDateOperationTrigger.setHidden(true);
+				fieldDateOperationTrigger.setRequired(true);
+				fieldDateOperationTrigger.setAllowedValues(displayDateOperationValues);
+				//ADD FIELD TO SECTION
+				sectionTrigger.add(fieldDateOperationTrigger);
+				//ADD NO CHANGE AND OVERRIDE FOR COMMA SEPARATED AND DATE FIELD
+				Field fieldnoChangeDetectedOverrideANDOperationTrigger = new Field();
+				fieldnoChangeDetectedOverrideANDOperationTrigger.setName("TriggerNoChangeOverride"+countTriggers);
+				fieldnoChangeDetectedOverrideANDOperationTrigger.setDisplayName("Override And Operator");
+				fieldnoChangeDetectedOverrideANDOperationTrigger.setDynamic(false);
+				fieldnoChangeDetectedOverrideANDOperationTrigger.setRequired(false);
+				fieldnoChangeDetectedOverrideANDOperationTrigger.setType("String");
+				fieldnoChangeDetectedOverrideANDOperationTrigger.setHidden(true);
+				List allowedValues = new ArrayList();
+				allowedValues.add("YES");
+				allowedValues.add("NO");
+				fieldnoChangeDetectedOverrideANDOperationTrigger.setAllowedValues(allowedValues);
+				//ADD FIELD TO SECTION
+				sectionTrigger.add(fieldnoChangeDetectedOverrideANDOperationTrigger);
+				//ADD NEW SECTION TRIGGER TO FORM
+				form.add(sectionTrigger);
+			}
+		}
+		//Add form to workflow
+		workflow.put("configureTriggersROADForm",form);
+	}
+	
+	]]></Source>
+</Rule>

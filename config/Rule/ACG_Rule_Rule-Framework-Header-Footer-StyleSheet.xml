@@ -1,0 +1,41 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule-Framework-Header-Footer-StyleSheet">
+  <Source><![CDATA[
+  
+        import org.apache.commons.logging.Log;
+		import org.apache.commons.logging.LogFactory;
+        import sailpoint.object.EmailTemplate;
+        import sailpoint.rapidapponboarding.logger.LogEnablement;
+        String styleSheetTemplateName="EmailTemplate-FrameworkStyleSheet";
+  		String footerTemplateName="EmailTemplate-FrameworkFooter";
+        String headerTemplateName="EmailTemplate-FrameworkHeader";
+        EmailTemplate emailTemplate = null;
+        Log loggerEmail = LogFactory.getLog("rapidapponboarding.rules");
+   	    String body;
+        if(keyEmailTemplate!=null && keyEmailTemplate.equalsIgnoreCase("styleSheet"))
+        {
+          emailTemplate = context.getObjectByName(EmailTemplate.class,styleSheetTemplateName);
+          body=emailTemplate.getBody();
+        }
+        else if (keyEmailTemplate!=null && keyEmailTemplate.equalsIgnoreCase("footerTemplate"))
+        {
+          emailTemplate = context.getObjectByName(EmailTemplate.class,footerTemplateName);
+            body=emailTemplate.getBody();
+        }
+  		else if (keyEmailTemplate!=null && keyEmailTemplate.equalsIgnoreCase("headerTemplate"))
+        {
+          emailTemplate = context.getObjectByName(EmailTemplate.class,headerTemplateName);
+           body=emailTemplate.getBody();
+        }
+        if(emailTemplate!=null)
+        {
+      	context.decache(emailTemplate);
+        }
+        if(emailTemplate!=null)
+        {
+        return body;
+        }
+       	
+    ]]></Source>
+</Rule>

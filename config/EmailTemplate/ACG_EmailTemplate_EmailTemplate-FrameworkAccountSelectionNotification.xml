@@ -1,0 +1,110 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE EmailTemplate PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<EmailTemplate name="EmailTemplate-FrameworkAccountSelectionNotification">
+  <Body>
+	
+		#set($ctx = $spTools.class.forName("sailpoint.api.SailPointFactory").getMethod("getFactory", null).invoke(null,null).getCurrentContext())
+		#set($reqType = $workflow.requestType)
+		#set($accessReqNumber = $workItem.identityRequestId)
+		#if(!$accessReqNumber)
+		#set($accessReqNumber = $workItem.name)
+		#end
+		#if($workItem.getAttributes() &amp;&amp; $workItem.getAttributes().get("applicationName"))
+			#set($applicationName = $workItem.getAttributes().get("applicationName"))
+		#else
+			#set($applicationName = "")
+		#end
+		#if($workItem.getAttributes() &amp;&amp; $workItem.getAttributes().get("operation"))
+			#set($operation = $workItem.getAttributes().get("operation"))
+		#else
+			#set($operation = "")
+		#end
+		#set($ruleObj = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Rule"), "Rule-Framework-Header-Footer-StyleSheet")) 
+		#set($ruleArgs = { 
+		    "keyEmailTemplate"  : "styleSheet"
+		}) 
+		#set($styleSheet = $ctx.runRule($ruleObj, $ruleArgs))
+		#if( $ruleObj )
+		$ctx.decache($ruleObj)
+		#end
+		#set($ruleObj = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Rule"), "Rule-Framework-Header-Footer-StyleSheet")) 
+		#set($ruleArgs = { 
+		    "keyEmailTemplate"  : "headerTemplate"
+		}) 
+		#set($headerTemplate = $ctx.runRule($ruleObj, $ruleArgs))
+		#if( $ruleObj )
+		$ctx.decache($ruleObj)
+		#end
+		#set($ruleObj = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Rule"), "Rule-Framework-Header-Footer-StyleSheet")) 
+		#set($ruleArgs = { 
+		    "keyEmailTemplate"  : "footerTemplate"
+		}) 
+		#set($footerTemplate = $ctx.runRule($ruleObj, $ruleArgs))
+		#if( $ruleObj )
+		$ctx.decache($ruleObj)
+		#end
+		#set($ruleObj = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Rule"), "Rule-Server-Root-Path")) 
+		#set($ruleArgs = {})
+		#set($rootPath = $ctx.runRule($ruleObj, $ruleArgs))
+		#if( $ruleObj )
+		$ctx.decache($ruleObj)
+		#end
+		<![CDATA[<html>
+		<head>
+		<meta charset="UTF-8">	    
+		#if( $styleSheet )
+		$styleSheet
+		#end  
+		</head>	      
+	    	<body>
+	    	#if( $headerTemplate )
+			$headerTemplate
+			#end
+			<br/>    
+			Request Number:  $accessReqNumber<br/>
+			Request For Identity Name:  <strong>$identityName</strong><br/>
+            Request For Identity Display Name:  <strong>$identityDisplayName</strong><br/>
+			<p>Please login to IdentityIQ and view your work item inbox .  <a href="$rootPath/workitem/workItem.jsf?id=$workItem.id">Click here</a></p>	
+    		#if( $footerTemplate )
+			$footerTemplate
+			#end
+			</body>
+		</html>]]>
+	
+	</Body>
+  <Description>
+      Email Template for notifying users when they need to select which accounts
+      a provisioning request should apply to when a user has multiple accounts on
+      an application.
+      This is used by the Do Provisioning Forms workflow subprocess.
+      Note that in addition to the declared arguments, all workflow variables,
+      Step arguments, and Approval arguments defined in the Workflow are
+      also available.
+    </Description>
+  <Signature>
+    <Inputs>
+      <Argument name="workflow" type="Workflow">
+        <Description>The Workflow object being executed.</Description>
+      </Argument>
+      <Argument name="item" type="WorkItem">
+        <Description>The WorkItem representing the account selection.</Description>
+      </Argument>
+      <Argument name="launcher" type="string">
+        <Description>The name of the Identity that launched the workflow.</Description>
+      </Argument>
+      <Argument name="identityDisplayName" type="string">
+        <Description>The display name (usually full name) of the Identity that is the target of the provisioning.</Description>
+      </Argument>
+      <Argument name="identityName" type="string">
+        <Description>The name of the Identity that is the target of the provisioning.</Description>
+      </Argument>
+      <Argument multi="true" name="accounts" type="AccountSelection">
+        <Description>A list of AccountSelection objects for the accounts that need to be selected.</Description>
+      </Argument>
+      <Argument name="emailSubject" type="String">
+        <Description>Email Subject</Description>
+      </Argument>
+    </Inputs>
+  </Signature>
+  <Subject>#if($emailSubject) $emailSubject #else Account selection required for $identityDisplayName #end</Subject>
+</EmailTemplate>

@@ -1,0 +1,27 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule-Validate-HighWaterMarkThreshold">
+  <Source><![CDATA[
+	
+	if(value!=null)
+	{
+	   String highWaterMarkThreshold=value;
+		try
+		{
+			if(highWaterMarkThreshold!=null)
+			{
+				Integer highWaterMarkThresholdInt = Integer.valueOf(highWaterMarkThreshold);
+			}
+		} 
+		catch (NumberFormatException mumberFormatException) 
+		{
+			return "Invalid Threshold";
+		}
+		catch (Exception ex) 
+		{
+		    return "Invalid Threshold";
+		}
+	}
+	
+	]]></Source>
+</Rule>

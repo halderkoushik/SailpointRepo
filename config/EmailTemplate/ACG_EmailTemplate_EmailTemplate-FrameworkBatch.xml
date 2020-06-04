@@ -1,0 +1,80 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE EmailTemplate PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<EmailTemplate name="EmailTemplate-FrameworkBatch">
+  <Body>
+
+			#set($ctx = $spTools.class.forName("sailpoint.api.SailPointFactory").getMethod("getFactory", null).invoke(null,null).getCurrentContext())
+			#set($ruleObj = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Rule"), "Rule-Framework-Header-Footer-StyleSheet")) 
+			#set($ruleArgs = { 
+			    "keyEmailTemplate"  : "styleSheet"
+			}) 
+			#set($styleSheet = $ctx.runRule($ruleObj, $ruleArgs))
+			#if( $ruleObj )
+			$ctx.decache($ruleObj)
+			#end
+			#set($ruleObj = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Rule"), "Rule-Framework-Header-Footer-StyleSheet")) 
+			#set($ruleArgs = { 
+			    "keyEmailTemplate"  : "headerTemplate"
+			}) 
+			#set($headerTemplate = $ctx.runRule($ruleObj, $ruleArgs))
+			#if( $ruleObj )
+			$ctx.decache($ruleObj)
+			#end
+			#set($ruleObj = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Rule"), "Rule-Framework-Header-Footer-StyleSheet")) 
+			#set($ruleArgs = { 
+			    "keyEmailTemplate"  : "footerTemplate"
+			}) 
+			#set($footerTemplate = $ctx.runRule($ruleObj, $ruleArgs))
+			#if( $ruleObj )
+			$ctx.decache($ruleObj)
+			#end
+			<![CDATA[<html>		
+			<head>
+			<meta charset="UTF-8">	    
+			#if( $styleSheet )
+			$styleSheet
+			#end 
+			</head>
+	    	<body>
+	    	#if( $headerTemplate )
+			$headerTemplate
+			#end
+			<br/>       
+			$launcher is requesting approval to run in a batch request file.
+			#if ( $approvalSet.items )
+			#foreach ($item in $approvalSet.items)
+			    Content Preview: $item.displayValue
+			#end
+			#end
+			#if( $footerTemplate )
+			$footerTemplate
+			#end
+			</body>
+		</html>]]>
+        
+    </Body>
+  <Description>
+		Email Template for notifying approvers when they need to approve a batch request
+		made through LCM.
+		Note that in addition to the declared arguments, all workflow variables,
+		Step arguments, and Approval arguments defined in the Workflow are
+		also available.
+	</Description>
+  <Signature>
+    <Inputs>
+      <Argument name="workflow" type="Workflow">
+        <Description>The Workflow object being executed.</Description>
+      </Argument>
+      <Argument name="item" type="WorkItem">
+        <Description>The WorkItem representing the review.</Description>
+      </Argument>
+      <Argument name="approvalSet" type="ApprovalSet">
+        <Description>The ApprovalSet object contained in the work item.</Description>
+      </Argument>
+      <Argument name="launcher" type="string">
+        <Description>The name of the Identity that launched the workflow. </Description>
+      </Argument>
+    </Inputs>
+  </Signature>
+  <Subject>Action Required: Batch request(s) need your approval</Subject>
+</EmailTemplate>

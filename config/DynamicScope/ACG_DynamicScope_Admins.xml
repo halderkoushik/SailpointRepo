@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE DynamicScope PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<DynamicScope name="Admins">
+  <Description>This Dynamic Scope will allow anyone  that belongs to the Workgroup access to the QuickLinks</Description>
+  <PopulationRequestAuthority>
+    <MatchConfig customControl="(correlated == true)" enableCustomControl="true" matchAll="true"/>
+  </PopulationRequestAuthority>
+  <Selector>
+    <IdentitySelector>
+      <MatchExpression>
+        <MatchTerm name="workgroups" value="Admins"/>
+      </MatchExpression>
+    </IdentitySelector>
+  </Selector>
+</DynamicScope>

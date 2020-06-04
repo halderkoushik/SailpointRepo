@@ -1,0 +1,135 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Workflow PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Workflow explicitTransitions="true" handler="sailpoint.api.StandardWorkflowHandler" name="Workflow-Configure-Triggers" type="LCMProvisioning">
+  <Variable initializer="true" name="transient">
+    <Description>Accelerator Pack Configure Triggers Workflow</Description>
+  </Variable>
+  <Variable name="confirmationForm">
+    <Description>
+      A form that gets displayed for confirming the registration.
+    </Description>
+  </Variable>
+  <Variable initializer="false" name="trace">
+    <Description>
+			Used for debugging this workflow and when set to true
+			trace
+			will be sent to stdout.
+		</Description>
+  </Variable>
+  <Variable initializer="ref:launcher" name="owner">
+    <Description>Name of the user that will recieve the forms.</Description>
+  </Variable>
+  <Variable name="roadSectionAttributes"/>
+  <Variable name="roadFieldTriggerSelect"/>
+  <Variable name="SAVETRIGGERS"/>
+  <Variable name="ADDTRIGGER"/>
+  <Variable name="CHANGELCE"/>
+  <Variable name="configureTriggersROADForm"/>
+  <Variable name="configureTriggersRoadModel"/>
+  <RuleLibraries>
+    <Reference class="sailpoint.object.Rule" name="Rule-Configure-Triggers-RuleLibrary"/>
+  </RuleLibraries>
+  <Step icon="Start" name="Start" posX="28" posY="10">
+    <Transition to="Initialize LCE Form"/>
+  </Step>
+  <Step name="Initialize LCE Form">
+    <Script>
+      <Source><![CDATA[
+	     
+	      intializeConfigureTriggersSectionAttributes(workflow);
+				
+	      ]]></Source>
+    </Script>
+    <Transition to="Show Trigger Selection Form"/>
+  </Step>
+  <Step name="Show Trigger Selection Form">
+    <Approval name="SmartServices-Trigger" owner="ref:requester" return="roadFieldTriggerSelect" send="roadSectionAttributes">
+      <Form name="SmartServices-Trigger" type="Workflow">
+        <Description>Lifecycle Event</Description>
+        <Section name="roadSectionTriggerSelect">
+          <Attributes>
+            <Map>
+              <entry key="subtitle" value="Standard Identity Lifecycle Event"/>
+            </Map>
+          </Attributes>
+          <Field displayName="Select Event for Configuration" displayType="radio" name="roadFieldTriggerSelect" required="true" type="string">
+            <AllowedValuesDefinition>
+              <RuleRef>
+                <Reference class="sailpoint.object.Rule" name="Rule-Initialize-LCE"/>
+              </RuleRef>
+            </AllowedValuesDefinition>
+          </Field>
+        </Section>
+        <Button action="cancel" label="Cancel"/>
+        <Button action="next" label="Next"/>
+      </Form>
+    </Approval>
+    <Transition to="End" when="!approved"/>
+    <Transition to="Initialize Identity Trigger Form" when="approved"/>
+  </Step>
+  <Step icon="Start" name="Initialize Identity Trigger Form">
+    <Script>
+      <Source><![CDATA[
+				 
+	        	intializeConfigureTriggersRoadModel(workflow,roadFieldTriggerSelect);
+	        	initializebuildTriggersForm(workflow,roadFieldTriggerSelect,"Triggers",SAVETRIGGERS,ADDTRIGGER,CHANGELCE);
+		    	
+			]]></Source>
+    </Script>
+    <Transition to="Show SmartServices Cofigure Triggers Form"/>
+  </Step>
+  <Step name="Show SmartServices Cofigure Triggers Form">
+    <Approval mode="serial" owner="ref:requester" return="SAVETRIGGERS,ADDTRIGGER,CHANGELCE,configureTriggersRoadModel" send="">
+      <Arg name="workItemFormBasePath" value="configureTriggersRoadModel"/>
+      <Arg name="workItemType" value="Form"/>
+      <Arg name="workItemDescription" value="SmartServices Configure Triggers"/>
+      <Arg name="workItemForm" value="ref:configureTriggersROADForm"/>
+    </Approval>
+    <Transition to="End" when="!approved"/>
+    <Transition to="Initialize Identity Trigger Form" when="script:(approved &amp;&amp; ADDTRIGGER!=void &amp;&amp; ADDTRIGGER!=null &amp;&amp; ADDTRIGGER.equalsIgnoreCase(&quot;ADDTRIGGER&quot;))"/>
+    <Transition to="Initialize LCE Form" when="script:(approved &amp;&amp; CHANGELCE!=void &amp;&amp;CHANGELCE!=null &amp;&amp; CHANGELCE.equalsIgnoreCase(&quot;CHANGELCE&quot;))"/>
+    <Transition to="Build Confirmation Form" when="approved"/>
+  </Step>
+  <Step action="call:buildReadOnlyForm" name="Build Confirmation Form" resultVariable="confirmationForm">
+    <Arg name="form" value="ref:configureTriggersROADForm"/>
+    <Arg name="nextButtonLabel" value="Confirm"/>
+    <Arg name="backButtonLabel" value="Back"/>
+    <Arg name="cancelButtonLabel" value="Cancel"/>
+    <Description>
+       Create the confirmation form to be displayed.
+    </Description>
+    <Transition to="Confirmation Form"/>
+  </Step>
+  <Step icon="Approval" name="Confirmation Form">
+    <Approval mode="serial" owner="ref:launcher" return="configureTriggersRoadModel" send="">
+      <Arg name="workItemType" value="Form"/>
+      <Arg name="workItemDescription" value="Confirmation form"/>
+      <Arg name="workItemForm" value="ref:confirmationForm"/>
+      <Arg name="workItemFormBasePath" value="configureTriggersRoadModel"/>
+    </Approval>
+    <Description>
+       Display the confirmation form.
+    </Description>
+    <Transition to="Show SmartServices Cofigure Triggers Form" when="!approved"/>
+    <Transition to="Save" when="approved"/>
+  </Step>
+  <Step name="Save">
+    <Script>
+      <Source><![CDATA[
+				 
+				try
+				{
+			    saveTriggers(configureTriggersRoadModel,roadFieldTriggerSelect,confirmationForm);
+			    }
+			    finally
+			    {
+	        	//Final Commit
+	        	context.commitTransaction();
+	        	}
+		    	
+			]]></Source>
+    </Script>
+    <Transition to="End"/>
+  </Step>
+  <Step icon="Stop" name="End"/>
+</Workflow>

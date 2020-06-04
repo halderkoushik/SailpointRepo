@@ -1,0 +1,215 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Workflow PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Workflow explicitTransitions="true" handler="sailpoint.api.StandardWorkflowHandler" name="Workflow-QuickLink-Self-Service-ROAD" type="LCMProvisioning">
+  <Variable initializer="true" name="transient"/>
+  <Variable name="confirmationForm">
+    <Description>
+      A form that gets displayed for confirming the registration.
+    </Description>
+  </Variable>
+  <Variable initializer="false" name="trace">
+    <Description>
+            Used for debugging this workflow and when set to true
+            trace
+            will be sent to stdout.
+        </Description>
+  </Variable>
+  <Variable initializer="ref:launcher" name="owner">
+    <Description>Name of the user that will recieve the forms.</Description>
+  </Variable>
+  <Variable name="roadForm">
+    <Script>
+      <Source><![CDATA[
+         
+            return "ROAD-Self-Service";
+                
+          ]]></Source>
+    </Script>
+  </Variable>
+  <Variable name="roadApplicationselect"/>
+  <Variable name="roadModel">
+    <Script>
+      <Source><![CDATA[
+         
+            HashMap roadModelMap= new HashMap();
+            roadModelMap.put("transformerClass", "sailpoint.transformer.IdentityTransformer");
+            roadModelMap.put("transformerOptions", null);
+            return roadModelMap;
+                
+          ]]></Source>
+    </Script>
+  </Variable>
+  <Variable name="roadSectionAttributes"/>
+  <Description>Accelerator Pack Self Service Workflow</Description>
+  <RuleLibraries>
+    <Reference class="sailpoint.object.Rule" name="Rule-Self-Service-RuleLibrary"/>
+  </RuleLibraries>
+  <Step icon="Start" name="Start" posX="28" posY="10">
+    <Transition to="Get ROAD Section Form Properties"/>
+  </Step>
+  <Step name="Get ROAD Section Form Properties" resultVariable="roadSectionAttributes">
+    <Script>
+      <Source><![CDATA[
+         
+           import sailpoint.object.Attributes;
+            import sailpoint.object.Custom;
+            Attributes mapAttr = new Attributes();
+            Custom mappingObj = context.getObjectByName(Custom.class, "Custom-ROAD-SelfService-Form-Settings");
+            if(mappingObj!=null && mappingObj.getAttributes()!=null)
+            {
+                 mapAttr = mappingObj.getAttributes();  
+                 context.decache(mappingObj);
+            }
+            return mapAttr;
+                
+          ]]></Source>
+    </Script>
+    <Transition to="Show Application Form"/>
+  </Step>
+  <Step name="Show Application Form">
+    <Approval name="ROAD-Self-Service" owner="ref:requester" return="roadApplicationselect,roadModel" send="roadModel">
+      <Form name="ROAD-Self-Service" type="Workflow">
+        <Attributes>
+          <Map>
+            <entry key="pageTitle" value="Self Service Application Onboarding"/>
+            <entry key="title" value="Self Service Application Onboarding"/>
+          </Map>
+        </Attributes>
+        <Description>Application Onboarding</Description>
+        <Section label="Select Application" name="roadApplication">
+          <Attributes>
+            <Map>
+              <entry key="subtitle" value="application_selection_ROAD_onboarding"/>
+            </Map>
+          </Attributes>
+          <Field displayName="Onboard Application" name="roadApplicationselect" postBack="true" required="true">
+            <AllowedValuesDefinition>
+              <Script>
+                <Source><![CDATA[
+            import sailpoint.rapidapponboarding.rule.ApplicationInventory;
+            List list = new ArrayList();    
+            list=ApplicationInventory.getScopedApps(context);
+            return list;
+            ]]></Source>
+              </Script>
+            </AllowedValuesDefinition>
+          </Field>
+          <Field displayName="Onboard Application" dynamic="true" hidden="true" name="initRoadModel" required="true" type="string">
+            <RuleRef>
+              <Reference class="sailpoint.object.Rule" name="Rule-Self-Service-ROAD-Trasnformer"/>
+            </RuleRef>
+          </Field>
+        </Section>
+        <Button action="cancel" label="Cancel"/>
+        <Button action="next" label="Next"/>
+      </Form>
+    </Approval>
+    <Transition to="End" when="!approved"/>
+    <Transition to="Fill In Additional Details to Section Attributes" when="approved"/>
+  </Step>
+  <Step name="Fill In Additional Details to Section Attributes">
+    <Script>
+      <Source><![CDATA[
+                 
+                addConnectorDetailsToSectionAttributes(roadSectionAttributes,roadApplicationselect);
+                addServiceAccountEmailInfo(roadSectionAttributes);
+                
+            ]]></Source>
+    </Script>
+    <Transition to="Show ROAD Form"/>
+  </Step>
+  <Step name="Show ROAD Form">
+    <Approval mode="serial" owner="ref:requester" return="roadModel" send="roadApplicationselect,roadSectionAttributes">
+      <Arg name="workItemFormBasePath" value="roadModel"/>
+      <Arg name="workItemType" value="Form"/>
+      <Arg name="workItemDescription" value="Application Onboarding"/>
+      <Arg name="workItemForm" value="ref:roadForm"/>
+    </Approval>
+    <Transition to="End" when="script:(roadSectionAttributes!=null &amp;&amp; roadSectionAttributes.containsKey(&quot;roadReadOnly&quot;) &amp;&amp; roadSectionAttributes.get(&quot;roadReadOnly&quot;)!=null &amp;&amp; roadSectionAttributes.get(&quot;roadReadOnly&quot;).equalsIgnoreCase(&quot;TRUE&quot;))"/>
+    <Transition to="Show Application Form" when="!approved"/>
+    <Transition to="Build Confirmation Form" when="approved"/>
+  </Step>
+  <Step action="call:buildReadOnlyForm" condition="script:(roadSectionAttributes!=void &amp;&amp; roadSectionAttributes!=null &amp;&amp; roadSectionAttributes.containsKey(&quot;roadConfirmation&quot;) &amp;&amp;  roadSectionAttributes.get(&quot;roadConfirmation&quot;).equalsIgnoreCase(&quot;FALSE&quot;))" name="Build Confirmation Form" resultVariable="confirmationForm">
+    <Arg name="form" value="ref:roadForm"/>
+    <Arg name="nextButtonLabel" value="label_confirm"/>
+    <Arg name="backButtonLabel" value="Go To First Page"/>
+    <Arg name="cancelButtonLabel" value="Cancel"/>
+    <Description>
+       Create the confirmation form to be displayed.
+    </Description>
+    <Transition to="Confirmation Form"/>
+  </Step>
+  <Step condition="script:(roadSectionAttributes!=void &amp;&amp; roadSectionAttributes!=null &amp;&amp; roadSectionAttributes.containsKey(&quot;roadConfirmation&quot;) &amp;&amp;  roadSectionAttributes.get(&quot;roadConfirmation&quot;).equalsIgnoreCase(&quot;FALSE&quot;))" icon="Approval" name="Confirmation Form">
+    <Approval mode="serial" owner="ref:launcher" return="roadModel" send="roadSectionAttributes,roadApplicationselect">
+      <Arg name="workItemType" value="Form"/>
+      <Arg name="workItemDescription" value="Confirmation form"/>
+      <Arg name="workItemForm" value="ref:confirmationForm"/>
+      <Arg name="workItemFormBasePath" value="roadModel"/>
+    </Approval>
+    <Description>
+       Display the confirmation form.
+    </Description>
+    <Transition to="Show ROAD Form" when="!approved"/>
+    <Transition to="Save" when="approved"/>
+  </Step>
+  <Step name="Save">
+    <Script>
+      <Source><![CDATA[
+                 
+                import sailpoint.rapidapponboarding.rule.ROADUtil;
+                import sailpoint.api.PersistenceManager;
+                import sailpoint.api.ObjectUtil;
+                Application app = null;
+                String appName=null;
+                if(roadApplicationselect!=null)
+                {
+                 String lockMode = PersistenceManager.LOCK_TYPE_TRANSACTION;
+                 app = ObjectUtil.lockObject(context, Application.class,null, roadApplicationselect, lockMode);
+                 appName=app.getName();
+                }
+                try
+                {
+                    List attrSyncKeys = new ArrayList();
+                    attrSyncKeys.add("attrSyncSubscription");
+                    List emailKeys= new ArrayList();
+                    emailKeys.add("joinerVelocityText");
+                    emailKeys.add("joinerPasswordVelocityText");
+                    emailKeys.add("joinerRehireVelocityText");
+                    emailKeys.add("joinerRehirePasswordVelocityText");
+                    List roleKeys= new ArrayList();
+                    roleKeys.add("requestorFormRole");
+                    saveApplication( roadModel,  roadApplicationselect,  appName,  attrSyncKeys,  emailKeys, roleKeys,app,roadSectionAttributes);
+                    String attrDisabled=ROADUtil.roadFeatureDisabledString(context,"ATTRIBUTE SYNCHRONIZATION FEATURE");
+                    if(attrDisabled!=null && attrDisabled.length()>0 && attrDisabled.equalsIgnoreCase("FALSE"))
+                    {
+                    saveAttributeSyncMappings( roadModel,  roadApplicationselect,  appName,  attrSyncKeys);
+                    }
+                    saveEmailMappings( roadModel,  roadApplicationselect,  appName,  emailKeys);
+                }
+                finally
+                {
+                //Final Commit
+                context.commitTransaction();
+                }
+                
+            ]]></Source>
+    </Script>
+    <Transition to="Force Load"/>
+  </Step>
+  <Step name="Force Load">
+    <Script>
+      <Source><![CDATA[
+                 
+                import sailpoint.rapidapponboarding.rule.EmailNotificationRuleLibrary;
+                import sailpoint.rapidapponboarding.rule.AttributeSyncRuleLibrary;
+                //Let's Force Load Email Settings
+                EmailNotificationRuleLibrary.forceLoad(context);
+                 //Let's Force Load Attribute Sync Settings
+                AttributeSyncRuleLibrary.forceLoad(context);
+                
+            ]]></Source>
+    </Script>
+    <Transition to="End"/>
+  </Step>
+  <Step icon="Stop" name="End"/>
+</Workflow>

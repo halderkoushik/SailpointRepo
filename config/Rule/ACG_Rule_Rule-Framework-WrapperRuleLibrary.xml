@@ -1,0 +1,1061 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule-Framework-WrapperRuleLibrary">
+  <Description>A rule used by a Workflow to determine a step action or variable value.
+    Note that an Attributes map of all variables from the current WorkflowContext,
+    merged with the arguments from the  Step, is also passed into the workflow rule .</Description>
+  <Signature returnType="Object">
+    <Inputs>
+      <Argument name="log">
+        <Description>
+          The log object associated with the SailPointContext.
+        </Description>
+      </Argument>
+      <Argument name="context">
+        <Description>
+          A sailpoint.api.SailPointContext object that can be used to query the database if necessary.
+        </Description>
+      </Argument>
+      <Argument name="wfcontext">
+        <Description>
+          The current WorkflowContext.
+        </Description>
+      </Argument>
+      <Argument name="handler">
+        <Description>
+          The workflow handler associated with the current WorkflowContext.
+        </Description>
+      </Argument>
+      <Argument name="workflow">
+        <Description>
+          The current Workflow definition.
+        </Description>
+      </Argument>
+      <Argument name="step">
+        <Description>
+          The current Step.
+        </Description>
+      </Argument>
+      <Argument name="approval">
+        <Description>
+          The current Approval.
+        </Description>
+      </Argument>
+      <Argument name="item">
+        <Description>
+          The WorkItem being processed.
+        </Description>
+      </Argument>
+    </Inputs>
+    <Returns>
+      <Argument name="Object">
+        <Description>
+          The result of the workflow rule; dependent on the rule itself.
+        </Description>
+      </Argument>
+    </Returns>
+  </Signature>
+  <Source><![CDATA[
+    
+        import java.text.DateFormat;
+        import java.text.SimpleDateFormat;
+        import java.util.ArrayList;
+        import java.util.Calendar;
+        import java.util.Date;
+        import java.util.HashMap;
+        import java.util.Iterator;
+        import java.util.List;
+        import java.util.Map;
+        import java.util.Set;
+        import org.apache.commons.logging.Log;
+        import org.apache.commons.logging.LogFactory;
+        import sailpoint.api.CertificationScheduler;
+        import sailpoint.api.IdentityService;
+        import sailpoint.api.PasswordGenerator;
+        //Workflow Invocation Imports
+        import sailpoint.object.Filter.CompositeFilter;
+        import sailpoint.api.RequestManager;
+        import sailpoint.api.SailPointContext;
+        import sailpoint.api.SailPointFactory;
+        import sailpoint.object.Application;
+        import sailpoint.object.Attributes;
+        import sailpoint.object.Bundle;
+        import sailpoint.object.Certification;
+        import sailpoint.object.CertificationAction;
+        import sailpoint.object.CertificationDefinition;
+        import sailpoint.object.CertificationSchedule;
+        import sailpoint.object.Configuration;
+        import sailpoint.object.Custom;
+        import sailpoint.object.Duration;
+        import sailpoint.object.Field;
+        import sailpoint.object.Filter;
+        import sailpoint.object.Form;
+        import sailpoint.object.Identity;
+        import sailpoint.object.IdentityEntitlement;
+        import sailpoint.object.IdentityRequest;
+        import sailpoint.object.Link;
+        import sailpoint.object.NotificationConfig;
+        import sailpoint.object.NotificationConfig.EscalationConfig;
+        import sailpoint.object.NotificationConfig.ReminderConfig;
+        import sailpoint.object.ObjectConfig;
+        import sailpoint.object.ProvisioningProject;
+        import sailpoint.object.ProvisioningPlan;
+        import sailpoint.object.ProvisioningPlan.AbstractRequest;
+        import sailpoint.object.ProvisioningPlan.AccountRequest;
+        import sailpoint.object.ProvisioningPlan.AttributeRequest;
+        import sailpoint.object.ProvisioningPlan.AccountRequest.Operation;
+        import sailpoint.object.ProvisioningResult;
+        import sailpoint.object.QueryOptions;
+        import sailpoint.object.Request;
+        import sailpoint.object.Rule;
+        import sailpoint.object.Schema;
+        import sailpoint.object.Tag;
+        import sailpoint.object.TaskSchedule;
+        import sailpoint.object.Template;
+        import sailpoint.object.Workflow;
+        import sailpoint.tools.GeneralException;
+        import sailpoint.tools.Message;
+        import sailpoint.tools.Util;
+        import sailpoint.api.IdentityArchiver;
+        import sailpoint.object.Identity;
+        import sailpoint.object.IdentitySnapshot;       
+        import sailpoint.object.GroupDefinition;    
+        import java.util.concurrent.TimeUnit;       
+        import sailpoint.rapidapponboarding.rule.WrapperRuleLibrary;
+        import sailpoint.rapidapponboarding.rule.ReverseLeaverRuleLibrary;
+        import sailpoint.rapidapponboarding.rule.JoinerRuleLibrary;
+        import sailpoint.rapidapponboarding.rule.LeaverRuleLibrary;
+        import sailpoint.rapidapponboarding.rule.ObjectConfigAttributesRuleLibrary;
+        import sailpoint.rapidapponboarding.rule.ROADUtil;
+        import sailpoint.object.RoleAssignment;
+        import java.util.regex.Matcher;
+        import java.util.regex.Pattern;
+        import sailpoint.api.Terminator;
+        import sailpoint.object.Filter.MatchMode;
+        import sailpoint.object.WorkflowLaunch;
+        import sailpoint.api.Provisioner;
+        import sailpoint.api.Workflower;
+        import sailpoint.object.TaskResult;
+        import sailpoint.tools.Util;
+        import sailpoint.rapidapponboarding.logger.LogEnablement;
+        Log fwLogger = LogFactory.getLog("rapidapponboarding.rules");
+        /**
+         * Get Bundles to Remove During Termination
+         * @param identity
+         * @param appName
+         * @return
+         */
+        public List frameworkRemoveRequestedAssignedBundles(Identity identity, String appName)  
+        {   
+            LogEnablement.isLogDebugEnabled(fwLogger,"Enter frameworkRemoveRequestedAssignedBundles");
+            String logicalAppEnabled=ObjectConfigAttributesRuleLibrary.extendedAttrLogicalAppEnabled(context);
+            boolean logApp=false;
+            if(logicalAppEnabled!=null && logicalAppEnabled.length()>0 && logicalAppEnabled.equalsIgnoreCase("TRUE"))
+            {
+                logApp=true;
+            }
+            List retVal = new ArrayList();
+            String logicalAppNameOnRole=null;
+            if (identity.getRoleAssignments() != null) 
+            {
+                //BIRTHRIGHT ROLES WILL HAVE NO ROLE ASSIGNMENTS ON CUBE
+                List identityRoleAssignments = identity.getRoleAssignments();
+                LogEnablement.isLogDebugEnabled(fwLogger,"...Iterate Role Assignments");
+                for (RoleAssignment ra : identityRoleAssignments) 
+                {
+                    if (ra.getSource() != null) 
+                    {
+                        if ((ra.getSource().equalsIgnoreCase("Rule") || ra.getSource().equalsIgnoreCase("LCM") || ra.getSource().equalsIgnoreCase("Batch") || ra.getSource().equalsIgnoreCase("UI"))) {
+                            if (ra.getRoleName() != null) 
+                            {
+                                String bundleName = ra.getRoleName();
+                                Bundle bundle = null;
+                                bundle = context.getObjectByName(Bundle.class, bundleName);
+                                LogEnablement.isLogDebugEnabled(fwLogger,"...appName = " + appName);
+                                logicalAppNameOnRole=bundle.getAttribute("appName");
+                                //If requested bundle
+                                //logicalAppNameOnRole is a physical application
+                                if (bundle != null && logApp && logicalAppNameOnRole != null && appName.equalsIgnoreCase(logicalAppNameOnRole)) 
+                                {
+                                    // logicalAppNameOnRole is a Business or IT/Infrastruture Application, 
+                                    // because it matches with application name on an Identity cube application accounts
+                                    if (retVal != null) 
+                                    {
+                                        AccountRequest bundleAR = LeaverRuleLibrary.removeRequestedAssignedBundle(context,identity, bundleName);
+                                        if (bundleAR != null) 
+                                        {
+                                            retVal.add(bundleAR);
+                                        }
+                                    }
+                                }
+                                // Logical Application is Disabled
+                                // OR Logical Application is Not Defined on Role
+                                // OR Logical Application doesn't exist in IdentityIQ
+                                // OR Logical Application is comma separated. As a result, doesn't match with Identity Application
+                                else if(bundle!=null)
+                                {
+                                    if(enterpriseRoles!=void && !enterpriseRoles.containsKey(bundle.getName()))
+                                    {
+                                        String businessAppNamePref=ROADUtil.setRoleAppName(bundle.getRequirements(),bundle.getApplications());
+                                        LogEnablement.isLogDebugEnabled(fwLogger,"...businessAppNamePref "+businessAppNamePref);
+                                        if (businessAppNamePref != null && appName.equalsIgnoreCase(businessAppNamePref)) 
+                                        {
+                                            enterpriseRoles.put(bundle.getName(),businessAppNamePref);
+                                            if (retVal != null) 
+                                            {
+                                                AccountRequest bundleAR = LeaverRuleLibrary.removeRequestedAssignedBundle(context,identity, bundleName);
+                                                if (bundleAR != null) 
+                                                {
+                                                    retVal.add(bundleAR);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                if (bundle != null)
+                                 {
+                                 context.decache(bundle);
+                                 }
+                            }
+                        }
+                    }
+                }
+            }
+            LogEnablement.isLogDebugEnabled(fwLogger,"Exit frameworkRemoveRequestedAssignedBundles");
+            return retVal;
+        }
+        /**
+         * Build Account Request for Application Options
+         * @param psa
+         * @param extSetting
+         * @param extendedRule
+         * @param appName
+         * @param nativeId
+         * @param identity
+         * @param iiqDisabled
+         * @param iiqLocked
+         * @param requestType
+         * @param workflow
+         * @param requestId
+         * @return
+         * @throws GeneralException
+         */
+        public List getAccountRequest(String psa, String extSetting, String extendedRule, String appName, String nativeId, Identity identity, String iiqDisabled, 
+        String iiqLocked, String requestType,Workflow workflow, String requestId) throws GeneralException 
+        {
+            LogEnablement.isLogDebugEnabled(fwLogger,"Overloading getAccountRequest");
+            return getAccountRequest(psa, extSetting, extendedRule, appName, nativeId, identity, iiqDisabled, iiqLocked, requestType, workflow, requestId, null, null, null);
+        }
+        /**
+         * Build Account Request for Application Options
+         * @param psa
+         * @param extSetting
+         * @param extendedRule
+         * @param appName
+         * @param nativeId
+         * @param identity
+         * @param iiqDisabled
+         * @param iiqLocked
+         * @param requestType
+         * @param workflow
+         * @param requestId
+         * @param roles
+         * @param apps
+         * @return
+         * @throws GeneralException
+         */
+        public List getAccountRequest(String psa, String extSetting, String extendedRule, String appName, String nativeId, Identity identity, String iiqDisabled, 
+        String iiqLocked, String requestType,Workflow workflow, String requestId, HashMap roles, List apps, ProvisioningProject project) throws GeneralException 
+        {
+            LogEnablement.isLogDebugEnabled(fwLogger,"Start getAccountRequest.."+appName);
+            LogEnablement.isLogDebugEnabled(fwLogger,"extendedRuleKey.."+extendedRule);
+            LogEnablement.isLogDebugEnabled(fwLogger,"extSetting.."+extSetting);
+            LogEnablement.isLogDebugEnabled(fwLogger,"iiqLocked.."+iiqLocked);
+            LogEnablement.isLogDebugEnabled(fwLogger,"iiqDisabled.."+iiqDisabled);
+            LogEnablement.isLogDebugEnabled(fwLogger,"requestType.."+requestType);
+            LogEnablement.isLogDebugEnabled(fwLogger,"requestId.."+requestId);
+            List retVal = new ArrayList();
+            List immediateActionList = new ArrayList();
+            AccountRequest acctReq = null;
+            String appXDays="xDays";
+            Map populationMap=null;
+            //Get app object
+            Application app = context.getObjectByName(Application.class, appName);
+            if(requestType!=null && (requestType.equalsIgnoreCase(LeaverRuleLibrary.LEAVERFEATURE) || requestType.equalsIgnoreCase(LeaverRuleLibrary.IMMEDIATELEAVERFEATURE)))
+            {
+                populationMap=LeaverRuleLibrary.overrideApplicationLeaverSettingsOnPopulationMatch(context, app,identity);
+            }
+            else if (requestType!=null && requestType.equalsIgnoreCase(ReverseLeaverRuleLibrary.REVERSELEAVERFEATURE) )
+            {
+                populationMap=ReverseLeaverRuleLibrary.overrideApplicationReverseLeaverSettingsOnPopulationMatch(context, app,identity);
+            }
+            //Get Identity Name
+            String identityName=identity.getName();
+            String xDays=null;
+            String scramblePasswordAttr=null;
+            String commentsAttr=null;
+            String passwordValue=null;
+            String commentsValue=null;
+            String moveAccountContainer=null;
+            List attrRequestPasswordCommentsMove = new ArrayList();
+            List attrRequestMoveLDAP = new ArrayList();
+            LogEnablement.isLogDebugEnabled(fwLogger,"Application UI extSetting.."+extSetting);
+            if (populationMap!=null && populationMap.containsKey(LeaverRuleLibrary.OPTIONSTOKEN) && populationMap.get(LeaverRuleLibrary.OPTIONSTOKEN)!=null)
+            {
+                extSetting=populationMap.get(LeaverRuleLibrary.OPTIONSTOKEN);
+                LogEnablement.isLogDebugEnabled(fwLogger,"Override Application Debug extSetting.."+extSetting);
+            }
+            else if (populationMap!=null && populationMap.containsKey(ReverseLeaverRuleLibrary.OPTIONSREVTOKEN) && populationMap.get(ReverseLeaverRuleLibrary.OPTIONSREVTOKEN)!=null)
+            {
+                extSetting=populationMap.get(ReverseLeaverRuleLibrary.OPTIONSREVTOKEN);
+                LogEnablement.isLogDebugEnabled(fwLogger,"Override Application Debug extSetting.."+extSetting);
+            }
+            //Let's get password attribute from application, if defined for custom or in house applications
+            if(app!=null && app.getAttributeValue("scramblePasswordAttr")!=null)
+            {
+                scramblePasswordAttr=(String)app.getAttributeValue("scramblePasswordAttr");
+            }
+            if(scramblePasswordAttr==null||scramblePasswordAttr.length()<=0)
+            {
+                //Let's get password attribute from LDAP Connector attribute "passwordAttr"
+                if(app!=null && app.getAttributeValue("passwordAttr")!=null)
+                {
+                    scramblePasswordAttr=(String)app.getAttributeValue("passwordAttr");
+                }
+                else
+                {
+                    // Default Connector Password Support
+                    scramblePasswordAttr=ProvisioningPlan.ATT_PASSWORD;
+                }
+            }
+            //Get Termination X Days
+            if(app!=null && app.getAttributeValue(appXDays)!=null)
+            {
+                xDays=(String) app.getAttributeValue(appXDays);
+            }
+            LogEnablement.isLogDebugEnabled(fwLogger,"Application UI xDays.."+xDays);
+            if (populationMap!=null && populationMap.containsKey(LeaverRuleLibrary.OPTIONSACCESSXTOKEN) && populationMap.get(LeaverRuleLibrary.OPTIONSACCESSXTOKEN)!=null)
+            {
+                xDays=populationMap.get(LeaverRuleLibrary.OPTIONSACCESSXTOKEN);
+                LogEnablement.isLogDebugEnabled(fwLogger," Application Debug Override xDays.."+xDays);
+            }
+            //Get MOVE OU
+            if(app!=null && app.getAttributeValue("moveAccountContainer")!=null)
+            {
+                moveAccountContainer=(String) app.getAttributeValue("moveAccountContainer");
+                LogEnablement.isLogDebugEnabled(fwLogger,"moveAccountContainer .."+moveAccountContainer);
+            }
+            //Leaver OU Logic
+            String[] moveAccountContainerArray = null;
+            List OuList = new ArrayList();
+            if(moveAccountContainer!=null && nativeId!=null)
+            {
+                if(moveAccountContainer.indexOf("|") > 0) 
+                {
+                    moveAccountContainerArray = moveAccountContainer.split("\\|");
+                }
+                else 
+                {
+                    moveAccountContainerArray = new String[1];
+                    moveAccountContainerArray[0] = moveAccountContainer;
+                }
+                if(moveAccountContainerArray != null && moveAccountContainerArray.length > 0) 
+                {
+                    for(String moveAccountContainerStr : moveAccountContainerArray) 
+                    {
+                        OuList.add(moveAccountContainerStr);
+                    }
+                }
+            }
+            LogEnablement.isLogDebugEnabled(fwLogger,"...OuList "+OuList);
+            if(OuList!=null && OuList.size()>0)
+            {
+                String domainfromDn= ROADUtil.getDomainDNFromDistinguishedDN(nativeId);
+                String domainfromDnUpper=null;
+                if(domainfromDn!=null)
+                {
+                    domainfromDnUpper=domainfromDn.toUpperCase();
+                }
+                LogEnablement.isLogErrorEnabled(fwLogger,"...domainfromDn "+domainfromDn);
+                LogEnablement.isLogErrorEnabled(fwLogger,"...nativeId "+nativeId);
+                LogEnablement.isLogErrorEnabled(fwLogger,"...domainfromDnUpper "+domainfromDnUpper);
+                for(String OuStr : OuList) 
+                {
+                    String OuStrUpper=null;
+                    OuStrUpper=OuStr.toUpperCase();
+                    LogEnablement.isLogErrorEnabled(fwLogger,"...OuStrUpper "+OuStrUpper);
+                    if(OuStrUpper!=null && OuStrUpper.contains(domainfromDnUpper))
+                    {
+                        moveAccountContainer=OuStr;
+                        LogEnablement.isLogErrorEnabled(fwLogger,"...OuStr "+OuStr);
+                        LogEnablement.isLogErrorEnabled(fwLogger,"...moveAccountContainer "+moveAccountContainer);
+                        break;
+                    }
+                }
+            }
+            //Get Password Attribute and Password Value
+            if(scramblePasswordAttr!=null)
+            {
+                PasswordGenerator pg = new PasswordGenerator(context);
+                try
+                {
+                    passwordValue=pg.generatePassword(identity, app);
+                }
+                catch (GeneralException ex)
+                {
+                    LogEnablement.isLogInfoEnabled(fwLogger, "...No Policy " + ex.getMessage() + ", falling back to default password generator.");
+                    passwordValue=pg.generatePassword();
+                }
+            }
+            //Get Comment Attribute and Comment Value
+            if(app!=null && app.getAttributeValue("commentsAttr")!=null && app.getAttributeValue("commentsValue")!=null)
+            {
+                commentsAttr=app.getAttributeValue("commentsAttr");
+                commentsValue=app.getAttributeValue("commentsValue");
+            }
+            //Get Password and/or Comment Attribute Request
+            if (extSetting!=null && extSetting.contains("Scramble Password and Add Comments")) 
+            {   
+                //Build Attribute Request for Comments
+                if(commentsAttr!=null && commentsValue!=null)
+                {
+                    AttributeRequest commentsAttributeRequest = ROADUtil.generateSetAttributeRequest(commentsAttr, commentsValue);
+                    attrRequestPasswordCommentsMove.add(commentsAttributeRequest);
+                }
+                //Build Attribute Request for Password
+                if(scramblePasswordAttr!=null && passwordValue!=null)
+                {
+                    AttributeRequest passwordAttributeRequest =ROADUtil.generateSetAttributeRequest(scramblePasswordAttr, passwordValue);
+                    Attributes secretAttr = new Attributes();
+                    secretAttr.put("secret", "true");
+                    passwordAttributeRequest.setArguments(secretAttr);
+                    attrRequestPasswordCommentsMove.add(passwordAttributeRequest);
+                }
+            }
+            //Leaver
+            if (extSetting!=null && extSetting.contains("Move Account") && moveAccountContainer!=null) 
+            {   
+                LogEnablement.isLogDebugEnabled(fwLogger,"...moveAccountContainer "+moveAccountContainer); 
+                LogEnablement.isLogDebugEnabled(fwLogger,"...nativeId "+nativeId); 
+                //Build Attribute Request for Move
+                if(moveAccountContainer!=null)
+                {
+                    if(nativeId!=null && !nativeId.contains(moveAccountContainer))
+                    {
+                        //Leaver
+                        AttributeRequest moveAttrReq=WrapperRuleLibrary.moveOUAttrRequest(moveAccountContainer,  appName ,  nativeId, "IdentityIQ Modified the DN on");
+                        LogEnablement.isLogDebugEnabled(fwLogger,"...Move Request Built Out using moveAccountContainer "+moveAccountContainer); 
+                        attrRequestPasswordCommentsMove.add(moveAttrReq);
+                    }
+                    else if(nativeId!=null)
+                    {
+                        //Reverse Leaver, nativeId, this should have disable container
+                        //Make sure it is reverse leaver by checking extsettings for Unlock and Enable
+                        String newDNfromPP = ROADUtil.getNativeIdentity( context, psa, appName,  identity);
+                        if(newDNfromPP!=null && !newDNfromPP.equalsIgnoreCase(nativeId) && (extSetting.contains("Enable")||extSetting.contains("Unlock")))
+                        {
+                            String strippedCNnewDNfromPP=WrapperRuleLibrary.stripCNFromNativeId(context,newDNfromPP);
+                            if(strippedCNnewDNfromPP!=null)
+                            {
+                                AttributeRequest moveAttrReq=WrapperRuleLibrary.moveOUAttrRequest( strippedCNnewDNfromPP,  appName ,  nativeId, "IdentityIQ Modified the DN on");
+                                attrRequestPasswordCommentsMove.add(moveAttrReq);
+                            }
+                        }
+                    }
+                }
+            }
+            //Rehire Use Case
+            if (extSetting!=null && extSetting.contains("Restore Account")) 
+            {   
+                //Get Native Id from Provisioning Policies
+                String newDNfromPP = ROADUtil.getNativeIdentity( context,  psa, appName,  identity);
+                if(newDNfromPP!=null && nativeId!=null && !newDNfromPP.equalsIgnoreCase(nativeId))
+                {
+                    //Remove CN
+                    String strippedCNnewDNfromPP=WrapperRuleLibrary.stripCNFromNativeId(context,newDNfromPP);
+                    if(strippedCNnewDNfromPP!=null)
+                    {
+                        Boolean onlyPrimaryAccount=(Boolean) app.getAttributeValue("rehirePrimaryaccount");
+                        if(onlyPrimaryAccount!=null && onlyPrimaryAccount.booleanValue() && psa !=null && psa.equalsIgnoreCase("TRUE"))
+                        {
+                            LogEnablement.isLogDebugEnabled(fwLogger,"...Ignore Secondary Account "+strippedCNnewDNfromPP); 
+                        }
+                        else
+                        {
+                            //Build Move LDAP Attribute Request
+                            AttributeRequest moveLDAPAttrReq=WrapperRuleLibrary.moveOUAttrRequest( strippedCNnewDNfromPP,  appName ,  nativeId, "IdentityIQ Modified the DN on");
+                            //Add to Array List
+                            attrRequestMoveLDAP.add(moveLDAPAttrReq);
+                        }
+                    }
+                }
+            }
+            //Rehire Reset Password Use Case
+            if (extSetting!=null && extSetting.contains("Reset Password")) 
+            {
+                String resetPasswordAttr = ROADUtil.getSecretFieldName( context, appName);
+                //Get secret password attribute
+                if(resetPasswordAttr!=null)
+                {
+                    Object valueFromPP=ROADUtil.getFieldValueFromProvisioningForms( context, appName, identity, resetPasswordAttr,"Create",null);
+                    //Build Attribute Request for Password
+                    if(valueFromPP!=null && valueFromPP!=null)
+                    {
+                        AttributeRequest resetPasswordAttributeRequest =ROADUtil.generateSetAttributeRequest(resetPasswordAttr, valueFromPP);
+                        Attributes secretAttr = new Attributes();
+                        secretAttr.put("secret", "true");
+                        resetPasswordAttributeRequest.setArguments(secretAttr);
+                        attrRequestPasswordCommentsMove.add(resetPasswordAttributeRequest);
+                    }
+                }
+            }
+            //Reverse Leaver Restore Birthright Use Case
+            if (extSetting!=null && extSetting.contains("Restore Birthright Access")) 
+            {   
+                List restoreBundles = JoinerRuleLibrary.restoreBirthrightBundles(context,identity, appName);
+                if (restoreBundles != null && !restoreBundles.isEmpty()) 
+                {
+                    retVal.addAll(restoreBundles);
+                }
+            }
+            //Reverse Leaver Restore All Access Use Case
+            if (extSetting!=null && extSetting.contains("Restore All Access Immediately") && requestId!=null) 
+            {   
+                //Execute Plan Here
+                project = ReverseLeaverRuleLibrary.buildExecuteReverseLeaverApplicationPlan(context,requestId, appName,roles,apps);
+                retVal= new ArrayList();
+            }
+            if (extSetting!=null && (extSetting.startsWith("Disable Only")||extSetting.startsWith("Disable Immediately"))) 
+            {
+                acctReq = new AccountRequest(AccountRequest.Operation.Disable, appName, null, nativeId);
+                acctReq.setNativeIdentity(nativeId);
+                if (acctReq != null) 
+                {
+                    if(extSetting!=null && extSetting.startsWith("Disable Immediately") && extSetting.contains("X Days"))
+                    {
+                        immediateActionList.add(acctReq);
+                    }
+                    else if(extSetting!=null && extSetting.startsWith("Disable Only") )
+                    {
+                        //account request is not added to retVal list for Disable Immediately Option
+                        //because it is added to  immediateActionList list
+                        retVal.add(acctReq);
+                    }
+                }
+                //Add Move, Scramble Password, Comments - Both Disable Only and Disable Immediately Option (X days)
+                if(extSetting!=null && (extSetting.startsWith("Disable Only") || (extSetting.startsWith("Disable Immediately") && extSetting.contains("X Days"))))
+                {
+                    if (attrRequestPasswordCommentsMove != null) {
+                        for (AttributeRequest newAttrReq : attrRequestPasswordCommentsMove) {
+                            acctReq = new AccountRequest(AccountRequest.Operation.Modify, appName, null, nativeId);
+                            acctReq.setNativeIdentity(nativeId);
+                            acctReq.add(newAttrReq);
+                            if (acctReq != null) {
+                                retVal.add(acctReq);
+                            }
+                        }
+                    }
+                }
+                //X days Remove Access
+                if(extSetting!=null && extSetting.startsWith("Disable Immediately") && extSetting.contains("X Days"))
+                {
+                    if(extSetting!=null && extSetting.contains("Remove Entitlements"))
+                    {
+                        //Role Access
+                        List removeBundles = frameworkRemoveRequestedAssignedBundles(identity, appName);
+                        if (removeBundles != null && !removeBundles.isEmpty()) 
+                        {
+                            retVal.addAll(removeBundles);
+                        }
+                        //Entitlement Access
+                        List attrReq = LeaverRuleLibrary.frameworkRemoveAttributeRequestPerApplication(context,appName, identity,nativeId);
+                        if (attrReq != null && attrReq.size()>0) 
+                        {
+                            for (AttributeRequest newAttrReq : attrReq) 
+                            {
+                                acctReq = new AccountRequest(AccountRequest.Operation.Modify, appName, null, nativeId);
+                                acctReq.setNativeIdentity(nativeId);
+                                acctReq.add(newAttrReq);
+                                if (acctReq != null) 
+                                {
+                                    retVal.add(acctReq);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            else if (extSetting!=null && (extSetting.startsWith("Lock Only")||extSetting.startsWith("Lock Immediately"))) 
+            {
+                acctReq = new AccountRequest(AccountRequest.Operation.Lock, appName, null, nativeId);
+                acctReq.setNativeIdentity(nativeId);
+                if (acctReq != null) 
+                { 
+                    if(extSetting!=null && extSetting.startsWith("Lock Immediately") && extSetting.contains("X Days"))
+                    {
+                        immediateActionList.add(acctReq);
+                    }
+                    else if(extSetting!=null && extSetting.startsWith("Lock Only") )
+                    {
+                        retVal.add(acctReq);
+                    }
+                }
+                //Add Move, Scramble Password, Comments - Both Lock Only and Lock Immediately Option (X Days)
+                if(extSetting!=null && (extSetting.startsWith("Lock Only")|| (extSetting.startsWith("Lock Immediately") && extSetting.contains("X Days"))))
+                {
+                    if (attrRequestPasswordCommentsMove != null) {
+                        for (AttributeRequest newAttrReq : attrRequestPasswordCommentsMove) {
+                            acctReq = new AccountRequest(AccountRequest.Operation.Modify, appName, null, nativeId);
+                            acctReq.setNativeIdentity(nativeId);
+                            acctReq.add(newAttrReq);
+                            if (acctReq != null) {
+                                retVal.add(acctReq);
+                            }
+                        }
+                    }
+                }
+                //X days Remove Access
+                if(extSetting!=null && extSetting.startsWith("Lock Immediately") && extSetting.contains("X Days"))
+                {
+                    if(extSetting!=null && extSetting.contains("Remove Entitlements"))
+                    {
+                        //Role Access
+                        List removeBundles = frameworkRemoveRequestedAssignedBundles(identity, appName);
+                        if (removeBundles != null && !removeBundles.isEmpty()) 
+                        {
+                            retVal.addAll(removeBundles);
+                        }
+                        //Entitlement Access
+                        List attrReq = LeaverRuleLibrary.frameworkRemoveAttributeRequestPerApplication(context,appName, identity,nativeId);
+                        if (attrReq != null && attrReq.size()>0) 
+                        {
+                            for (AttributeRequest newAttrReq : attrReq) 
+                            {
+                                acctReq = new AccountRequest(AccountRequest.Operation.Modify, appName, null, nativeId);
+                                acctReq.setNativeIdentity(nativeId);
+                                acctReq.add(newAttrReq);
+                                if (acctReq != null) 
+                                {
+                                    retVal.add(acctReq);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            else if (extSetting!=null && (extSetting.startsWith("Remove Entitlements")||extSetting.startsWith("Remove Entitlements Immediately"))) 
+            {
+                //Role Access
+                List removeBundles = frameworkRemoveRequestedAssignedBundles(identity, appName);
+                if (removeBundles != null && !removeBundles.isEmpty()) 
+                {
+                    if(extSetting!=null && extSetting.startsWith("Remove Entitlements Immediately") && extSetting.contains("X Days") )
+                    {
+                        immediateActionList.addAll(removeBundles);
+                    }
+                    else if(extSetting!=null && extSetting.startsWith("Remove Entitlements"))
+                    {
+                        retVal.addAll(removeBundles);
+                    }
+                }
+                //Entitlement Access
+                List attrReq = LeaverRuleLibrary.frameworkRemoveAttributeRequestPerApplication(context,appName, identity,nativeId);
+                if(extSetting!=null && extSetting.startsWith("Remove Entitlements Immediately") && extSetting.contains("X Days"))
+                {
+                    if (attrReq != null && attrReq.size()>0) 
+                    {
+                        for (AttributeRequest newAttrReq : attrReq)
+                        {
+                            acctReq = new AccountRequest(AccountRequest.Operation.Modify, appName, null, nativeId);
+                            acctReq.setNativeIdentity(nativeId);
+                            acctReq.add(newAttrReq);
+                            if (acctReq != null) 
+                            {
+                                //Only Retain Entitlements for Remove Entitlements Immediately
+                                immediateActionList.add(acctReq);
+                            }
+                        }
+                    }
+                    //Add Move, Scramble Password, Comments for Remove Entitlements Immediately for X Days
+                    if (attrRequestPasswordCommentsMove != null) {
+                        for (AttributeRequest newAttrReq : attrRequestPasswordCommentsMove) {
+                            acctReq = new AccountRequest(AccountRequest.Operation.Modify, appName, null, nativeId);
+                            acctReq.setNativeIdentity(nativeId);
+                            acctReq.add(newAttrReq);
+                            if (acctReq != null) {
+                                retVal.add(acctReq);
+                            }
+                        }
+                    }
+                }
+                //Add Move, Scramble Password, Comments for Remove Entitlements
+                else if(extSetting!=null && extSetting.startsWith("Remove Entitlements") )
+                {
+                    if(attrRequestPasswordCommentsMove!=null && attrRequestPasswordCommentsMove.size()>0)
+                    {
+                        attrReq.addAll(attrRequestPasswordCommentsMove);
+                    }
+                    if (attrReq != null && attrReq.size()>0) {
+                        for (AttributeRequest newAttrReq : attrReq) {
+                            acctReq = new AccountRequest(AccountRequest.Operation.Modify, appName, null, nativeId);
+                            acctReq.setNativeIdentity(nativeId);
+                            acctReq.add(newAttrReq);
+                            if (acctReq != null) {
+                                retVal.add(acctReq);
+                            }
+                        }
+                    }
+                }
+            } 
+            else if (extSetting!=null && (extSetting.startsWith("Disable and Move Account Immediately")||extSetting.startsWith("Disable and Move Account and Scramble Password and Add Comments Immediately"))) 
+            {
+                //Account Operation
+                acctReq = new AccountRequest(AccountRequest.Operation.Disable, appName, null, nativeId);
+                acctReq.setNativeIdentity(nativeId);
+                //Note retVal is not built for these options
+                immediateActionList.add(acctReq);
+                if (acctReq != null) 
+                {
+                    //Add Move, Scramble Password, Comments Immediately
+                    if (attrRequestPasswordCommentsMove != null) 
+                    {
+                        for (AttributeRequest newAttrReq : attrRequestPasswordCommentsMove) 
+                        {
+                            acctReq = new AccountRequest(AccountRequest.Operation.Modify, appName, null, nativeId);
+                            acctReq.setNativeIdentity(nativeId);
+                            acctReq.add(newAttrReq);
+                            if (acctReq != null) 
+                            {
+                                //Note retVal is not built for these options
+                                immediateActionList.add(acctReq);
+                            }
+                        }
+                    }
+                }
+            }
+            else if (extSetting!=null && (extSetting.startsWith("Lock and Move Account Immediately")||extSetting.startsWith("Lock and Move Account and Scramble Password and Add Comments Immediately"))) 
+            {
+                //Account Operation
+                acctReq = new AccountRequest(AccountRequest.Operation.Disable, appName, null, nativeId);
+                acctReq.setNativeIdentity(nativeId);
+                //Note retVal is not built for these options
+                immediateActionList.add(acctReq);
+                if (acctReq != null) 
+                {
+                    //Add Move, Scramble Password, Comments Immediately
+                    if (attrRequestPasswordCommentsMove != null) 
+                    {
+                        for (AttributeRequest newAttrReq : attrRequestPasswordCommentsMove) 
+                        {
+                            acctReq = new AccountRequest(AccountRequest.Operation.Modify, appName, null, nativeId);
+                            acctReq.setNativeIdentity(nativeId);
+                            acctReq.add(newAttrReq);
+                            if (acctReq != null) 
+                            {
+                                //Note retVal is not built for these options
+                                immediateActionList.add(acctReq);
+                            }
+                        }
+                    }
+                }
+            }
+            else if (extSetting!=null && (extSetting.startsWith("Disable and Remove Entitlements")||extSetting.startsWith("Disable and Remove Entitlements Immediately"))) 
+            {
+                List removeBundles = frameworkRemoveRequestedAssignedBundles(identity, appName);
+                //Role Access
+                if (removeBundles != null && !removeBundles.isEmpty()) 
+                {
+                    if(extSetting!=null && extSetting.startsWith("Disable and Remove Entitlements Immediately") && extSetting.contains("X Days"))
+                    {
+                        immediateActionList.addAll(removeBundles);
+                    }
+                    else if(extSetting!=null && extSetting.startsWith("Disable and Remove Entitlements"))
+                    {
+                        retVal.addAll(removeBundles);
+                    }
+                }
+                //Account Operation
+                acctReq = new AccountRequest(AccountRequest.Operation.Disable, appName, null, nativeId);
+                acctReq.setNativeIdentity(nativeId);
+                if (acctReq != null) 
+                {
+                    if(extSetting!=null && extSetting.startsWith("Disable and Remove Entitlements Immediately") && extSetting.contains("X Days"))
+                    {
+                        immediateActionList.add(acctReq);
+                    }
+                    else if(extSetting!=null && extSetting.startsWith("Disable and Remove Entitlements"))
+                    {
+                        retVal.add(acctReq);
+                    }
+                }
+                List attrReq = LeaverRuleLibrary.frameworkRemoveAttributeRequestPerApplication(context,appName, identity,nativeId);
+                //Entitlement Access
+                if(extSetting!=null && extSetting.startsWith("Disable and Remove Entitlements Immediately") && extSetting.contains("X Days"))
+                {
+                    if (attrReq != null && attrReq.size()>0) 
+                    {
+                        for (AttributeRequest newAttrReq : attrReq) {
+                            acctReq = new AccountRequest(AccountRequest.Operation.Modify, appName, null, nativeId);
+                            acctReq.setNativeIdentity(nativeId);
+                            acctReq.add(newAttrReq);
+                            if (acctReq != null) 
+                            { 
+                                //Only Retain Entitlements
+                                immediateActionList.add(acctReq);
+                            }
+                        }
+                    }
+                    //Add Move, Scramble Password, Comments for Disable and Remove Entitlements Immediately for X days
+                    if (attrRequestPasswordCommentsMove != null) {
+                        for (AttributeRequest newAttrReq : attrRequestPasswordCommentsMove) {
+                            acctReq = new AccountRequest(AccountRequest.Operation.Modify, appName, null, nativeId);
+                            acctReq.setNativeIdentity(nativeId);
+                            acctReq.add(newAttrReq);
+                            if (acctReq != null) {
+                                retVal.add(acctReq);
+                            }
+                        }
+                    }
+                }
+                //Add Move, Scramble Password, Comments for  Disable and Remove Entitlements 
+                else  if(extSetting!=null && extSetting.startsWith("Disable and Remove Entitlements"))
+                {
+                    if(attrRequestPasswordCommentsMove!=null && attrRequestPasswordCommentsMove.size()>0)
+                    {
+                        attrReq.addAll(attrRequestPasswordCommentsMove);
+                    }
+                    if (attrReq != null && attrReq.size()>0) 
+                    {
+                        for (AttributeRequest newAttrReq : attrReq) {
+                            acctReq = new AccountRequest(AccountRequest.Operation.Modify, appName, null, nativeId);
+                            acctReq.setNativeIdentity(nativeId);
+                            acctReq.add(newAttrReq);
+                            if (acctReq != null) 
+                            {
+                                retVal.add(acctReq);
+                            }
+                        }
+                    }
+                }
+            }
+            else if (extSetting!=null && (extSetting.startsWith("Lock and Remove Entitlements")|| extSetting.startsWith("Lock and Remove Entitlements Immediately"))) 
+            {
+                List removeBundles = frameworkRemoveRequestedAssignedBundles(identity, appName);
+                //Role Access
+                if (removeBundles != null && !removeBundles.isEmpty()) 
+                {
+                    if(extSetting!=null && extSetting.startsWith("Lock and Remove Entitlements Immediately")  && extSetting.contains("X Days"))
+                    {
+                        immediateActionList.addAll(removeBundles);
+                    }
+                    else if(extSetting!=null && extSetting.startsWith("Lock and Remove Entitlements"))
+                    {
+                        retVal.addAll(removeBundles);
+                    }
+                }
+                //Account Operation
+                acctReq = new AccountRequest(AccountRequest.Operation.Lock, appName, null, nativeId);
+                acctReq.setNativeIdentity(nativeId);
+                if (acctReq != null) 
+                {
+                    if(extSetting!=null && extSetting.startsWith("Lock and Remove Entitlements Immediately") && extSetting.contains("X Days"))
+                    {
+                        immediateActionList.add(acctReq);
+                    }
+                    else if(extSetting!=null && extSetting.startsWith("Lock and Remove Entitlements"))
+                    {
+                        retVal.add(acctReq);
+                    }
+                }
+                //Entitlement Access
+                List attrReq = LeaverRuleLibrary.frameworkRemoveAttributeRequestPerApplication(context,appName, identity,nativeId);
+                if(extSetting!=null && extSetting.startsWith("Lock and Remove Entitlements Immediately") && extSetting.contains("X Days"))
+                {
+                    if (attrReq != null && attrReq.size()>0) 
+                    {
+                        for (AttributeRequest newAttrReq : attrReq) 
+                        {
+                            acctReq = new AccountRequest(AccountRequest.Operation.Modify, appName, null, nativeId);
+                            acctReq.setNativeIdentity(nativeId);
+                            acctReq.add(newAttrReq);
+                            if (acctReq != null) 
+                            {
+                                //Only Retain Entitlements for Lock and Remove Entitlements Immediately Option
+                                immediateActionList.add(acctReq);
+                            }
+                        }
+                    }
+                    //Add Move, Scramble Password, Comments for Lock and Remove Entitlements Immediately for X days
+                    if (attrRequestPasswordCommentsMove != null) {
+                        for (AttributeRequest newAttrReq : attrRequestPasswordCommentsMove) {
+                            acctReq = new AccountRequest(AccountRequest.Operation.Modify, appName, null, nativeId);
+                            acctReq.setNativeIdentity(nativeId);
+                            acctReq.add(newAttrReq);
+                            if (acctReq != null) {
+                                retVal.add(acctReq);
+                            }
+                        }
+                    }
+                }
+                else if(extSetting!=null && extSetting.startsWith("Lock and Remove Entitlements") )
+                {
+                    //Add Move, Scramble Password, Comments for Lock and Remove Entitlements
+                    if(attrRequestPasswordCommentsMove!=null && attrRequestPasswordCommentsMove.size()>0)
+                    {
+                        attrReq.addAll(attrRequestPasswordCommentsMove);
+                    }
+                    if (attrReq != null && attrReq.size()>0) 
+                    {
+                        for (AttributeRequest newAttrReq : attrReq) {
+                            acctReq = new AccountRequest(AccountRequest.Operation.Modify, appName, null, nativeId);
+                            acctReq.setNativeIdentity(nativeId);
+                            acctReq.add(newAttrReq);
+                            if (acctReq != null) {
+                                retVal.add(acctReq);
+                            }
+                        }
+                    }
+                }
+            }  
+            else if (extSetting!=null && extSetting.startsWith("Delete Only")) 
+            {
+                acctReq = new AccountRequest(AccountRequest.Operation.Delete, appName, null, nativeId);
+                acctReq.setNativeIdentity(nativeId);
+                if (acctReq != null) 
+                {
+                    retVal.add(acctReq);
+                }
+                if (attrRequestPasswordCommentsMove != null) 
+                {
+                    for (AttributeRequest newAttrReq : attrRequestPasswordCommentsMove) 
+                    {
+                        acctReq = new AccountRequest(AccountRequest.Operation.Modify, appName, null, nativeId);
+                        acctReq.setNativeIdentity(nativeId);
+                        acctReq.add(newAttrReq);
+                        if (acctReq != null) 
+                        {
+                            retVal.add(acctReq);
+                        }
+                    }
+                }
+            } 
+            else if (extSetting!=null && extSetting.startsWith("Enable Immediately")) 
+            {
+                boolean disabled = false;
+                if (iiqDisabled != null && !iiqDisabled.equals("")) {
+                    disabled = ("true".equals(iiqDisabled));
+                    if (disabled) {
+                        acctReq = new AccountRequest(AccountRequest.Operation.Enable, appName, null, nativeId);
+                    }
+                }
+                if (acctReq != null) {
+                    retVal.add(acctReq);
+                }
+                if (attrRequestPasswordCommentsMove != null) {
+                    for (AttributeRequest newAttrReq : attrRequestPasswordCommentsMove) {
+                        acctReq = new AccountRequest(AccountRequest.Operation.Modify, appName, null, nativeId);
+                        acctReq.setNativeIdentity(nativeId);
+                        acctReq.add(newAttrReq);
+                        if (acctReq != null) {
+                            retVal.add(acctReq);
+                        }
+                    }
+                }
+                if (attrRequestMoveLDAP != null) 
+                {
+                    for (AttributeRequest newAttrReq : attrRequestMoveLDAP) 
+                    {
+                        acctReq = new AccountRequest(AccountRequest.Operation.Modify, appName, null, nativeId);
+                        acctReq.setNativeIdentity(nativeId);
+                        acctReq.add(newAttrReq);
+                        if (acctReq != null) 
+                        {
+                            retVal.add(acctReq);
+                        }
+                    }
+                }
+            } 
+            else if (extSetting!=null && extSetting.startsWith("Unlock Only")) 
+            {
+                boolean locked = false;
+                if (iiqLocked != null && !iiqLocked.equals("")) {
+                    locked = ("true".equalsIgnoreCase(iiqLocked));
+                    if (locked) {
+                        acctReq = new AccountRequest(AccountRequest.Operation.Unlock, appName, null, nativeId);
+                    }
+                }
+                if (acctReq != null) 
+                {
+                    retVal.add(acctReq);
+                }
+                if (attrRequestPasswordCommentsMove != null) 
+                {
+                    for (AttributeRequest newAttrReq : attrRequestPasswordCommentsMove)
+                    {
+                        acctReq = new AccountRequest(AccountRequest.Operation.Modify, appName, null, nativeId);
+                        acctReq.setNativeIdentity(nativeId);
+                        acctReq.add(newAttrReq);
+                        if (acctReq != null) 
+                        {
+                            retVal.add(acctReq);
+                        }
+                    }
+                }
+                if (attrRequestMoveLDAP != null) 
+                {
+                    for (AttributeRequest newAttrReq : attrRequestMoveLDAP) 
+                    {
+                        acctReq = new AccountRequest(AccountRequest.Operation.Modify, appName, null, nativeId);
+                        acctReq.setNativeIdentity(nativeId);
+                        acctReq.add(newAttrReq);
+                        if (acctReq != null) 
+                        {
+                            retVal.add(acctReq);
+                        }
+                    }
+                }
+            } 
+            else if (extSetting!=null && extSetting.startsWith("Extended Rule")) 
+            {
+                LogEnablement.isLogDebugEnabled(fwLogger,"extSetting .."+extSetting);
+                if (!(extendedRule.equalsIgnoreCase(""))) 
+                {
+                    List extendedAccountRequests = new ArrayList();
+                     LogEnablement.isLogDebugEnabled(fwLogger,"Launch Extended Rule ..");
+                    extendedAccountRequests = ROADUtil.invokeExtendedRuleNoObjectReferences(context,psa,extendedRule, app.getName(), requestType, (Attributes)workflow.get("spExtAttrs"), "", "", identity.getName(), nativeId, true,populationMap);                                    
+                    if (!(extendedAccountRequests.isEmpty())) 
+                    { 
+                        retVal.addAll(extendedAccountRequests); 
+                    }       
+                }
+            }
+            //Rule Rule-FrameworkTerminateXDays, puts all account requests in X days pending state and  
+            //all account requests are cleared out Only if there is no option to take immediate action
+            if (extSetting!=null && extSetting.contains("X Days") ) 
+            {   
+                if(retVal!=null && retVal.size()>0)
+                {
+                    LogEnablement.isLogDebugEnabled(fwLogger,"Launch X Days Access Removal or Account Action.."+appName+"..identityName.."+identityName+"..xDays.."+xDays);
+                    LeaverRuleLibrary.invokeXdaysRule(context,LeaverRuleLibrary.LEAVERXDAYSRULE,retVal,appName,requestType,(Attributes)workflow.get("spExtAttrs"), identityName, nativeId,xDays);
+                }
+                if(immediateActionList!=null && immediateActionList.size()>0)
+                {
+                    //This mean we have to take some provsioning actions now and override all retVal list
+                    retVal=immediateActionList; 
+                }
+                else
+                {
+                    //Empty List would clear out all provsioning actions
+                    retVal= new ArrayList();
+                }
+            }
+            if(app!=null)
+            {
+                context.decache(app);
+            }
+            LogEnablement.isLogDebugEnabled(fwLogger,"End getAccountRequest.."+appName);
+            return retVal;
+        }
+    
+    ]]></Source>
+</Rule>

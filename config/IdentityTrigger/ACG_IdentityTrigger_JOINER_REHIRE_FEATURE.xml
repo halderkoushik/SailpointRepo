@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE IdentityTrigger PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<IdentityTrigger handler="sailpoint.api.WorkflowTriggerHandler" name="JOINER REHIRE FEATURE" type="Rule">
+  <Description>A Rehire for an Identity has been detected in IdentityIQ.</Description>
+  <HandlerParameters>
+    <Attributes>
+      <Map>
+        <entry key="workflow" value="Workflow-Lifecycle-Joiner-Rehire-RequestObject-Wrapper"/>
+      </Map>
+    </Attributes>
+  </HandlerParameters>
+  <TriggerRule>
+    <Reference class="sailpoint.object.Rule" name="Rule-IdentityTrigger-Joiner-Rehire"/>
+  </TriggerRule>
+</IdentityTrigger>

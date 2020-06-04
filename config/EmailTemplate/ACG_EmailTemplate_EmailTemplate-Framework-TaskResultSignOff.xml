@@ -1,0 +1,73 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE EmailTemplate PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<EmailTemplate name="EmailTemplate-Framework-TaskResultSignOff">
+  <Body>
+		
+		#set($ctx = $spTools.class.forName("sailpoint.api.SailPointFactory").getMethod("getFactory", null).invoke(null,null).getCurrentContext())
+		#set($ruleObj = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Rule"), "Rule-Framework-Header-Footer-StyleSheet")) 
+		#set($ruleArgs = { 
+		    "keyEmailTemplate"  : "styleSheet"
+		}) 
+		#set($styleSheet = $ctx.runRule($ruleObj, $ruleArgs))
+		#if( $ruleObj )
+		$ctx.decache($ruleObj)
+		#end
+		#set($ruleObj = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Rule"), "Rule-Framework-Header-Footer-StyleSheet")) 
+		#set($ruleArgs = { 
+		    "keyEmailTemplate"  : "headerTemplate"
+		}) 
+		#set($headerTemplate = $ctx.runRule($ruleObj, $ruleArgs))
+		#if( $ruleObj )
+		$ctx.decache($ruleObj)
+		#end
+		#set($ruleObj = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Rule"), "Rule-Framework-Header-Footer-StyleSheet")) 
+		#set($ruleArgs = { 
+		    "keyEmailTemplate"  : "footerTemplate"
+		}) 
+		#set($footerTemplate = $ctx.runRule($ruleObj, $ruleArgs))
+		#if( $ruleObj )
+		$ctx.decache($ruleObj)
+		#end
+		<![CDATA[<html>
+			<head>
+			<meta charset="UTF-8">	    
+			#if( $styleSheet )
+			$styleSheet
+			#end 
+			</head>
+	    	<body>
+	    	#if( $headerTemplate )
+			$headerTemplate
+			#end
+			<br/>				
+			Dear $owner,<br/>
+			You have been requested to signoff on a $objectType result named: $objectName.
+			Please login to IdentityIQ to perform the signoff.<br/>
+	  		#if( $footerTemplate )
+			$footerTemplate
+			#end
+			</body>
+		</html>]]>
+		
+	</Body>
+  <Description>
+      Email Template for notifying a signer of a task or report result.
+    </Description>
+  <Signature>
+    <Inputs>
+      <Argument name="ownerName" type="string">
+        <Description>The display name of the Identity that owns the task result and is expected to sign off.</Description>
+      </Argument>
+      <Argument name="requesterName" type="string">
+        <Description>The display name of the Identity that launched the task.</Description>
+      </Argument>
+      <Argument name="objectName" type="string">
+        <Description>The name of the TaskResult object.</Description>
+      </Argument>
+      <Argument name="objectType" type="string">
+        <Description>Set to "report" if this is a report result or "task" if this is a general task result.</Description>
+      </Argument>
+    </Inputs>
+  </Signature>
+  <Subject>Signoff for $objectType $objectName</Subject>
+</EmailTemplate>

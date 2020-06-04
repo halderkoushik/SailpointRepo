@@ -1,0 +1,78 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE EmailTemplate PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<EmailTemplate name="EmailTemplate-FrameworkWorkItemAssignment">
+  <Body>
+		
+		#set($ctx = $spTools.class.forName("sailpoint.api.SailPointFactory").getMethod("getFactory", null).invoke(null,null).getCurrentContext())
+		#set($ruleObj = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Rule"), "Rule-Framework-Header-Footer-StyleSheet")) 
+		#set($ruleArgs = { 
+		    "keyEmailTemplate"  : "styleSheet"
+		}) 
+		#set($styleSheet = $ctx.runRule($ruleObj, $ruleArgs))
+		#if( $ruleObj )
+		$ctx.decache($ruleObj)
+		#end
+		#set($ruleObj = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Rule"), "Rule-Framework-Header-Footer-StyleSheet")) 
+		#set($ruleArgs = { 
+		    "keyEmailTemplate"  : "headerTemplate"
+		}) 
+		#set($headerTemplate = $ctx.runRule($ruleObj, $ruleArgs))
+		#if( $ruleObj )
+		$ctx.decache($ruleObj)
+		#end
+		#set($ruleObj = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Rule"), "Rule-Framework-Header-Footer-StyleSheet")) 
+		#set($ruleArgs = { 
+		    "keyEmailTemplate"  : "footerTemplate"
+		}) 
+		#set($footerTemplate = $ctx.runRule($ruleObj, $ruleArgs))
+		#if( $ruleObj )
+		$ctx.decache($ruleObj)
+		#end
+		#set($ruleObj = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Rule"), "Rule-Server-Root-Path")) 
+		#set($ruleArgs = {})
+		#set($rootPath = $ctx.runRule($ruleObj, $ruleArgs))
+		#if( $ruleObj )
+		$ctx.decache($ruleObj)
+		#end
+		<![CDATA[<html>
+			<head>
+			<meta charset="UTF-8">	    
+			#if( $styleSheet )
+			$styleSheet
+			#end 
+			</head>
+	    	<body>
+	    	#if( $headerTemplate )
+			$headerTemplate
+			#end
+			<br/> 				
+			Dear $!workItem.getAssignee().getDisplayName(),<br/>
+			<p>#if ($requesterName) $requesterName #{else} The system #{end} has assigned the following work item to you: $workItemName.</p>
+  			Please click <a href="$rootPath/workitem/commonWorkItem.jsf#/commonWorkItem/$workItem.id">here</a> to view the work item.
+	  		#if( $footerTemplate )
+			$footerTemplate
+			#end
+			</body>
+		</html>]]>
+		
+	</Body>
+  <Description>
+		Email Template for notifying work item assignee that they have
+		been assigned a work item.
+	</Description>
+  <Signature>
+    <Inputs>
+      <Argument name="workItem" type="WorkItem">
+        <Description>The WorkItem that is being reassigned.</Description>
+      </Argument>
+      <Argument name="workItemName" type="string">
+        <Description>The description property of the WorkItem.</Description>
+      </Argument>
+      <Argument name="requesterName" type="string">
+        <Description>The display name of the Identity that requested the
+					assignment.</Description>
+      </Argument>
+    </Inputs>
+  </Signature>
+  <Subject>Work item assigned: $workItemName</Subject>
+</EmailTemplate>

@@ -1,0 +1,45 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Workflow PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Workflow explicitTransitions="true" name="Workflow-Provisioner" type="LCMProvisioning">
+  <Variable initializer="false" name="trace">
+    <Description>
+      Used for debugging this workflow and when set to true trace
+      will be sent to stdout.
+    </Description>
+  </Variable>
+  <Variable input="true" name="identityName">
+    <Description>The name of the identity.</Description>
+  </Variable>
+  <Variable input="true" name="plan">
+    <Description>ProvisioningPlan.</Description>
+  </Variable>
+  <Description>Accelerator Pack Workflow</Description>
+  <Step icon="Start" name="Start">
+    <Transition to="Call Provisioner"/>
+  </Step>
+  <Step name="Call Provisioner">
+    <Script>
+      <Source><![CDATA[
+		 import org.apache.commons.logging.Log;
+		 import org.apache.commons.logging.LogFactory;
+		 import sailpoint.rapidapponboarding.logger.LogEnablement;
+		 import sailpoint.rapidapponboarding.rule.ROADUtil;
+		 import sailpoint.object.Identity;
+		 Log provLogger = LogFactory.getLog("rapidapponboarding.rules");
+		 LogEnablement.isLogDebugEnabled(provLogger,"identityName..ntext."+identityName);
+		if (identityName != null && plan!=null) 
+		{
+			//Use Provisioner
+			Identity identityObj=context.getObjectByName(Identity.class,identityName);
+			plan.setIdentity(identityObj);
+			LogEnablement.isLogDebugEnabled(provLogger,"Start..launchProvisionerPlan.Workflow-Provisioner.");
+			ROADUtil.launchProvisionerPlan(plan,context);
+			LogEnablement.isLogDebugEnabled(provLogger,"End..launchProvisionerPlan.Workflow-Provisioner.");
+		}
+				 
+					]]></Source>
+    </Script>
+    <Transition to="end"/>
+  </Step>
+  <Step icon="Stop" name="end"/>
+</Workflow>

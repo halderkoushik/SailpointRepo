@@ -1,0 +1,1845 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule-Admin-RuleLibrary">
+  <Source><![CDATA[
+	
+	import sailpoint.rapidapponboarding.rule.InstalledSmartServicesLibrary;
+	import sailpoint.rapidapponboarding.rule.ROADUtil;
+	import sailpoint.object.Attributes;
+	import sailpoint.api.SailPointContext;
+	import sailpoint.object.Configuration;
+	import sailpoint.server.Auditor;
+	import org.apache.commons.logging.Log;
+	import org.apache.commons.logging.LogFactory;
+	import sailpoint.object.QuickLinkCategory;
+	import sailpoint.rapidapponboarding.logger.LogEnablement;
+	import sailpoint.rapidapponboarding.rule.TriggersRuleLibrary;
+	import sailpoint.rapidapponboarding.rule.JoinerRuleLibrary;
+	Log installedSmartServicesLogger = LogFactory.getLog("rapidapponboarding.rules");
+	/**
+	 * Detect Installed Smart Services
+	 * @param adminAttributes
+	 */
+	public Attributes detectInstalledSmartServices(SailPointContext context, Attributes adminAttributes)
+	{
+		LogEnablement.isLogDebugEnabled(installedSmartServicesLogger,"Start detectInstalledSmartServices");
+		Class leaverclazz = Class.forName("sailpoint.rapidapponboarding.rule.LeaverRuleLibrary");
+		java.lang.reflect.Method autoRejectPendingItems=null;
+		java.lang.reflect.Method authQuestionsClear=null;
+		if(leaverclazz!=null)
+		{
+		autoRejectPendingItems = leaverclazz.getDeclaredMethod("autoRejectPendingWorkItemsForTerminatedUserAccessRequest", sailpoint.api.SailPointContext.class, String.class);
+		authQuestionsClear = leaverclazz.getDeclaredMethod("clearAthenticationQuestionsOnTermination", sailpoint.api.SailPointContext.class, String.class);
+		}
+		Configuration sysConfig = context.getConfiguration();
+		Attributes sysConfigAttributes=null;
+		if(sysConfig!=null)
+		{
+		sysConfigAttributes=sysConfig.getAttributes();
+		}
+		Map entryObj = ROADUtil.getCustomGlobalMap(context);
+		//Lifecycle Triggers
+		if(InstalledSmartServicesLibrary.isSailPointObjectEnabled(context,"Rule","HighWater Mark Scan"))
+		{
+		adminAttributes.put("smartServiceshwmScan", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServiceshwmScan", "true");
+		}
+		if(InstalledSmartServicesLibrary.isSailPointObjectEnabled(context,"Custom",TriggersRuleLibrary.CUSTOMTRIGGERS))
+		{
+		adminAttributes.put("smartServiceslifeCycleTriggers", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServiceslifeCycleTriggers", "true");
+		}
+		if(InstalledSmartServicesLibrary.isSailPointObjectEnabled(context,"QuickLink","QuickLink-Configure-Triggers"))
+		{
+		adminAttributes.put("smartServicesuserInterfaceTriggers", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesuserInterfaceTriggers", "true");
+		}
+		if(InstalledSmartServicesLibrary.isSailPointObjectEnabled(context,"Rule","Rule-OldValues")
+		&& InstalledSmartServicesLibrary.isSailPointObjectEnabled(context,"Rule","Rule-NewValues"))
+		{
+		adminAttributes.put("smartServicestriggerFunctions", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicestriggerFunctions", "true");
+		}
+		//Mine Provisioning Policies (BETA)
+		if(InstalledSmartServicesLibrary.isSailPointObjectEnabled(context,"QuickLink","QuickLink-Discover-Provisioning-Policies"))
+		{
+		adminAttributes.put("smartServicesprovisioningDiscovery", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesprovisioningDiscovery", "true");
+		}
+		//Aggregation
+		if(InstalledSmartServicesLibrary.isSailPointObjectEnabled(context,"Rule","Rule-Framework-RapidAppOnBoarding-Customization-Rule")
+		&& InstalledSmartServicesLibrary.isSailPointObjectEnabled(context,"Rule","Rule-FrameWork-Promote-Managed-Attribute")
+		&& InstalledSmartServicesLibrary.isSailPointObjectEnabled(context,"Rule","Rule-FrameWork-Group-Refresh")
+		&& InstalledSmartServicesLibrary.isSailPointObjectEnabled(context,"Rule","Rule-FrameWork-Correlation"))
+		{
+		adminAttributes.put("smartServicesaggregationFeature", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesaggregationFeature", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","authoritativeNonEmployee"))
+		{
+		adminAttributes.put("smartServicesauthoritativeNonEmployee", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesauthoritativeNonEmployee", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","authoritativeEmployee"))
+		{
+		adminAttributes.put("smartServicesauthoritativeEmployee", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesauthoritativeEmployee", "true");
+		}
+		if(((String)adminAttributes.get("smartServicesauthoritativeNonEmployee")).equalsIgnoreCase("FALSE") && 
+		((String)adminAttributes.get("smartServicesauthoritativeEmployee")).equalsIgnoreCase("FALSE"))
+		{
+		adminAttributes.put("smartServicesappAggregationFeature", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesappAggregationFeature", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","accountDisableAttrExpression"))
+		{
+		adminAttributes.put("smartServicesaccountDisableAttrExpression", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesaccountDisableAttrExpression", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","accountLockAttrExpression"))
+		{
+		adminAttributes.put("smartServicesaccountLockAttrExpression", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesaccountLockAttrExpression", "true");
+		}
+		if(((String)adminAttributes.get("smartServicesaccountDisableAttrExpression")).equalsIgnoreCase("FALSE") && 
+		((String)adminAttributes.get("smartServicesaccountLockAttrExpression")).equalsIgnoreCase("FALSE"))
+		{
+		adminAttributes.put("smartServicesacctAggregationFeature", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesacctAggregationFeature", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","accountCorrelationAttrExpression"))
+		{
+		adminAttributes.put("smartServicesaccountCorrelationAttrExpression", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesaccountCorrelationAttrExpression", "true");
+		}
+		//Joiner
+		if(entryObj!=null && entryObj.containsKey("wgJoinerRehireEmail"))
+        {
+        	adminAttributes.put("smartServiceswgJoinerRehireEmail", "false");
+        }
+        else
+        {
+        	adminAttributes.put("smartServiceswgJoinerRehireEmail", "true");
+        }
+		if(entryObj!=null && entryObj.containsKey("postJoinerRule"))
+        {
+        	adminAttributes.put("smartServicespostJoinerRule", "false");
+        }
+        else
+        {
+        	adminAttributes.put("smartServicespostJoinerRule", "true");
+        }
+        if(entryObj!=null && entryObj.containsKey("postRehireRule"))
+        {
+        	adminAttributes.put("smartServicespostRehireRule", "false");
+        }
+        else
+        {
+        	adminAttributes.put("smartServicespostRehireRule", "true");
+        }
+        if(entryObj!=null && entryObj.containsKey("postRTWLOARule"))
+        {
+        	adminAttributes.put("smartServicespostRTWLOARule", "false");
+        }
+        else
+        {
+        	adminAttributes.put("smartServicespostRTWLOARule", "true");
+        }
+        if(entryObj!=null && entryObj.containsKey("postRTWLTDRule"))
+        {
+        	adminAttributes.put("smartServicespostRTWLTDRule", "false");
+        }
+        else
+        {
+        	adminAttributes.put("smartServicespostRTWLTDRule", "true");
+        }
+        if(entryObj!=null && entryObj.containsKey("postReverseLeaverRule"))
+        {
+        	adminAttributes.put("smartServicespostReverseLeaverRule", "false");
+        }
+        else
+        {
+        	adminAttributes.put("smartServicespostReverseLeaverRule", "true");
+        }
+        if(entryObj!=null && entryObj.containsKey("wgLeaverReverseLeaverEmail"))
+        {
+        	adminAttributes.put("smartServiceswgLeaverReverseLeaverEmail", "false");
+        }
+        else
+        {
+        	adminAttributes.put("smartServiceswgLeaverReverseLeaverEmail", "true");
+        }
+		if(InstalledSmartServicesLibrary.isSailPointObjectEnabled(context,"Rule","Rule-FrameWork-Creation-Joiner-Authoritative-Source")
+		&& InstalledSmartServicesLibrary.isSailPointObjectEnabled(context,"GroupDefinition","New Joiner Has At least One Birthright Account")
+		&& InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Identity",JoinerRuleLibrary.JOINERATTRNEEDSJOINER))
+		{
+		adminAttributes.put("smartServicesimplicitJoinerEvent", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesimplicitJoinerEvent", "true");
+		}
+		if(InstalledSmartServicesLibrary.identityTriggerAttributeEnabled(context,"JOINER FEATURE"))
+		{
+		adminAttributes.put("smartServicesjoiner", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesjoiner", "true");
+		}
+		if(InstalledSmartServicesLibrary.identityTriggerAttributeEnabled(context,"JOINER LTD FEATURE"))
+		{
+		adminAttributes.put("smartServicesjoinerltd", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesjoinerltd", "true");
+		}
+		if(InstalledSmartServicesLibrary.identityTriggerAttributeEnabled(context,"JOINER LOA FEATURE"))
+		{
+		adminAttributes.put("smartServicesjoinerloa", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesjoinerloa", "true");
+		}
+		if(InstalledSmartServicesLibrary.identityTriggerAttributeEnabled(context,"REVERSE LEAVER FEATURE"))
+		{
+		adminAttributes.put("smartServicesreverseleaver", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesreverseleaver", "true");
+		}
+		if(InstalledSmartServicesLibrary.identityTriggerAttributeEnabled(context,"JOINER REHIRE FEATURE"))
+		{
+		adminAttributes.put("smartServicesrehire", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesrehire", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","birthrightEntAttrExpression")
+		&& InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"ManagedAttribute","isBirthright") 
+		&& InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Bundle","isBirthright") )
+		{
+		adminAttributes.put("smartServicesbirthrightEntAttrExpression", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesbirthrightEntAttrExpression", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","joinerEnabled"))
+		{
+		adminAttributes.put("smartServicesjoinerEnabled", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesjoinerEnabled", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","joinerPopulationRegex"))
+		{
+		adminAttributes.put("smartServicesjoinerPopulationRegex", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesjoinerPopulationRegex", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","joinerRoles"))
+		{
+		adminAttributes.put("smartServicesjoinerRoles", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesjoinerRoles", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","rehirePrimaryaccount"))
+		{
+			adminAttributes.put("smartServicesrehirePrimaryaccount", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServicesrehirePrimaryaccount", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","rehireExtendedRule"))
+		{
+			adminAttributes.put("smartServicesrehireExtendedRule", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServicesrehireExtendedRule", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","rtwLOAExtendedRule"))
+		{
+			adminAttributes.put("smartServicesrtwLOAExtendedRule", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServicesrtwLOAExtendedRule", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","rtwLTDxtendedRule"))
+		{
+			adminAttributes.put("smartServicesrtwLTDExtendedRule", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServicesrtwLTDExtendedRule", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","reverseTerminationExtendedRule"))
+		{
+			adminAttributes.put("smartServicesreverseTerminationExtendedRule", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServicesreverseTerminationExtendedRule", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"ManagedAttribute","manualOverride"))
+		{
+		adminAttributes.put("smartServicesmanualOverride", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesmanualOverride", "true");
+		}
+		if(InstalledSmartServicesLibrary.isSailPointObjectEnabled(context,"Custom","Custom-Framework-EmailTextMapping"))
+		{
+			adminAttributes.put("smartServicesdynamicEmailContexnt", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServicesdynamicEmailContexnt", "true");
+		}
+		if(entryObj!=null && entryObj.containsKey("additionalPasswordEmail"))
+        {
+        	adminAttributes.put("smartServicesadditionalPasswordEmail", "false");
+        }
+        else
+        {
+        	adminAttributes.put("smartServicesadditionalPasswordEmail", "true");
+        }
+        if(entryObj!=null && entryObj.containsKey("rehireBeforePlanRule"))
+        {
+        	adminAttributes.put("smartServicesrehireBeforePlanRule", "false");
+        }
+        else
+        {
+        	adminAttributes.put("smartServicesrehireBeforePlanRule", "true");
+        }
+        if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","rehireProcess"))
+		{
+		adminAttributes.put("smartServicesrehireProcess", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesrehireProcess", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","reverseleaverProcess"))
+		{
+		adminAttributes.put("smartServicesreverseleaverProcess", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesreverseleaverProcess", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","rtwltdProcess"))
+		{
+		adminAttributes.put("smartServicesrtwltdProcess", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesrtwltdProcess", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","rtwloaProcess"))
+		{
+		adminAttributes.put("smartServicesrtwloaProcess", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesrtwloaProcess", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","apAfterRehireAttrSync"))
+		{
+		adminAttributes.put("smartServicesapAfterRehireAttrSync", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesapAfterRehireAttrSync", "true");
+		}
+		//Leaver
+		if(entryObj!=null && entryObj.containsKey("postLeaverRule"))
+        {
+        	adminAttributes.put("smartServicespostLeaverRule", "false");
+        }
+        else
+        {
+        	adminAttributes.put("smartServicespostLeaverRule", "true");
+        }
+        if(entryObj!=null && entryObj.containsKey("postLOARule"))
+        {
+        	adminAttributes.put("smartServicespostLOARule", "false");
+        }
+        else
+        {
+        	adminAttributes.put("smartServicespostLOARule", "true");
+        }
+        if(entryObj!=null && entryObj.containsKey("postLTDRule"))
+        {
+        	adminAttributes.put("smartServicespostLTDRule", "false");
+        }
+        else
+        {
+        	adminAttributes.put("smartServicespostLTDRule", "true");
+        }
+		if(autoRejectPendingItems!=null)
+		{
+		adminAttributes.put("smartServicesautoRejectItems", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesautoRejectItems", "true");
+		}
+		if(authQuestionsClear!=null)
+		{
+		adminAttributes.put("smartServicesclearQuestionAnswer", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesclearQuestionAnswer", "true");
+		}
+		if(InstalledSmartServicesLibrary.identityTriggerAttributeEnabled(context,"LEAVER FEATURE"))
+		{
+		adminAttributes.put("smartServicestermination", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicestermination", "true");
+		}
+		if(InstalledSmartServicesLibrary.identityTriggerAttributeEnabled(context,"LEAVER LOA FEATURE"))
+		{
+		adminAttributes.put("smartServicesloa", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesloa", "true");
+		}
+		if(InstalledSmartServicesLibrary.identityTriggerAttributeEnabled(context,"LEAVER LTD FEATURE"))
+		{
+		adminAttributes.put("smartServicesltd", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesltd", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","loaProcess"))
+		{
+		adminAttributes.put("smartServicesloaProcess", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesloaProcess", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","ltdProcess"))
+		{
+		adminAttributes.put("smartServicesltdProcess", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesltdProcess", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","terminationProcess"))
+		{
+		adminAttributes.put("smartServicesterminationProcess", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesterminationProcess", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","removeEntitlementLeaverExceptionExpression"))
+		{
+		adminAttributes.put("smartServicesremoveEntitlementLeaverExceptionExpression", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesremoveEntitlementLeaverExceptionExpression", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","terminationExtendedRule"))
+		{
+			adminAttributes.put("smartServicesterminationExtendedRule", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServicesterminationExtendedRule", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","loaExtendedRule"))
+		{
+			adminAttributes.put("smartServicesloaExtendedRule", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServicesterminationExtendedRule", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","ltdExtendedRule"))
+		{
+			adminAttributes.put("smartServicesltdExtendedRule", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServicesltdExtendedRule", "true");
+		}
+		if(entryObj!=null && entryObj.containsKey("removeIIQArtifactsOwnership") 
+		&& entryObj.containsKey("reassignOwnershipToManager"))
+        {
+        	adminAttributes.put("smartServicesremoveIIQArtifactsOwnershipToManager", "false");
+        }
+        else
+        {
+        	adminAttributes.put("smartServicesremoveIIQArtifactsOwnershipToManager", "true");
+        }
+        if(entryObj!=null && entryObj.containsKey("businessApproversremoveOwnership") 
+		&& entryObj.containsKey("businessApproversToManager"))
+        {
+        	adminAttributes.put("smartServicesbusinessApproversremoveOwnershipToManager", "false");
+        }
+        else
+        {
+        	adminAttributes.put("smartServicesbusinessApproversremoveOwnershipToManager", "true");
+        }
+        if(entryObj!=null && entryObj.containsKey("businessApproversreassignmentRule"))
+        {
+        	adminAttributes.put("smartServicesbusinessApproversreassignmentRule", "false");
+        }
+        else
+        {
+        	adminAttributes.put("smartServicesbusinessApproversreassignmentRule", "true");
+        }
+        if(entryObj!=null && entryObj.containsKey("reassignmentRule"))
+        {
+        	adminAttributes.put("smartServicesreassignmentRule", "false");
+        }
+        else
+        {
+        	adminAttributes.put("smartServicesreassignmentRule", "true");
+        }
+        if(InstalledSmartServicesLibrary.isSailPointObjectEnabled(context,"Rule","Rule-FrameworkInactiveWorkItemEscalation"))
+		{
+			adminAttributes.put("smartServicesinactiveWorkItemRule", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServicesinactiveWorkItemRule", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","apPopulationLeaverOptions"))
+		{
+		adminAttributes.put("smartServicesapPopulationLeaverOptions", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesapPopulationLeaverOptions", "true");
+		}
+		//Mover
+		if(entryObj!=null && entryObj.containsKey("postMoverRule"))
+        {
+        	adminAttributes.put("smartServicespostMoverRule", "false");
+        }
+        else
+        {
+        	adminAttributes.put("smartServicespostMoverRule", "true");
+        }
+        if(entryObj!=null && entryObj.containsKey("postMitigationRule"))
+        {
+        	adminAttributes.put("smartServicespostMitigationRule", "false");
+        }
+        else
+        {
+        	adminAttributes.put("smartServicespostMitigationRule", "true");
+        }
+		if(InstalledSmartServicesLibrary.identityTriggerAttributeEnabled(context,"MOVER FEATURE"))
+		{
+			adminAttributes.put("smartServicesmover", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServicesmover", "true");
+		}
+		if(InstalledSmartServicesLibrary.identityTriggerAttributeEnabled(context,"MANAGER CERTIFICATION ALLOW EXCEPTION FEATURE"))
+		{
+			adminAttributes.put("smartServicesmitigation", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServicesmitigation", "true");
+		}
+		if(InstalledSmartServicesLibrary.isSailPointObjectEnabled(context,"CertificationDefinition","MOVER CERTIFICATION TEMPLATE"))
+		{
+			adminAttributes.put("smartServicesmovercertevent", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServicesmovercertevent", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","moverProcess"))
+		{
+		adminAttributes.put("smartServicesmoverProcess", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServicesmoverProcess", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","beforemoverAccount"))
+		{
+			adminAttributes.put("smartServicesbeforemoverAccount", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServicesbeforemoverAccount", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","moverExtendedRule"))
+		{
+			adminAttributes.put("smartServicesmoverExtendedRule", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServicesmoverExtendedRule", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","beforemoverPrimaryaccount"))
+		{
+			adminAttributes.put("smartServicesbeforemoverPrimaryaccount", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServicesbeforemoverPrimaryaccount", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","moverRevocation"))
+		{
+			adminAttributes.put("smartServicesmoverRevocation", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesmoverRevocation", "true");
+		}
+		if(InstalledSmartServicesLibrary.isSailPointObjectEnabled(context,"Rule","Rule-FrameWorkCertificationExclusion"))
+		{
+			adminAttributes.put("smartServicescertificationExclusionRule", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServicescertificationExclusionRule", "true");
+		}
+		if(InstalledSmartServicesLibrary.isSailPointObjectEnabled(context,"Rule","Rule-FrameWorkCertificationExclusionManager"))
+		{
+			adminAttributes.put("smartServicescertificationExclusionMgAdAppRule", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServicescertificationExclusionMgAdAppRule", "true");
+		}
+		if(InstalledSmartServicesLibrary.isSailPointObjectEnabled(context,"Custom","Custom-Framework-Exclusion-Logical-BusinessApplications-PrivilegedAccess"))
+		{
+		adminAttributes.put("smartServicescustomCertExclusion", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicescustomCertExclusion", "true");
+		}
+		if(InstalledSmartServicesLibrary.isSailPointObjectEnabled(context,"Rule","Rule-FrameworkEmailRecipientCcFirstManager"))
+		{
+			adminAttributes.put("smartServicescertificationRecepientRule", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServicescertificationRecepientRule", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","apBeforeMoverAttrSync"))
+		{
+		adminAttributes.put("smartServicesapBeforeMoverAttrSync", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesapBeforeMoverAttrSync", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","apAfterMoverJoiner"))
+		{
+		adminAttributes.put("smartServicesapAfterMoverJoiner", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesapAfterMoverJoiner", "true");
+		}
+		//Certification
+		if(sysConfigAttributes!=null)
+		{
+			if(sysConfigAttributes.containsKey("certificationItemCustomizationRule"))
+			{
+				String smartServicesCertRule=sysConfigAttributes.get("certificationItemCustomizationRule");
+				if(smartServicesCertRule!=null && smartServicesCertRule.equalsIgnoreCase("Rule-Framework-Certification-Item-Rule"))
+				{
+				adminAttributes.put("smartServicescertificationFeature", "false");
+				}
+				else
+				{
+				adminAttributes.put("smartServicescertificationFeature", "true");
+				}
+			}
+		}
+		//Attribute Synchronization
+		 if(entryObj!=null && entryObj.containsKey("postAttributeSyncRule"))
+        {
+        	adminAttributes.put("smartServicespostAttributeSyncRule", "false");
+        }
+        else
+        {
+        	adminAttributes.put("smartServicespostAttributeSyncRule", "true");
+        }
+		if(InstalledSmartServicesLibrary.identityTriggerAttributeEnabled(context,"ATTRIBUTE SYNCHRONIZATION FEATURE"))
+		{
+			adminAttributes.put("smartServicesattributeSync", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServicesattributeSync", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","evaluateCreateprovpolicy"))
+		{
+			adminAttributes.put("smartServicesevaluateCreateprovpolicy", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServicesevaluateCreateprovpolicy", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","renameLDAPaccount"))
+		{
+			adminAttributes.put("smartServicesrenameLDAPaccount", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServicesrenameLDAPaccount", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","primarySyncaccounts"))
+		{
+			adminAttributes.put("smartServicesprimarySyncaccounts", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServicesprimarySyncaccounts", "true");
+		}
+		if(InstalledSmartServicesLibrary.isSailPointObjectEnabled(context,"Custom","Custom-FrameworkAttributeSyncMapping"))
+		{
+		adminAttributes.put("smartServicesattrSyncExtensionRule", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesattrSyncExtensionRule", "true");
+		}
+		//Native Change
+		if(entryObj!=null && entryObj.containsKey("postNativeChangeRule"))
+        {
+        	adminAttributes.put("smartServicespostNativeChangeRule", "false");
+        }
+        else
+        {
+        	adminAttributes.put("smartServicespostNativeChangeRule", "true");
+        }
+		if(InstalledSmartServicesLibrary.identityTriggerAttributeEnabled(context,"NATIVE CHANGE DETECTION FEATURE"))
+		{
+		adminAttributes.put("smartServicesnativechange", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesnativechange", "true");
+		}
+		if(InstalledSmartServicesLibrary.isSailPointObjectEnabled(context,"CertificationDefinition","NATIVE CHANGE CERTIFICATION TEMPLATE"))
+		{
+			adminAttributes.put("smartServicesnativechangecertevent", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServicesnativechangecertevent", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","nativeChangeProcess"))
+		{
+		adminAttributes.put("smartServicesnativeChangeProcessProcess", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesnativeChangeProcessProcess", "true");
+		}
+        //Policy Violation
+		if(InstalledSmartServicesLibrary.isSailPointObjectEnabled(context,"Custom","Custom-PolicyViolation-AllowDenyExceptions"))
+		{
+		adminAttributes.put("smartServicescrossApplicationPolicyViolations", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicescrossApplicationPolicyViolations", "true");
+		}
+		if(InstalledSmartServicesLibrary.isSailPointObjectEnabled(context,"TaskDefinition","SOD Matrix Report"))
+		{
+		adminAttributes.put("smartServicesmatrixReport", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesmatrixReport", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","softPolicyviolations"))
+		{
+			adminAttributes.put("smartServicessoftPolicyviolations", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServicessoftPolicyviolations", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","hardPolicyviolations"))
+		{
+			adminAttributes.put("smartServiceshardPolicyviolations", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServiceshardPolicyviolations", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","policyType"))
+		{
+			adminAttributes.put("smartServicespolicyType", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServicespolicyType", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","policytypeExceptions"))
+		{
+			adminAttributes.put("smartServicespolicytypeExceptions", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServicespolicytypeExceptions", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","eligibilityExpression"))
+		{
+			adminAttributes.put("smartServiceseligibilityExpression", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServiceseligibilityExpression", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","txCombinationName"))
+		{
+			adminAttributes.put("smartServicestxCombinationName", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServicestxCombinationName", "true");
+		}
+		if(entryObj!=null && entryObj.containsKey("policySoftFilter"))
+        {
+        	adminAttributes.put("smartServicespolicySoftFilter", "false");
+        }
+        else
+        {
+        	adminAttributes.put("smartServicespolicySoftFilter", "true");
+        }
+        if(entryObj!=null && entryObj.containsKey("policyDenyFilter"))
+        {
+        	adminAttributes.put("smartServicespolicyDenyFilter", "false");
+        }
+        else
+        {
+        	adminAttributes.put("smartServicespolicyDenyFilter", "true");
+        }
+		//New Account Entitlements Dependency
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","accountCreateEntitlements"))
+		{
+			adminAttributes.put("smartServicesaccountCreateEntitlements", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServicesaccountCreateEntitlements", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","accountCreateConditionalRule"))
+		{
+			adminAttributes.put("smartServicesaccountCreateConditionalRule", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServicesaccountCreateConditionalRule", "true");
+		}
+		//Access and Accounts Request
+		if(InstalledSmartServicesLibrary.isSailPointObjectEnabled(context,"Workflow","Accelerator Pack GRC Integration"))
+		{
+		adminAttributes.put("smartServicesGRCIntegartion", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesGRCIntegartion", "true");
+		}
+		if(InstalledSmartServicesLibrary.isSailPointObjectEnabled(context,"Rule","Accelerator Pack GRC Dates Rule"))
+		{
+		adminAttributes.put("smartServicesGRCIntegartionrule", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesGRCIntegartionrule", "true");
+		}
+		if(InstalledSmartServicesLibrary.isSailPointObjectEnabled(context,"Custom","Custom-ApprovalFrameWorkMappings"))
+		{
+		adminAttributes.put("smartServicesapprovalMappings", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesapprovalMappings", "true");
+		}
+		//Application
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","appBusApprovers"))
+		{
+			adminAttributes.put("smartServicesappBusApprovers", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServicesappBusApprovers", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","additionalAppBusApprovers"))
+		{
+			adminAttributes.put("smartServicesadditionalAppBusApprovers", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServicesadditionalAppBusApprovers", "true");
+		}
+		if(((String)adminAttributes.get("smartServicesadditionalAppBusApprovers")).equalsIgnoreCase("FALSE") && 
+		((String)adminAttributes.get("smartServicesappBusApprovers")).equalsIgnoreCase("FALSE"))
+		{
+		adminAttributes.put("smartServicesappTwoLevel", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesappTwoLevel", "true");
+		}
+		//Entitlement
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"ManagedAttribute","entBusApprovers"))
+		{
+			adminAttributes.put("smartServicesentBusApprovers", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServicesentBusApprovers", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"ManagedAttribute","additionalEntBusApprovers"))
+		{
+			adminAttributes.put("smartServicesadditionalEntBusApprovers", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServicesadditionalEntBusApprovers", "true");
+		}
+		if(((String)adminAttributes.get("smartServicesadditionalEntBusApprovers")).equalsIgnoreCase("FALSE") && 
+		((String)adminAttributes.get("smartServicesentBusApprovers")).equalsIgnoreCase("FALSE"))
+		{
+		adminAttributes.put("smartServicesentTwoLevel", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesentTwoLevel", "true");
+		}
+		//Role
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Bundle","roleBusApprovers"))
+		{
+			adminAttributes.put("smartServicesRoleBusApprovers", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServicesRoleBusApprovers", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Bundle","additionalRoleBusApprovers"))
+		{
+			adminAttributes.put("smartServicesadditionalRoleBusApprovers", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServicesadditionalRoleBusApprovers", "true");
+		}
+		if(((String)adminAttributes.get("smartServicesRoleBusApprovers")).equalsIgnoreCase("FALSE") && 
+		((String)adminAttributes.get("smartServicesadditionalRoleBusApprovers")).equalsIgnoreCase("FALSE"))
+		{
+		adminAttributes.put("smartServicesRoleTwoLevel", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesRoleTwoLevel", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","skipSupervisorApproval"))
+		{
+			adminAttributes.put("smartServicesskipSupervisorApproval", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServicesskipSupervisorApproval", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","appBusApprovalRule"))
+		{
+			adminAttributes.put("smartServicesappBusApprovalRule", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServicesappBusApprovalRule", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","additionalAppBusApprovalRule"))
+		{
+			adminAttributes.put("smartServicesadditionalAppBusApprovalRule", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServicesadditionalAppBusApprovalRule", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"ManagedAttribute","entBusApprovalRule"))
+		{
+			adminAttributes.put("smartServicesentBusApprovalRule", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServicesentBusApprovalRule", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"ManagedAttribute","additionalEntBusApproversRule"))
+		{
+			adminAttributes.put("smartServicesadditionalEntBusApproversRule", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServicesadditionalEntBusApproversRule", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Bundle","roleBusApprovalRule"))
+		{
+			adminAttributes.put("smartServicesroleBusApprovalRule", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServicesadditionalRoleBusApprovalRule", "true");
+		}
+			if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Bundle","additionalRoleBusApprovalRule"))
+		{
+			adminAttributes.put("smartServicesadditionalRoleBusApprovalRule", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServicesroleBusApprovalRule", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Bundle","formappName"))
+		{
+			adminAttributes.put("smartServicesformappName", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServicesformappName", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","displayFormRule"))
+		{
+			adminAttributes.put("smartServicesdisplayFormRule", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServicesdisplayFormRule", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Identity","saccountOwnerone"))
+		{
+			adminAttributes.put("smartServicesentsaccountOwnerone", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServicesentsaccountOwnerone", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Identity","administrator"))
+		{
+			adminAttributes.put("smartServicesadministrator", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServicesadministrator", "true");
+		}
+		if(((String)adminAttributes.get("smartServicesentsaccountOwnerone")).equalsIgnoreCase("FALSE") ||
+		((String)adminAttributes.get("smartServicesadministrator")).equalsIgnoreCase("FALSE"))
+		{
+		adminAttributes.put("smartServicesserviceAccountApprovalLevel", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesserviceAccountApprovalLevel", "true");
+		}
+		//Operations
+		if(sysConfigAttributes!=null && sysConfigAttributes.containsKey("quickLinkCategories"))
+		{
+			List listCatgeories = sysConfigAttributes.get("quickLinkCategories");
+			if(listCatgeories!=null && listCatgeories.size()>0)
+			{
+				for(QuickLinkCategory category:listCatgeories)
+				{
+					if(category.getName()!=null && category.getName().equalsIgnoreCase("Operations"))
+					{
+						adminAttributes.put("smartServicesoperationsFeature", "false");
+						break;
+					}
+					else
+					{
+						adminAttributes.put("smartServicesoperationsFeature", "true");
+					}
+				}
+			}
+		}
+		if(InstalledSmartServicesLibrary.isSailPointObjectEnabled(context,"QuickLink","QuickLink-ActivateIdentityAccess"))
+		{
+		adminAttributes.put("smartServicesActivateIdentity", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesActivateIdentity", "true");
+		}
+		if(InstalledSmartServicesLibrary.isSailPointObjectEnabled(context,"QuickLink","QuickLink-SuspendAllAccess"))
+		{
+		adminAttributes.put("smartServicesSuspendIdentity", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesSuspendIdentity", "true");
+		}
+		if(InstalledSmartServicesLibrary.isSailPointObjectEnabled(context,"QuickLink","QuickLink-TerminateIdentity"))
+		{
+		adminAttributes.put("smartServicesterminateIdentity", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesterminateIdentity", "true");
+		}
+		if(InstalledSmartServicesLibrary.isSailPointObjectEnabled(context,"QuickLink","QuickLink-RecoveryTool"))
+		{
+		adminAttributes.put("smartServicesrecoverIdentity", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesrecoverIdentity", "true");
+		}
+		if(InstalledSmartServicesLibrary.isSailPointObjectEnabled(context,"QuickLink","QuickLink-ProcessIdentityLifecycleEvent"))
+		{
+		adminAttributes.put("smartServicesprocessIdentity", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesprocessIdentity", "true");
+		}
+		if(entryObj!=null && entryObj.containsKey("errorNotificationWorkGroup"))
+        {
+        	adminAttributes.put("smartServiceserrorNotificationWorkGroup", "false");
+        }
+        else
+        {
+        	adminAttributes.put("smartServiceserrorNotificationWorkGroup", "true");
+        }
+        if(entryObj!=null && entryObj.containsKey("temporaryApprovalsWorkGroup"))
+        {
+        	adminAttributes.put("smartServicestemporaryApprovalsWorkGroup", "false");
+        }
+        else
+        {
+        	adminAttributes.put("smartServicestemporaryApprovalsWorkGroup", "true");
+        }
+        if(InstalledSmartServicesLibrary.isSailPointObjectEnabled(context,"TaskDefinition","Application Health Check Report"))
+		{
+		adminAttributes.put("smartServicesholisticApp", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesholisticApp", "true");
+		}
+		//Privileged Account
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Bundle","apaccountType"))
+		{
+			adminAttributes.put("smartServicesprivilegedRolesAccountType", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServicesprivilegedRolesAccountType", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"ManagedAttribute","apaccountType"))
+		{
+			adminAttributes.put("smartServicesprivilegedMEAccountType", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServicesprivilegedLinkAccountType", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Link","apaccountType"))
+		{
+			adminAttributes.put("smartServicesprivilegedLinkAccountType", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServicesprivilegedLinkAccountType", "true");
+		}
+		if(adminAttributes.get("smartServicesprivilegedLinkAccountType")!=null &&
+		((String)adminAttributes.get("smartServicesprivilegedLinkAccountType")).equalsIgnoreCase("false") &&
+		adminAttributes.get("smartServicesprivilegedMEAccountType")!=null &&
+		((String)adminAttributes.get("smartServicesprivilegedMEAccountType")).equalsIgnoreCase("false") &&
+		adminAttributes.get("smartServicesprivilegedRolesAccountType")!=null &&
+		((String)adminAttributes.get("smartServicesprivilegedRolesAccountType")).equalsIgnoreCase("false"))
+		{
+			adminAttributes.put("smartServicesprivilegedTierAccountType", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServicesprivilegedTierAccountType", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","privilegedAccountAttrExpression"))
+		{
+			adminAttributes.put("smartServicesprivilegedAccountAttrExpression", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServicesprivilegedAccountAttrExpression", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","privilegedEntAttrExpression"))
+		{
+			adminAttributes.put("smartServicesprivilegedEntAttrExpression", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServicesprivilegedEntAttrExpression", "true");
+		}
+		if(InstalledSmartServicesLibrary.isSailPointObjectEnabled(context,"Rule","Rule-FrameWorkPrivilegedRoles")
+		&& InstalledSmartServicesLibrary.isSailPointObjectEnabled(context,"Rule","Rule-FrameWorkPrivilegedEntitlements"))
+		{
+		adminAttributes.put("smartServicesfilterRolesEnts", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesfilterRolesEnts", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","enablepsaValidation"))
+		{
+			adminAttributes.put("smartServicesenablepsaValidation", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServicesenablepsaValidation", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","enablepswexpNotification"))
+		{
+			adminAttributes.put("smartServicesenableenablepswexpNotification", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServicesenableenablepswexpNotification", "true");
+		}
+		if(InstalledSmartServicesLibrary.isSailPointObjectEnabled(context,"QuickLink","Request Privileged Access"))
+		{
+		adminAttributes.put("smartServicesquickLinkPrivAccess", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesquickLinkPrivAccess", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","afterPassExpProcess"))
+		{
+			adminAttributes.put("smartServicesafterPassExpProcess", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServicesafterPassExpProcess", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","omitmanagerPrivgaccess"))
+		{
+			adminAttributes.put("smartServicesomitmanagerPrivgaccess", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServicesomitmanagerPrivgaccess", "true");
+		}
+		//Service Account
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Identity","serviceCube"))
+		{
+			adminAttributes.put("smartServicesserviceCube", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServicesserviceCube", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","serviceAccountAttrExpression"))
+		{
+			adminAttributes.put("smartServicesserviceAccountAttrExpression", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServicesserviceAccountAttrExpression", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","authoritativeServiceAccount"))
+		{
+			adminAttributes.put("smartServicesauthoritativeServiceAccount", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServicesauthoritativeServiceAccount", "true");
+		}
+		if(InstalledSmartServicesLibrary.isSailPointObjectEnabled(context,"Rule","Rule-Framework-ServiceCubes-CertificationPreDelegation"))
+		{
+		adminAttributes.put("smartServicesservicesOwnerCert", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesservicesOwnerCert", "true");
+		}
+		if(entryObj!=null && entryObj.containsKey("serviceAccountremoveOwnership") 
+		&& entryObj.containsKey("serviceAccountreassignOwnershipToManager"))
+        {
+        	adminAttributes.put("smartServicesserviceAccountremoveOwnershipToManager", "false");
+        }
+        else
+        {
+        	adminAttributes.put("smartServicesbusinessApproversremoveOwnershipToManager", "true");
+        }
+        if(entryObj!=null && entryObj.containsKey("serviceAccountreassignmentRule"))
+        {
+        	adminAttributes.put("smartServicesserviceAccountreassignmentRule", "false");
+        }
+        else
+        {
+        	adminAttributes.put("smartServicesserviceAccountreassignmentRule", "true");
+        }
+        //Create Identity
+        if(sysConfigAttributes!=null)
+		{
+			if(sysConfigAttributes.containsKey("workflowLCMIdentityCreateRequest") && sysConfigAttributes.containsKey("batchRequestIdentityCreateRequest"))
+			{
+			    String smartServicesWorklfowname=sysConfigAttributes.get("workflowLCMIdentityCreateRequest");
+				String smartServicesWorklfownameBatch=sysConfigAttributes.get("batchRequestIdentityCreateRequest");
+				if(smartServicesWorklfowname!=null && smartServicesWorklfowname.equalsIgnoreCase(ROADUtil.DEFAULTWORKFLOWCREATE)
+				&& smartServicesWorklfownameBatch!=null && smartServicesWorklfownameBatch.equalsIgnoreCase(ROADUtil.DEFAULTWORKFLOWCREATE))
+				{
+					adminAttributes.put("smartServicescreateFeature", "false");
+				}
+				else
+				{
+					adminAttributes.put("smartServicescreateFeature", "true");
+				}
+			}
+		}
+        if(entryObj!=null && entryObj.containsKey("createServiceCubes"))
+        {
+        	adminAttributes.put("smartServicescreateServiceCubes", "false");
+        }
+        else
+        {
+        	adminAttributes.put("smartServicescreateServiceCubes", "true");
+        }
+        if(InstalledSmartServicesLibrary.isSailPointObjectEnabled(context,"Form","Accelerator Pack Create Identity"))
+		{
+		adminAttributes.put("smartServicescreateIdentity", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicescreateIdentity", "true");
+		}
+   		//Edit Identity
+		if(sysConfigAttributes!=null)
+		{
+			if(sysConfigAttributes.containsKey("batchRequestIdentityEditRequest") && sysConfigAttributes.containsKey("workflowLCMIdentityEditRequest"))
+			{
+			    String smartServicesWorklfowname=sysConfigAttributes.get("workflowLCMIdentityEditRequest");
+				String smartServicesWorklfownameBatch=sysConfigAttributes.get("batchRequestIdentityEditRequest");
+				if(smartServicesWorklfowname!=null && smartServicesWorklfowname.equalsIgnoreCase(ROADUtil.DEFAULTWORKFLOWEDIT)
+				&& smartServicesWorklfownameBatch!=null && smartServicesWorklfownameBatch.equalsIgnoreCase(ROADUtil.DEFAULTWORKFLOWEDIT))
+				{
+					adminAttributes.put("smartServiceseditFeature", "false");
+				}
+				else
+				{
+					adminAttributes.put("smartServiceseditFeature", "true");
+				}
+			}
+		}
+		if(entryObj!=null && entryObj.containsKey("editServiceCubes"))
+        {
+        	adminAttributes.put("smartServiceseditServiceCubes", "false");
+        }
+        else
+        {
+        	adminAttributes.put("smartServiceseditServiceCubes", "true");
+        }
+        if(InstalledSmartServicesLibrary.isSailPointObjectEnabled(context,"Form","Accelerator Pack Edit Identity"))
+		{
+		adminAttributes.put("smartServiceseditIdentity", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServiceseditIdentity", "true");
+		}
+		//Register Identity
+		if(sysConfigAttributes!=null)
+		{
+			if(sysConfigAttributes.containsKey("workflowLCMSelfServiceRegistrationRequest"))
+			{
+			    String smartServicesWorklfowname=sysConfigAttributes.get("workflowLCMSelfServiceRegistrationRequest");
+				if(smartServicesWorklfowname!=null && smartServicesWorklfowname.equalsIgnoreCase("Workflow-FrameWork-Registration"))
+				{
+					adminAttributes.put("smartServicesregisterFeature", "false");
+				}
+				else
+				{
+					adminAttributes.put("smartServicesregisterFeature", "true");
+				}
+			}
+		}
+		if(InstalledSmartServicesLibrary.isSailPointObjectEnabled(context,"Form","Accelerator Pack Registration Identity"))
+		{
+		adminAttributes.put("smartServicesregisterIdentity", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesregisterIdentity", "true");
+		}
+		//Batch
+		if(sysConfigAttributes!=null)
+		{
+			if(sysConfigAttributes.containsKey("batchRequestAccessRequest") && sysConfigAttributes.containsKey("batchRequestAccountsRequest"))
+			{
+			    String smartServicesWorklfownameAcces=sysConfigAttributes.get("batchRequestAccessRequest");
+				String smartServicesWorklfownameAccount=sysConfigAttributes.get("batchRequestAccountsRequest");
+				if(smartServicesWorklfownameAcces!=null && smartServicesWorklfownameAcces.equalsIgnoreCase(ROADUtil.DEFAULTWORKFLOW)
+				&& smartServicesWorklfownameAccount!=null && smartServicesWorklfownameAccount.equalsIgnoreCase(ROADUtil.DEFAULTWORKFLOW))
+				{
+					adminAttributes.put("smartServicesbatchFeature", "false");
+				}
+				else
+				{
+					adminAttributes.put("smartServicesbatchFeature", "true");
+				}
+			}
+		}
+		if(entryObj!=null && entryObj.containsKey("byPassBatchApprovals"))
+        {
+        	adminAttributes.put("smartServicesbyPassBatchApprovalsCapability", "false");
+        }
+        else
+        {
+        	adminAttributes.put("smartServicesbyPassBatchApprovalsCapability", "true");
+        }
+		//Logical App
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"ManagedAttribute","entAppName")
+		&& InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Bundle","appName"))
+		{
+		adminAttributes.put("smartServiceslogApp", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServiceslogApp", "true");
+		}
+		//Self Service
+		if(InstalledSmartServicesLibrary.isSailPointObjectEnabled(context,"QuickLink","QuickLink-Self-Service-Application-Onboarding")
+		&& InstalledSmartServicesLibrary.isSailPointObjectEnabled(context,"Form","ROAD-Self-Service"))
+		{
+		adminAttributes.put("smartServicesselfService", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesselfService", "true");
+		}
+		//Email
+		if(InstalledSmartServicesLibrary.isSailPointObjectEnabled(context,"EmailTemplate","EmailTemplate-FrameworkFooter")
+		&& InstalledSmartServicesLibrary.isSailPointObjectEnabled(context,"EmailTemplate","EmailTemplate-FrameworkHeader")
+		&& InstalledSmartServicesLibrary.isSailPointObjectEnabled(context,"EmailTemplate","EmailTemplate-FrameworkStyleSheet"))
+		{
+		adminAttributes.put("smartServicesemailHeaderFooterCss", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesemailHeaderFooterCss", "true");
+		}
+		if(entryObj!=null && entryObj.containsKey("postRehireRule"))
+        {
+        	adminAttributes.put("smartServicespostRehireRule", "false");
+        }
+        else
+        {
+        	adminAttributes.put("smartServicespostRehireRule", "true");
+        }
+        if(entryObj!=null && entryObj.containsKey("apCCEmailRule"))
+        {
+        	adminAttributes.put("smartServicesapCCEmailRule", "false");
+        }
+        else
+        {
+        	adminAttributes.put("smartServicesapCCEmailRule", "true");
+        }
+        if(entryObj!=null && entryObj.containsKey("apDisableStaticManagerEmailContent"))
+        {
+        	adminAttributes.put("smartServicesapDisableStaticManagerEmailContent", "false");
+        }
+        else
+        {
+        	adminAttributes.put("smartServicesapDisableStaticManagerEmailContent", "true");
+        }
+        if(entryObj!=null && entryObj.containsKey("apCCEmailWorkgroup"))
+        {
+        	adminAttributes.put("smartServicesapCCEmailWorkgroup", "false");
+        }
+        else
+        {
+        	adminAttributes.put("smartServicesapCCEmailWorkgroup", "true");
+        }
+		//Epic
+		if(InstalledSmartServicesLibrary.identityTriggerAttributeEnabled(context,"SER LINK FEATURE"))
+		{
+		adminAttributes.put("smartServicesserLink", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesserLink", "true");
+		}
+		if(InstalledSmartServicesLibrary.isSailPointObjectEnabled(context,"Custom","Custom-Epic-SER-Settings"))
+		{
+		adminAttributes.put("smartServicesepicSerlink", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesepicSerlink", "true");
+		}
+		//Persona
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Identity","relationships")
+		&& InstalledSmartServicesLibrary.isSailPointObjectEnabled(context,"Custom","Custom-Persona-Settings"))
+		{
+		adminAttributes.put("smartServicespersona", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicespersona", "true");
+		}
+		if(InstalledSmartServicesLibrary.isSailPointObjectEnabled(context,"Rule","Rule-Framework-IdentityAttribute-Relationships"))
+		{
+		adminAttributes.put("smartServicesrelationshipRule", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesrelationshipRule", "true");
+		}
+		if(InstalledSmartServicesLibrary.isSailPointObjectEnabled(context,"Rule","Rule-Framework-IdentityAttribute-Manager-Global-Index"))
+		{
+		adminAttributes.put("smartServicesmanagerIndexRule", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesmanagerIndexRule", "true");
+		}
+		//Flat File
+		if(InstalledSmartServicesLibrary.isSailPointObjectEnabled(context,"Rule","Rule-FrameWork-Preiterate-DelimitedFile"))
+		{
+		adminAttributes.put("smartServicesflatfile", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesflatfile", "true");
+		}
+		//IdentityIQ
+		if(InstalledSmartServicesLibrary.isSailPointObjectEnabled(context,"Application","IdentityIQ"))
+		{
+			adminAttributes.put("smartServicesidentityIQ", "false");
+		}
+		else
+		{
+			adminAttributes.put("smartServicesidentityIQ", "true");
+		}
+		//Global Definitions
+		if(InstalledSmartServicesLibrary.isSailPointObjectEnabled(context,"QuickLink","QuickLink-Global-Modify-Settings")
+		&& InstalledSmartServicesLibrary.isSailPointObjectEnabled(context,"Form","Form-Global-SmartServices"))
+		{
+		adminAttributes.put("smartServicesglobalDefinitions", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesglobalDefinitions", "true");
+		}
+		//Password
+		if(sysConfigAttributes!=null)
+		{
+			if(sysConfigAttributes.containsKey("batchRequestPasswordsRequest") && sysConfigAttributes.containsKey("workflowLCMExpirePassword")
+			&& sysConfigAttributes.containsKey("workflowLCMForgotPassword") && sysConfigAttributes.containsKey("workflowLCMPasswordsRequest")
+			&& sysConfigAttributes.containsKey("workflowPasswordIntercept"))
+			{
+			   String smartServicesWorklfowname=sysConfigAttributes.get("batchRequestPasswordsRequest");
+			   String smartServicesWorklfownameExpire=sysConfigAttributes.get("workflowLCMExpirePassword");
+			   String smartServicesWorklfownameForgot=sysConfigAttributes.get("workflowLCMForgotPassword");
+			   String smartServicesWorklfownameManagePassword=sysConfigAttributes.get("workflowLCMPasswordsRequest");
+			   String smartServicesWorklfowInterceptorname=sysConfigAttributes.get("workflowPasswordIntercept");
+				if(smartServicesWorklfowname!=null && smartServicesWorklfowname.equalsIgnoreCase(ROADUtil.DEFAULTWORKFLOW)
+				&& smartServicesWorklfowInterceptorname!=null && smartServicesWorklfowInterceptorname.equalsIgnoreCase("Workflow-Intercept-Password")
+				&& smartServicesWorklfownameExpire!=null && smartServicesWorklfownameExpire.equalsIgnoreCase(ROADUtil.DEFAULTWORKFLOW)
+				&& smartServicesWorklfownameForgot!=null && smartServicesWorklfownameForgot.equalsIgnoreCase(ROADUtil.DEFAULTWORKFLOW)
+				&& smartServicesWorklfownameManagePassword!=null && smartServicesWorklfownameManagePassword.equalsIgnoreCase(ROADUtil.DEFAULTWORKFLOW))
+				{
+					adminAttributes.put("smartServicespasswordFeature", "false");
+				}
+				else
+				{
+					adminAttributes.put("smartServicespasswordFeature", "true");
+				}
+			}
+		}
+		if(InstalledSmartServicesLibrary.isSailPointObjectEnabled(context,"QuickLink","Change Password"))
+		{
+		adminAttributes.put("smartServiceschangePassword", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServiceschangePassword", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","targetpasswordSync"))
+		{
+		adminAttributes.put("smartServicestargetpasswordSync", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicestargetpasswordSync", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","primarypasswordSyncaccounts"))
+		{
+		adminAttributes.put("smartServicesprimarypasswordSyncaccounts", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesprimarypasswordSyncaccounts", "true");
+		}
+		if(InstalledSmartServicesLibrary.isSailPointObjectEnabled(context,"Custom","Custom-Identity-Verification-Form-Settings"))
+		{
+		adminAttributes.put("smartServicesexcludeVerificationAttrs", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesexcludeVerificationAttrs", "true");
+		}
+		//Audit
+		String auditEvent="roadLifeCycleEventRequest";
+		if(Auditor.isEnabled(auditEvent))
+		{
+		adminAttributes.put("smartServicesLifeCycleEventRequest", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesLifeCycleEventRequest", "true");
+		}
+		auditEvent="roadCertificationLifeCycleEventRequest";
+		if(Auditor.isEnabled(auditEvent))
+		{
+		adminAttributes.put("smartServicesCertificationLifeCycleEventRequest", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesCertificationLifeCycleEventRequest", "true");
+		}
+		auditEvent="roadInteractiveRequest";
+		if(Auditor.isEnabled(auditEvent))
+		{
+		adminAttributes.put("smartServicesInteractiveRequest", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesInteractiveRequest", "true");
+		}
+		auditEvent="roadOperationalRequest";
+		if(Auditor.isEnabled(auditEvent))
+		{
+		adminAttributes.put("smartServicesOperationalRequest", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesOperationalRequest", "true");
+		}
+		auditEvent="roadBackGroundServiceRequest";
+		if(Auditor.isEnabled(auditEvent))
+		{
+		adminAttributes.put("smartServicesBackGroundServiceRequest", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesBackGroundServiceRequest", "true");
+		}
+		auditEvent="roadRoleEntitlementAssignmentsRequest";
+		if(Auditor.isEnabled(auditEvent))
+		{
+		adminAttributes.put("smartServicesRoleEntitlementAssignmentsRequest", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesRoleEntitlementAssignmentsRequest", "true");
+		}
+		auditEvent="roadPolicyViolationDeprovisioningRequest";
+		if(Auditor.isEnabled(auditEvent))
+		{
+		adminAttributes.put("smartServicesPolicyViolationDeprovisioningRequest", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesPolicyViolationDeprovisioningRequest", "true");
+		}
+		auditEvent="roadCertificationRemediation";
+		if(Auditor.isEnabled(auditEvent))
+		{
+		adminAttributes.put("smartServicesCertificationRemediation", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesCertificationRemediation", "true");
+		}
+		auditEvent="roadWebservicesRequest";
+		if(Auditor.isEnabled(auditEvent))
+		{
+		adminAttributes.put("smartServicesWebservicesRequest", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesWebservicesRequest", "true");
+		}
+		if(InstalledSmartServicesLibrary.isSailPointObjectEnabled(context,"Rule","Rule-Audit-Framework"))
+		{
+		adminAttributes.put("smartServicesauditFeature", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesauditFeature", "true");
+		}
+		//Ticket
+		if(InstalledSmartServicesLibrary.isSailPointObjectEnabled(context,"QuickLink","QuickLink-Ticket-Status"))
+		{
+		adminAttributes.put("smartServicesticketStatus", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesticketStatus", "true");
+		}
+		if(InstalledSmartServicesLibrary.isSailPointObjectEnabled(context,"QuickLink","QuickLink-Ticket-Integration"))
+		{
+		adminAttributes.put("smartServicesticketConfig", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesticketConfig", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","assignmentGroupname"))
+		{
+		adminAttributes.put("smartServicesassignmentGroupname", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesassignmentGroupname", "true");
+		}
+		if(InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","afterTicketProvisioningOptions")
+		&& InstalledSmartServicesLibrary.objectConfigAttributeEnabled(context,"Application","afterticketprovisioningExtendedrule"))
+		{
+		adminAttributes.put("smartServicesafterTicketProvisioningOptionsRule", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesafterTicketProvisioningOptionsRule", "true");
+		}
+		if(InstalledSmartServicesLibrary.isSailPointObjectEnabled(context,"Rule","Rule-Framework-Plan-Initializer"))
+		{
+		adminAttributes.put("smartServicesdataRule", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesdataRule", "true");
+		}
+		if(InstalledSmartServicesLibrary.isSailPointObjectEnabled(context,"IntegrationConfig","SmartServicesTicketIntegration"))
+		{
+		adminAttributes.put("smartServicesticketIntegrationSimulator", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesticketIntegrationSimulator", "true");
+		}
+		if(InstalledSmartServicesLibrary.isSailPointObjectEnabled(context,"Custom","Custom-Ticket-Settings"))
+		{
+		adminAttributes.put("smartServicesuniversalPolling", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesuniversalPolling", "true");
+		}
+		//Provisioning
+		if(InstalledSmartServicesLibrary.isSailPointObjectEnabled(context,"Workflow",ROADUtil.DEFAULTWORKFLOW))
+		{
+		adminAttributes.put("smartServicesProvisioning", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesProvisioning", "true");
+		}
+		if(entryObj!=null && entryObj.containsKey("postWrapperRule"))
+        {
+        	adminAttributes.put("smartServicespostWrapperRule", "false");
+        }
+        else
+        {
+        	adminAttributes.put("smartServicespostWrapperRule", "true");
+        }
+        if(entryObj!=null && entryObj.containsKey("interceptorPlanRule"))
+        {
+        	adminAttributes.put("smartServicesinterceptorPlanRule", "false");
+        }
+        else
+        {
+        	adminAttributes.put("smartServicesinterceptorPlanRule", "true");
+        }
+         if(entryObj!=null && entryObj.containsKey("interceptorProjectRule"))
+        {
+        	adminAttributes.put("smartServicesinterceptorProjectRule", "false");
+        }
+        else
+        {
+        	adminAttributes.put("smartServicesinterceptorProjectRule", "true");
+        }
+        //IdentityIQ Access
+        if(InstalledSmartServicesLibrary.isSailPointObjectEnabled(context,"Application","IdentityIQ Access"))
+		{
+		adminAttributes.put("smartServicesIdentityIQAccess", "false");
+		}
+		else
+		{
+		adminAttributes.put("smartServicesIdentityIQAccess", "true");
+		}
+		LogEnablement.isLogDebugEnabled(installedSmartServicesLogger,"End detectInstalledSmartServices.."+adminAttributes);
+		return adminAttributes;
+	}
+	
+	]]></Source>
+</Rule>

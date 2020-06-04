@@ -1,0 +1,240 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Workflow PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Workflow explicitTransitions="true" handler="sailpoint.api.StandardWorkflowHandler" libraries="Identity" name="Workflow-QuickLink-Process-Identity-Lifecycle-Event" type="LCMProvisioning">
+  <Variable initializer="true" name="transient"/>
+  <Variable initializer="ref:launcher" name="owner">
+    <Description>Name of the user that will recieve the forms.</Description>
+  </Variable>
+  <Variable input="true" name="quickLinkIdentityId">
+    <Description>QL ID</Description>
+  </Variable>
+  <Variable input="true" name="quickLinkIdentityIds">
+    <Description>QL ID</Description>
+  </Variable>
+  <Variable initializer="false" name="trace">
+    <Description>
+			Used for debugging this workflow and when set to true
+			trace
+			will be sent to stdout.
+		</Description>
+  </Variable>
+  <Variable initializer="AccessRequest" name="flow">
+    <Description>The name of the identity.</Description>
+  </Variable>
+  <Variable initializer="string:LCM" name="source">
+    <Description>The name of the identity.</Description>
+  </Variable>
+  <Variable initializer="ref:launcher" name="owner">
+    <Description>Name of the user that will recieve the forms.</Description>
+  </Variable>
+  <Variable name="taskName"/>
+  <Variable input="true" name="identityName">
+    <Description>The name of the identity.</Description>
+  </Variable>
+  <Variable name="lifecycleIdentity"/>
+  <Variable name="lifecycleComments"/>
+  <Variable name="returnResult"/>
+  <Description>Accelerator Pack Process Identity Event Workflow</Description>
+  <Step icon="Start" name="Start" posX="28" posY="10">
+    <Transition to="Find Identity"/>
+  </Step>
+  <Step name="Find Identity">
+    <Script>
+      <Source><![CDATA[
+				import sailpoint.object.Identity;
+				if (quickLinkIdentityId != null) 
+				{
+					Identity user = context.getObjectById(Identity.class,quickLinkIdentityId);
+					if (user != null)
+					 {
+						workflow.put("lifecycleIdentity",user.getName());
+						context.decache(user);
+					}
+				}
+			       	
+				]]></Source>
+    </Script>
+    <Transition to="Select Lifecycle Event"/>
+  </Step>
+  <Step name="Select Lifecycle Event" posX="98" posY="10">
+    <Approval owner="ref:owner" return="taskName,lifecycleComments" send="lifecycleIdentity">
+      <Form>
+        <Attributes>
+          <Map>
+            <entry key="hideIncompleteFields" value="true"/>
+            <entry key="pageTitle" value="Select Lifecycle Event"/>
+          </Map>
+        </Attributes>
+        <Button action="next" label="Next"/>
+        <Button action="back" label="Cancel"/>
+        <Section type="text">
+          <Field displayName="Selected Identity" name="selectedIdentity">
+            <Script>
+              <Source><![CDATA[
+			               if(lifecycleIdentity!=null)
+			               {
+			               	return lifecycleIdentity;
+			               }
+			               	
+						]]></Source>
+            </Script>
+          </Field>
+        </Section>
+        <Section>
+          <Field displayName="Tasks" displayType="radio" name="taskName" required="true">
+            <AllowedValuesDefinition>
+              <Script>
+                <Source><![CDATA[
+				            import sailpoint.rapidapponboarding.rule.ROADUtil;
+							List displayList = new ArrayList();
+							String serDisabled=ROADUtil.roadFeatureDisabledString(context,"SER LINK FEATURE");
+							String nativeChangeDisabled=ROADUtil.roadFeatureDisabledString(context,"NATIVE CHANGE DETECTION FEATURE");
+							String moverDisabled=ROADUtil.roadFeatureDisabledString(context,"MOVER FEATURE");
+							String mitigationExpirationDisabled=ROADUtil.roadFeatureDisabledString(context,"MANAGER CERTIFICATION ALLOW EXCEPTION FEATURE");
+							String leaverLoaDisabled=ROADUtil.roadFeatureDisabledString(context,"LEAVER LOA FEATURE");
+							String leaverLtdDisabled=ROADUtil.roadFeatureDisabledString(context,"LEAVER LTD FEATURE");
+							String joinerDisabled=ROADUtil.roadFeatureDisabledString(context,"JOINER FEATURE");
+							String joinerRehireDisabled=ROADUtil.roadFeatureDisabledString(context,"JOINER REHIRE FEATURE");
+							String joinerRtwLtdDisabled=ROADUtil.roadFeatureDisabledString(context,"JOINER LTD FEATURE");
+							String joinerRtwLoaDisabled=ROADUtil.roadFeatureDisabledString(context,"JOINER LOA FEATURE");
+							String joinerRtwreverLeaverDisabled=ROADUtil.roadFeatureDisabledString(context,"REVERSE LEAVER FEATURE");
+							String attrSyncDisabled=ROADUtil.roadFeatureDisabledString(context,"ATTRIBUTE SYNCHRONIZATION FEATURE");
+							if(serDisabled!=null && serDisabled.equalsIgnoreCase("FALSE"))
+							{
+								displayList.add("Operations Launch SER Linking");
+								displayList.add("Operations Launch SER UnLinking");
+							}
+							if(nativeChangeDisabled!=null && nativeChangeDisabled.equalsIgnoreCase("FALSE"))
+							{
+								displayList.add("Operations Launch Native Change");
+							}
+							if(moverDisabled!=null && moverDisabled.equalsIgnoreCase("FALSE"))
+							{
+								displayList.add("Operations Launch Mover");
+							}
+							if(mitigationExpirationDisabled!=null && mitigationExpirationDisabled.equalsIgnoreCase("FALSE"))
+							{
+								displayList.add("Operations Launch Mitigation Expiration");
+							}
+							if(leaverLoaDisabled!=null && leaverLoaDisabled.equalsIgnoreCase("FALSE"))
+							{
+								displayList.add("Operations Launch Leaver - LOA");
+							}
+							if(leaverLtdDisabled!=null && leaverLtdDisabled.equalsIgnoreCase("FALSE"))
+							{
+								displayList.add("Operations Launch Leaver - LTD");
+							}
+							if(joinerDisabled!=null && joinerDisabled.equalsIgnoreCase("FALSE"))
+							{
+								displayList.add("Operations Launch Joiner");
+							}
+							if(joinerRehireDisabled!=null && joinerRehireDisabled.equalsIgnoreCase("FALSE"))
+							{
+								displayList.add("Operations Launch Joiner - Rehire");
+							}
+							if(joinerRtwLtdDisabled!=null && joinerRtwLtdDisabled.equalsIgnoreCase("FALSE"))
+							{
+								displayList.add("Operations Launch Leaver - RTW - LTD");
+							}
+							if(joinerRtwLoaDisabled!=null && joinerRtwLoaDisabled.equalsIgnoreCase("FALSE"))
+							{
+								displayList.add("Operations Launch Leaver - RTW - LOA");
+							}
+							if(joinerRtwreverLeaverDisabled!=null && joinerRtwreverLeaverDisabled.equalsIgnoreCase("FALSE"))
+							{
+								displayList.add("Operations Launch Reverse Leaver");
+							}
+							if(attrSyncDisabled!=null && attrSyncDisabled.equalsIgnoreCase("FALSE"))
+							{
+								displayList.add("Operations Launch Attribute Synchronization");
+							}
+							return displayList;
+							
+							]]></Source>
+              </Script>
+            </AllowedValuesDefinition>
+          </Field>
+          <Field displayName="Reason for Processing Event" displayType="textarea" name="lifecycleComments" required="true"/>
+        </Section>
+      </Form>
+    </Approval>
+    <Transition to="end" when="!approved"/>
+    <Transition to="Confirm Identity and Lifecycle Event"/>
+  </Step>
+  <Step name="Confirm Identity and Lifecycle Event" posX="234" posY="114">
+    <Approval owner="ref:owner" send="taskName,lifecycleIdentity,lifecycleComments">
+      <Form>
+        <Attributes>
+          <Map>
+            <entry key="hideIncompleteFields" value="true"/>
+            <entry key="pageTitle" value="Confirmation"/>
+          </Map>
+        </Attributes>
+        <Button action="next" label="Process Identity Event"/>
+        <Button action="back" label="Cancel"/>
+        <Section columns="3" type="datatable">
+          <Field displayName="Full name" readOnly="true">
+            <Script>
+              <Source><![CDATA[
+						
+							import sailpoint.object.Identity;
+							String identityDisplayName = "";
+							if(lifecycleIdentity!=null)
+							{
+								Identity selectedIdentity=context.getObjectByName(Identity.class, lifecycleIdentity);
+								if (selectedIdentity!=null && selectedIdentity.getDisplayName() != null) 
+								{
+									identityDisplayName=selectedIdentity.getDisplayName();
+								}
+							}
+							return identityDisplayName;
+							
+						]]></Source>
+            </Script>
+          </Field>
+          <Field displayName="Lifecycle Event To Run" readOnly="true" value="ref:taskName"/>
+        </Section>
+        <Section columns="1" label="Reason" type="datatable">
+          <Field displayName="Comments" readOnly="true" value="ref:lifecycleComments"/>
+        </Section>
+      </Form>
+    </Approval>
+    <Transition to="Refresh Identity" when="approved"/>
+    <Transition to="end" when="!approved"/>
+  </Step>
+  <Step action="call:refreshIdentity" icon="Default" name="Refresh Identity">
+    <Arg name="identityName" value="ref:lifecycleIdentity"/>
+    <Arg name="correlateEntitlements" value="true"/>
+    <Transition to="Run Lifecycle Event"/>
+  </Step>
+  <Step name="Run Lifecycle Event" posX="446" posY="126" resultVariable="returnResult">
+    <Arg name="taskName" value="ref:taskName"/>
+    <Arg name="identityName" value="ref:lifecycleIdentity"/>
+    <Arg name="lifecycleComments" value="ref:lifecycleComments"/>
+    <Return name="returnResult" to="returnResult"/>
+    <Script>
+      <Source><![CDATA[
+				 
+				import sailpoint.object.Attributes;
+				import sailpoint.object.Identity;
+				import sailpoint.object.TaskResult;
+				import sailpoint.object.TaskDefinition;
+				import sailpoint.api.TaskManager;
+				Identity identity = context.getObjectByName(Identity.class,identityName);
+				String CUBEID = identity.getName();
+				Map args = new HashMap();
+				args.put("CUBEID",CUBEID);
+				args.put("COMMENTS",lifecycleComments);
+				Attributes attributes = new Attributes();
+				attributes.setMap(args);
+				TaskManager tm = new TaskManager(context);
+				TaskDefinition taskdef = tm.getTaskDefinition(taskName);
+				TaskResult newTaskResult = tm.runWithResult(taskdef, attributes);
+				return newTaskResult.getId();
+		    	
+			]]></Source>
+    </Script>
+    <Transition to="end"/>
+  </Step>
+  <Step icon="Stop" name="end" posX="502" posY="10"/>
+</Workflow>

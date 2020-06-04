@@ -1,0 +1,31 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Custom PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Custom name="Custom-Mover-Settings">
+  <Attributes>
+    <Map>
+      <entry key="MOVER SETTINGS">
+        <value>
+          <Map>
+            <entry key="certificationSettingsMappings">
+              <value>
+                <Map>
+                  <entry key="MOVER FEATURE">
+                    <value>
+                      <List>
+                        <Map>
+                          <entry key="certificationNamePrefix" value="Mover Event For "/>
+                          <entry key="certificationNameSuffix" value=" Assigned To"/>
+                          <entry key="stagingEnabled" value="true"/>
+                        </Map>
+                      </List>
+                    </value>
+                  </entry>
+                </Map>
+              </value>
+            </entry>
+          </Map>
+        </value>
+      </entry>
+    </Map>
+  </Attributes>
+</Custom>

@@ -1,0 +1,70 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule-FrameWorkRegularRoles" type="RequestObjectSelector">
+  <Description>This rule returns a Filter that restricts entitlements to those that are not privileged</Description>
+  <Signature returnType="sailpoint.object.Filter">
+    <Inputs>
+      <Argument name="log">
+        <Description>
+          The log object associated with the SailPointContext.
+        </Description>
+      </Argument>
+      <Argument name="context">
+        <Description>
+          A sailpoint.api.SailPointContext object that can be used to query the database if necessary.
+        </Description>
+      </Argument>
+      <Argument name="requestor" type="sailpoint.object.Identity">
+        <Description>
+          Identity that is making the Life Cycle Manager request.
+        </Description>
+      </Argument>
+      <Argument name="requestee" type="sailpoint.object.Identity">
+        <Description>
+          Identity on whose behalf the Life Cycle Manager request is being made.  In the case of bulk requests,
+          this argument will be set to null when determining the roles that are visible to the requestor.
+          It will be provided once a selection has been made in order to determine whether or not the given requestee
+          should have access to the selected role.
+        </Description>
+      </Argument>
+    </Inputs>
+    <Returns>
+      <Argument name="filter">
+        <Description>
+          A Filter object that will be used to search for accessible Roles.
+        </Description>
+      </Argument>
+    </Returns>
+  </Signature>
+  <Source><![CDATA[
+          
+	 import sailpoint.object.Filter;
+	 import sailpoint.rapidapponboarding.rule.ObjectConfigAttributesRuleLibrary;
+	 String joinerDisabled=ObjectConfigAttributesRuleLibrary.extendedAttrJoinerBirthrightAppDisabled(context);
+	 String psaEnabled=ObjectConfigAttributesRuleLibrary.extendedAttrPrivAccValEnabled(context);
+	 //JOINER is ENABLED and PRIVILEGED ACCOUNT ACCESS REQUEST VALIDATION IS ENABLED
+	 if(joinerDisabled!=null && joinerDisabled.length()>0 && psaEnabled!=null && psaEnabled.length()>0 && joinerDisabled.equalsIgnoreCase("FALSE")
+	 && psaEnabled.equalsIgnoreCase("TRUE"))
+	 {
+     	return Filter.and(Filter.or(Filter.isnull("isBirthright"), Filter.ignoreCase(Filter.eq("isBirthright", "FALSE"))),Filter.or(Filter.isnull("rolePrivileged"), Filter.ignoreCase(Filter.eq("rolePrivileged", "FALSE"))));
+     }
+     //JOINER is ENABLED and  PRIVILEGED ACCOUNT ACCESS REQUEST VALIDATION is DISABLED
+     else if(joinerDisabled!=null && joinerDisabled.length()>0 && psaEnabled!=null && psaEnabled.length()>0 && joinerDisabled.equalsIgnoreCase("FALSE")
+	 && psaEnabled.equalsIgnoreCase("FALSE"))
+	 {
+     	return Filter.or(Filter.isnull("isBirthright"), Filter.ignoreCase(Filter.eq("isBirthright", "FALSE")));
+     }
+     //JOINER is DISABLED and  PRIVILEGED ACCOUNT ACCESS REQUEST VALIDATION is ENABLED
+     else if(joinerDisabled!=null && joinerDisabled.length()>0 && psaEnabled!=null && psaEnabled.length()>0 && joinerDisabled.equalsIgnoreCase("TRUE")
+	 && psaEnabled.equalsIgnoreCase("TRUE"))
+	 {
+    	return Filter.or(Filter.isnull("rolePrivileged"), Filter.ignoreCase(Filter.eq("rolePrivileged", "FALSE")));
+     }
+     //INCLUDE ALL
+     else
+     {
+     return Filter.and(Filter.or(Filter.isnull("isBirthright"), Filter.ignoreCase(Filter.eq("isBirthright", "FALSE"))),Filter.or(Filter.isnull("rolePrivileged"), Filter.ignoreCase(Filter.eq("rolePrivileged", "FALSE"))));
+     }
+        
+    ]]></Source>
+</Rule>

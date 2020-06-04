@@ -1,0 +1,130 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE EmailTemplate PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<EmailTemplate name="EmailTemplate-FrameworkRejection">
+  <Body>
+		
+		#set($ctx = $spTools.class.forName("sailpoint.api.SailPointFactory").getMethod("getFactory", null).invoke(null,null).getCurrentContext())
+		#set($requesteeIdentity = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Identity"),$identityName))
+    	#set($launcherIdentity = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Identity"),$launcher))
+		#set($reqType = $workflow.requestType)
+		#set($accessReqNumber = $identityRequestId)
+   		#set($ruleObj = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Rule"), "Rule-Framework-Header-Footer-StyleSheet")) 
+		#set($ruleArgs = { 
+		    "keyEmailTemplate"  : "styleSheet"
+		}) 
+		#set($styleSheet = $ctx.runRule($ruleObj, $ruleArgs))
+		#if( $ruleObj )
+		$ctx.decache($ruleObj)
+		#end
+		#set($ruleObj = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Rule"), "Rule-Framework-Header-Footer-StyleSheet")) 
+		#set($ruleArgs = { 
+		    "keyEmailTemplate"  : "headerTemplate"
+		}) 
+		#set($headerTemplate = $ctx.runRule($ruleObj, $ruleArgs))
+		#if( $ruleObj )
+		$ctx.decache($ruleObj)
+		#end
+		#set($ruleObj = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Rule"), "Rule-Framework-Header-Footer-StyleSheet")) 
+		#set($ruleArgs = { 
+		    "keyEmailTemplate"  : "footerTemplate"
+		}) 
+		#set($footerTemplate = $ctx.runRule($ruleObj, $ruleArgs))
+		#if( $ruleObj )
+		$ctx.decache($ruleObj)
+		#end
+		<![CDATA[<html>
+		<head>
+		<meta charset="UTF-8">   
+		#if( $styleSheet )
+		$styleSheet
+		#end    
+		</head>	      
+	    	<body>
+	    	#if( $headerTemplate )
+			$headerTemplate
+			#end
+			<br/>    
+			Dear $recipientDisplayName,<br/>
+			<p>This request has been denied by the reviewer.</p>
+			<br/>
+      Request Number:  $accessReqNumber<br/>
+      Request For Identity Name:  <strong>$identityName</strong><br/>
+      Request For Identity Display Name:  <strong>$refIdentityDisplayName</strong><br/>
+      Request:<br/>
+			#if ( $approvalSet.hasRejected() )
+				#foreach ($approvalItem in $approvalSet.rejected)
+					#set($approverIdentity = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Identity"),$approvalItem.approver))
+					<br/>
+          #if ( $approvalItem.displayValue )
+						<strong>$!approvalItem.operation $approvalItem.displayValue</strong><br/>
+					#elseif ($approvalItem.value && $approvalItem.name && $approvalItem.application)
+						#set($ruleObj = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Rule"), "Rule-Framework-ManagedAttribute-GetDisplayValue")) 
+						#set($ruleArgs = { 
+						    "attrName"  : $approvalItem.name, 
+						    "attrValue" : $approvalItem.value,
+						    "attrApp"   : $approvalItem.application 
+						}) 
+						#set($attrDisplayValue = $ctx.runRule($ruleObj, $ruleArgs))
+						#if( $ruleObj )
+						$ctx.decache($ruleObj)
+						#end
+						<strong>$!approvalItem.operation $attrDisplayValue</strong><br/>
+					#elseif ($approvalItem.value.class.name == "java.util.List" || $approvalItem.value.class.name == "java.util.ArrayList")
+						<strong>$!approvalItem.operation $approvalItem.value.get(0)</strong><br/>
+					 #elseif($approvalItem.value)
+			 		<strong>$!approvalItem.operation  $approvalItem.value</strong><br/>
+					#elseif($approvalItem.application)
+					<strong>$!approvalItem.operation  Account on $approvalItem.application</strong><br/>
+			 		 #end
+          Reviewer:  $approverIdentity.displayName<br/>
+          #if ( $approvalItem.comments)
+            Reviewer Comment:<br/>
+             #foreach ($comment in $approvalItem.comments)
+							&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$comment<br/>
+					   #end
+				  #end
+			    #end
+           	#end
+			#if ($dynamicAppContent)
+			<table>
+			#foreach( $key in $dynamicAppContent.keySet() )
+			<tr><td>$key</td><td>$dynamicAppContent.get($key)</td></tr>
+			#end
+			</table>
+			#end
+			#if( $footerTemplate )
+			$footerTemplate
+			#end
+			#if( $launcherIdentity )
+			$ctx.decache($launcherIdentity)
+			#end
+			#if( $requesteeIdentity )
+			$ctx.decache($requesteeIdentity)
+			#end
+			</body>
+		</html>]]>
+		
+	</Body>
+  <Description>
+		Note that in addition to the declared arguments, all workflow variables,
+		Step arguments, and Approval arguments defined in the Workflow are
+		also available.
+	</Description>
+  <Signature>
+    <Inputs>
+      <Argument name="workflow" type="Workflow">
+        <Description>The Workflow object being executed.</Description>
+      </Argument>
+      <Argument name="approvalSet" type="ApprovalSet">
+        <Description>The ApprovalSet object contained in the workflow.</Description>
+      </Argument>
+      <Argument name="recipientDisplayName" type="string">
+        <Description>The name of the Identity that launched the workflow.</Description>
+      </Argument>
+      <Argument name="refIdentityDisplayName" type="string">
+        <Description>The display name of the Identity that is being changed. </Description>
+      </Argument>
+    </Inputs>
+  </Signature>
+  <Subject>Access Request Denied</Subject>
+</EmailTemplate>

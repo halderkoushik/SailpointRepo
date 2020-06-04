@@ -1,0 +1,39 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule-FrameWork-GetApprovalTypes">
+  <ReferencedRules>
+    <Reference class="sailpoint.object.Rule" name="Rule-ApprovalFrameWorkLibrary"/>
+  </ReferencedRules>
+  <Signature>
+    <Inputs>
+      <Argument name="log">
+        <Description>
+          The log object associated with the SailPointContext.
+        </Description>
+      </Argument>
+      <Argument name="context">
+        <Description>
+          A sailpoint.api.SailPointContext object that can be used to query the database if necessary.
+        </Description>
+      </Argument>
+      <Argument name="workflow">
+        <Description>
+          Workflow object containing all attributes from the workflow.  To get attributes being set on identity, do workflow.get("fieldValues")
+        </Description>
+      </Argument>
+    </Inputs>
+    <Returns>
+      <Argument name="approvalTypes">
+        <Description>
+          List of approval types.  
+        </Description>
+      </Argument>
+    </Returns>
+  </Signature>
+  <Source><![CDATA[
+  
+  import sailpoint.rapidapponboarding.rule.ApprovalRuleLibrary;
+  return ApprovalRuleLibrary.getAllApprovals(context, workflow,this,"Operations");
+  
+]]></Source>
+</Rule>

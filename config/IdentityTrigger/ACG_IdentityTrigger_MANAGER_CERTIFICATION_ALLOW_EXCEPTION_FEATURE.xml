@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE IdentityTrigger PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<IdentityTrigger handler="sailpoint.api.WorkflowTriggerHandler" name="MANAGER CERTIFICATION ALLOW EXCEPTION FEATURE" type="Rule">
+  <Description>An entitlement previously set with an Allowed Exception status has expired now in IdentityIQ.</Description>
+  <HandlerParameters>
+    <Attributes>
+      <Map>
+        <entry key="workflow" value="Workflow-Lifecycle-Mitigation-RequestObject-Wrapper"/>
+      </Map>
+    </Attributes>
+  </HandlerParameters>
+  <TriggerRule>
+    <Reference class="sailpoint.object.Rule" name="Rule-IdentityTrigger-Mitigation"/>
+  </TriggerRule>
+</IdentityTrigger>

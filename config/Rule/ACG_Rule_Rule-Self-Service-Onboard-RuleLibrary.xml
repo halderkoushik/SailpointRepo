@@ -1,0 +1,566 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule-Self-Service-Onboard-RuleLibrary">
+  <Source><![CDATA[
+	import org.apache.commons.logging.Log;
+	import org.apache.commons.logging.LogFactory;
+	import sailpoint.object.ObjectConfig;
+	import sailpoint.object.ObjectAttribute;
+	import sailpoint.object.Attributes;
+	import sailpoint.tools.Util;
+	import sailpoint.object.Application;
+	import sailpoint.object.Field;
+	import sailpoint.object.ProvisioningConfig;
+	import sailpoint.object.Custom;
+	import sailpoint.object.ManagedAttribute;
+	import sailpoint.object.QueryOptions;
+	import sailpoint.object.Filter;
+	import sailpoint.api.SailPointContext;
+	import sailpoint.rapidapponboarding.rule.ROADUtil;
+	import sailpoint.rapidapponboarding.rule.ObjectConfigAttributesRuleLibrary;
+	import sailpoint.rapidapponboarding.rule.EmailNotificationRuleLibrary;
+	import sailpoint.rapidapponboarding.logger.LogEnablement;
+	Log logger = LogFactory.getLog("rapidapponboarding.rules");
+	/**
+	 * Validate Attribute Sync Mappings
+	 * @param fieldValue
+	 * @param appName
+	 * @param evaluateCreateprovpolicy
+	 * @return
+	 * @throws Exception
+	 */
+    public String validateAttributeSyncMappings(Object fieldValue, String appName, String evaluateCreateprovpolicy) throws Exception 
+    {
+        LogEnablement.isLogDebugEnabled(logger,"Enter validateAttributeSyncMappings ");
+        List resultCubeAttrNames= ROADUtil.getCubeAttributesList(context,true,true,false,false);
+        String result= null;
+        if(appName!=null)
+        {
+	        List resultSchemaAttrNames= ROADUtil.getApplicationSchemaAttributes(appName, context,true);
+	        List fieldValuelist =null;
+	  		if (fieldValue !=null && fieldValue instanceof List ) 
+			{
+			    fieldValuelist= fieldValue;
+				for(String str:fieldValuelist)
+				{
+					if(str!=null && !str.contains(":"))
+					{
+					  return  "Invalid Mapping. Use Colon Betweeen Target and Source Attributes";
+					}
+					else if(str!=null)
+					{
+							String[] attrSourceTargetArr = str.split(":");
+							if(attrSourceTargetArr!=null && attrSourceTargetArr.length==2)
+							{
+								String source = attrSourceTargetArr[0];
+								String target = attrSourceTargetArr[1];
+								if(target!=null && target.length()>0 && resultSchemaAttrNames!=null && resultSchemaAttrNames.size()>0)
+								{
+								    String targetUpperCase=target.toUpperCase();
+									if(!targetUpperCase.contains("EXCH_") &&!resultSchemaAttrNames.contains(target))
+									{
+										return "Invalid Target Attribute";
+									}
+								}
+								if(source!=null && source.length()>0 && resultCubeAttrNames!=null && resultCubeAttrNames.size()>0)
+								{
+									if(resultCubeAttrNames!=null)
+									{
+									resultCubeAttrNames.add("CREATEPOLICY");
+									}
+									if(!resultCubeAttrNames.contains(source))
+									{
+									return "Invalid Source Attribute";
+									}
+								}
+								if(source!=null && source.length()>0 && resultCubeAttrNames!=null && resultCubeAttrNames.size()>0 && source.equalsIgnoreCase("CREATEPOLICY")
+								&& (evaluateCreateprovpolicy==null || (evaluateCreateprovpolicy!=null && evaluateCreateprovpolicy.equalsIgnoreCase("FALSE"))) )
+								{
+								return "Please Check Evaluate Create Provisioning Policy for Synchronization";
+								}
+							}
+					}
+				}
+			}
+		}
+	    LogEnablement.isLogDebugEnabled(logger,"End validateAttributeSyncMappings "+result);
+        return result;
+    }
+	/**
+	 * Get All Application On Boarding Options based on field Name
+	 * @param field
+	 * @return
+	 * @throws Exception
+	 */
+    public List getObjectConfigOptions(Field field) throws Exception 
+    {
+        LogEnablement.isLogDebugEnabled(logger,"Enter getObjectConfigOptions ");
+        List result= new ArrayList();
+        if(field!=null)
+        {
+	        ObjectConfig objectConfig=Application.getObjectConfig();
+	        if(objectConfig!=null)
+	        {
+	        ObjectAttribute objAttr=objectConfig.getObjectAttribute(field.getName());
+	        if(objAttr!=null)
+	        {
+		         result=objAttr.getAllowedValues();
+		         if(result!=null)
+		         {
+		             if(result!=null && result.size()>0 && result.contains("Extended Rule"))
+			         {
+			         	result.remove("Extended Rule");
+			         }
+		         }
+	        }
+	        }
+        }
+        LogEnablement.isLogDebugEnabled(logger,"End getObjectConfigOptions "+result);
+        return result;
+    }
+    /**
+     * Get Leaver Application Onboard Options, Remove Extended and Anything that doesn't have Remove Access
+     * @param field
+     * @return
+     * @throws Exception
+     */
+    public List getObjectConfigLeaverOptions(Field field) throws Exception 
+    {
+        LogEnablement.isLogDebugEnabled(logger,"Enter getObjectConfigLeaverOptions ");
+        List result= new ArrayList();
+        List newResult= new ArrayList();
+        if(field!=null)
+        {
+	        ObjectConfig objectConfig=Application.getObjectConfig();
+	        if(objectConfig!=null)
+	        {
+	        	ObjectAttribute objAttr=objectConfig.getObjectAttribute(field.getName());
+		        if(objAttr!=null)
+		        {
+				         result=objAttr.getAllowedValues();
+				         if(result!=null && result.size()>0 && result.contains("Extended Rule"))
+				         {
+				         	result.remove("Extended Rule");
+				         }
+				         //Industry Standards, All Access Must be Removed
+				        if(result!=null && result.size()>0)
+				        {
+				            LogEnablement.isLogDebugEnabled(logger,"result "+result);
+					        for(String res:result)
+					        {
+					            if(res!=null)
+					            {
+						            String resultUpper=res.toUpperCase();
+							        if(resultUpper.contains("REMOVE ENTITLEMENTS")||resultUpper.equalsIgnoreCase("DO NOTHING")||resultUpper.contains("DELETE"))
+						         	{
+						         	 	newResult.add(res);
+						         	}
+					         	}
+					        }
+				       }
+		        }
+		    }
+        }
+        LogEnablement.isLogDebugEnabled(logger,"End getObjectConfigLeaverOptions "+newResult);
+        return newResult;
+    }
+   /**
+    * Convert Application Comma Separated Attribute Values into List
+    * @param roadApplicationselect
+    * @param field
+    * @return
+    * @throws Exception
+    */
+    public Object getApplicationAttributesValue(String roadApplicationselect, Field field) throws Exception 
+    {
+        Object result;
+        if(roadApplicationselect!=null  && field!=null)
+		{
+			Application app = context.getObjectByName(Application.class,roadApplicationselect);
+			if(app!=null)
+			{
+				Attributes attrs = app.getAttributes();
+				if(attrs!=null && attrs.containsKey(field.getName()))
+				{
+					String value=attrs.get(field.getName());
+					LogEnablement.isLogDebugEnabled(logger,"value "+value);
+					if(value!=null && value.contains(","))
+					{
+					result=Util.csvToList(value);
+					}
+					else
+					{
+					result=value;
+					}
+				}
+				context.decache(app);
+			}
+	   }
+    	LogEnablement.isLogDebugEnabled(logger,"End getApplicationAttributesValue "+result);
+	    return result;
+    }
+	/**
+	 * Get All Attribute Synchronization Subscribed Attributes
+	 * @param appName
+	 * @return
+	 */
+    public List getApplicationSubscribedAttributes(String appName) {
+        List attrAppList = new ArrayList();
+        LogEnablement.isLogDebugEnabled(logger,"Enter getApplicationSubscribedAttributes");
+        Custom mappingObj = context.getObjectByName(Custom.class, "Custom-FrameworkAttributeSyncMapping");
+        if(mappingObj!=null && mappingObj.getAttributes()!=null)
+        {
+	        List keyList = mappingObj.getAttributes().getKeys();	       
+	        LogEnablement.isLogDebugEnabled(logger,"...Got Custom Object and the key list="+keyList);
+	        for (String key : keyList) 
+	        {
+	            LogEnablement.isLogDebugEnabled(logger,"...Key found = " + key);
+	            if(mappingObj.getAttributes().get(key)!=null && mappingObj.getAttributes().get(key) instanceof List)
+	            {        
+					List appList = (List) mappingObj.getAttributes().get(key);
+					for (String appAttr : appList) 
+		            {
+		                LogEnablement.isLogDebugEnabled(logger,"...Attribute found = " + appAttr);
+						String[] appSplit = appAttr.split(":");
+						String attrApp = "";
+						String attrChange = "";
+						boolean useRule = false;
+						if (appSplit != null) 
+						{
+							LogEnablement.isLogDebugEnabled(logger,"...appSplit.length=" + appSplit.length);
+							 if(appSplit.length == 2)
+							{
+								attrApp = appSplit[0];
+								attrChange = appSplit[1];
+							}
+			                LogEnablement.isLogDebugEnabled(logger,"...Application Change = " + attrApp);
+			                LogEnablement.isLogDebugEnabled(logger,"...Attribute Change = " + attrChange);
+			                if(attrApp!=null && attrChange!=null && appName!=null && attrApp.equalsIgnoreCase(appName) && attrChange!=null)
+			                {
+			                 attrAppList.add(key+":"+attrChange);
+			                }
+			            }
+			          }
+		          }
+		        }
+		         context.decache(mappingObj);
+		     }   
+        LogEnablement.isLogDebugEnabled(logger,"Exit getApplicationSubscribedAttributes");
+        return attrAppList;
+    }
+    /**
+     * Initialize ROAD Transformer
+     * Entitlement Dependency - processed with additional keys in map
+     * Attribute Sync - processed with additional keys in map
+     * Joiner Email - processed with additional keys in map
+     * Leaver OU - processed as mukti-valued
+     * @param roadApplicationselect
+     * @param roadModel
+     */
+	 public void initROADModelPerApplication(String roadApplicationselect, HashMap roadModel)
+	 {
+	 	LogEnablement.isLogDebugEnabled(logger,"Enter initROADModelPerApplication.. "+roadModel);
+	 	LogEnablement.isLogDebugEnabled(logger,"Enter initROADModelPerApplication roadApplicationselect.."+roadApplicationselect);
+	 	List allKeys = new ArrayList();
+	 	HashMap regularExpressionKeys = new HashMap();
+	 	regularExpressionKeys.put("accountDisableAttrExpression","#IIQDisabled#");
+	 	regularExpressionKeys.put("accountLockAttrExpression","#IIQLocked#");
+	 	regularExpressionKeys.put("birthrightEntAttrExpression","#IIQEntitlementBirthright#");
+	 	regularExpressionKeys.put("privilegedEntAttrExpression","#IIQEntitlementPrivileged#");
+	 	regularExpressionKeys.put("privilegedAccountAttrExpression","#IIQPrivileged#");
+	 	regularExpressionKeys.put("accountCorrelationAttrExpression","#IIQCorrelated#");
+	 	regularExpressionKeys.put("removeEntitlementLeaverExceptionExpression","#IIQEntitlementLeaverException#");
+	 	regularExpressionKeys.put("serviceAccountAttrExpression","#IIQService#");
+	 	if(roadModel!=null && !roadModel.isEmpty())
+	 	{
+	 	    for (Map.Entry entry : roadModel.entrySet()) 
+			{
+			    String key=entry.getKey();
+			 	if(key.equalsIgnoreCase("transformerClass")||key.equalsIgnoreCase("transformerOptions"))
+			 	{
+			 	//Do Nothing
+			 	}
+			 	else
+			 	{
+			 	allKeys.add(key);
+			 	}
+		 	}
+	 	}
+	 	for(String singkleKey:allKeys)
+	 	{
+	 	roadModel.remove(singkleKey);
+	 	}
+	 	String joinerRehireTemplateName=null;
+	    String joinerRehirePasswordTemplateName=null;
+		LogEnablement.isLogDebugEnabled(logger,"Reinitialize initROADModelPerApplication..."+roadModel);
+	 	if(roadApplicationselect!=null )
+		{
+		   		Application app = context.getObjectByName(Application.class,roadApplicationselect);
+				if(app!=null)
+				{
+				        Map entryObj = ROADUtil.getCustomGlobalMap(context);
+						if (entryObj != null && entryObj.containsKey("JoinerManager")) 
+					    {
+					        joinerRehireTemplateName=entryObj.get("JoinerManager");
+					    }
+					    if (entryObj != null && entryObj.containsKey("PasswordJoinerManager")) 
+					    {
+					        joinerRehirePasswordTemplateName=entryObj.get("PasswordJoinerManager");
+					    }
+						Attributes attrs = app.getAttributes();
+						Map map = attrs.getMap();
+						if(map!=null )
+						{
+							for (Map.Entry entry : map.entrySet()) 
+							{
+								LogEnablement.isLogDebugEnabled(logger," initROADModelPerApplication..."+entry.getKey());
+								LogEnablement.isLogDebugEnabled(logger," initROADModelPerApplication..."+entry.getValue());
+								if (regularExpressionKeys.containsKey(entry.getKey()) && entry.getValue()!=null && regularExpressionKeys.get(entry.getKey())!=null)
+								{
+								    String token=(String)regularExpressionKeys.get(entry.getKey());
+								    String[] expressionArr = ((String)entry.getValue()).split(token);
+								    LogEnablement.isLogDebugEnabled(logger," token..."+token);
+								  	LogEnablement.isLogDebugEnabled(logger," expressionArr..."+expressionArr);
+								  	if(token.contains("#"))
+								    {
+								    token=token.replaceAll("#","");
+								    LogEnablement.isLogDebugEnabled(logger," token..."+token);
+								    }
+								  	if(expressionArr!=null)
+								  	{
+								  	LogEnablement.isLogDebugEnabled(logger," expressionArr length..."+expressionArr.length);
+								  	}
+									if(expressionArr != null && expressionArr.length == 2 && Util.isNotNullOrEmpty(expressionArr[0]) && Util.isNotNullOrEmpty(expressionArr[1]) )
+									{
+										roadModel.put( token+"Attribute" ,expressionArr[0]);
+										roadModel.put( token+"RegexExpression" ,expressionArr[1]);
+										roadModel.put( token+"JavaRegex" ,"True");
+									}
+									else if(expressionArr != null && expressionArr.length == 3 && Util.isNotNullOrEmpty(expressionArr[0]) && Util.isNotNullOrEmpty(expressionArr[1]) &&  Util.isNotNullOrEmpty(expressionArr[2]) )
+									{
+										roadModel.put( token+"Attribute" ,expressionArr[0]);
+										roadModel.put( token+"RegexExpression" ,expressionArr[1]);
+										roadModel.put( token+"Operation" ,expressionArr[2]);
+									}
+								}
+								roadModel.put( entry.getKey() ,entry.getValue());
+							}
+						}
+						//Start DeleteToDisable Conversion
+						ProvisioningConfig config=app.getProvisioningConfig();
+						if(config!=null)
+						{
+							boolean isDeleteToDisable=config.isDeleteToDisable();
+							if(isDeleteToDisable)
+							roadModel.put( "isDeleteToDisable" ,"true");
+							else
+							roadModel.put( "isDeleteToDisable" ,"false");
+						}
+						else
+						{
+							roadModel.put( "isDeleteToDisable" ,"false");
+						}
+						//End DeleteToDisable Conversion
+						String joinerDisabled=ROADUtil.roadFeatureDisabledString(context,"JOINER FEATURE");
+						boolean enabledJoiner=true;
+						if(joinerDisabled!=null && joinerDisabled.length()>0 && joinerDisabled.equalsIgnoreCase("TRUE"))
+						{
+							enabledJoiner=false;
+						}
+						if(enabledJoiner)
+						{
+							//Let's add Joiner Email Stuff
+							if(joinerRehirePasswordTemplateName!=null)
+						    {
+							    String joinerPasswordVelocityText=EmailNotificationRuleLibrary.getStaticAppText(context,"JOINER FEATURE", joinerRehirePasswordTemplateName, app.getName(), "Create");
+							    LogEnablement.isLogDebugEnabled(logger,"joinerPasswordVelocityText.. "+joinerPasswordVelocityText);
+							    if(joinerPasswordVelocityText!=null)
+							    {
+							    roadModel.put( "joinerPasswordVelocityText" ,joinerPasswordVelocityText);
+							    }
+						    }
+						    if(joinerRehireTemplateName!=null)
+						    {
+							    String joinerVelocityText=EmailNotificationRuleLibrary.getStaticAppText(context,"JOINER FEATURE", joinerRehireTemplateName, app.getName(), "Create");
+							    if(joinerVelocityText!=null)
+							    {
+							    roadModel.put( "joinerVelocityText" ,joinerVelocityText);
+							    }
+						    }
+					    }
+					    String joinerRehireDisabled=ROADUtil.roadFeatureDisabledString(context,"JOINER REHIRE FEATURE");
+						boolean enabledRehireJoiner=true;
+						if(joinerRehireDisabled!=null && joinerRehireDisabled.length()>0 && joinerRehireDisabled.equalsIgnoreCase("TRUE"))
+						{
+							enabledRehireJoiner=false;
+						}
+						if(enabledRehireJoiner)
+						{ 
+						    if(joinerRehirePasswordTemplateName!=null)
+						    {
+							    String joinerRehirePasswordVelocityText=EmailNotificationRuleLibrary.getStaticAppText(context,"JOINER REHIRE FEATURE", joinerRehirePasswordTemplateName, app.getName(), "Create");
+							    if(joinerRehirePasswordVelocityText!=null)
+							    {
+							    roadModel.put( "joinerRehirePasswordVelocityText" ,joinerRehirePasswordVelocityText);
+							    }
+						    }
+						    if(joinerRehireTemplateName!=null)
+						    {
+							    String joinerRehireVelocityText=EmailNotificationRuleLibrary.getStaticAppText(context,"JOINER REHIRE FEATURE", joinerRehireTemplateName, app.getName(), "Create");
+							    if(joinerRehireVelocityText!=null)
+							    {
+							    roadModel.put( "joinerRehireVelocityText" ,joinerRehireVelocityText);
+							    }
+						    }
+					    }
+					   String attrDisabled=ROADUtil.roadFeatureDisabledString(context,"ATTRIBUTE SYNCHRONIZATION FEATURE");
+				        if(attrDisabled!=null && attrDisabled.length()>0 && attrDisabled.equalsIgnoreCase("FALSE"))
+			       		{
+			       		 	List attrList=getApplicationSubscribedAttributes(app.getName());
+	       				    if(attrList!=null)
+						    {
+						     roadModel.put( "attrSyncSubscription" ,attrList);
+						    }
+						    List resultCubeAttrNames= ROADUtil.getCubeAttributesList(context,true,true,false,false);
+						    if(resultCubeAttrNames!=null)
+						    {
+						    resultCubeAttrNames.add("CREATEPOLICY");
+						    }
+						    if(attrList!=null)
+						    {
+						     roadModel.put( "identityAttrSubscription" ,resultCubeAttrNames);
+						    }
+						    List resultSchemaAttrNames= ROADUtil.getApplicationSchemaAttributes(app.getName(), context,true);
+						    if(resultSchemaAttrNames!=null)
+						    {
+						     roadModel.put( "applicationAttrSubscription" ,resultSchemaAttrNames);
+						    }
+					    }
+					    //Leaver OU Logic
+					    String moveAccountContainer= roadModel.get("moveAccountContainer");
+					    String[] moveAccountContainerArray = null;
+					    List OuList = new ArrayList();
+						if(moveAccountContainer!=null)
+						{
+							if(moveAccountContainer.indexOf("|") > 0) 
+						    {
+						     moveAccountContainerArray = moveAccountContainer.split("\\|");
+					        }
+							else 
+							{
+								moveAccountContainerArray = new String[1];
+								moveAccountContainerArray[0] = moveAccountContainer;
+							}
+							if(moveAccountContainerArray != null && moveAccountContainerArray.length > 0) 
+							{
+							    for(String moveAccountContainerStr : moveAccountContainerArray) 
+								{
+								OuList.add(moveAccountContainerStr);
+								}
+							}
+							roadModel.put( "moveAccountContainer" , OuList);
+						}
+				        String entDependencyEnabled = ObjectConfigAttributesRuleLibrary.extendedAttrEntitlementDependencyEnabled(context);
+				        if(entDependencyEnabled!=null && entDependencyEnabled.length()>0 && entDependencyEnabled.equalsIgnoreCase("TRUE"))
+			       		{
+					       //Entitlement Dependency Logic
+						    String dependencyEntitlements= roadModel.get("accountCreateEntitlements");
+						    LogEnablement.isLogDebugEnabled(logger,"initROADModelPerApplication...dependencyEntitlements"+dependencyEntitlements);
+						    String[] entitlementArray = null;
+						    if(dependencyEntitlements!=null)
+						    {
+							    if(dependencyEntitlements.indexOf("|") > 0) 
+							    {
+							     entitlementArray = dependencyEntitlements.split("\\|");
+						        }
+								else 
+								{
+									entitlementArray = new String[1];
+									entitlementArray[0] = dependencyEntitlements;
+								}
+						        LogEnablement.isLogDebugEnabled(logger,"initROADModelPerApplication...entitlementArray"+entitlementArray);
+								if(entitlementArray != null && entitlementArray.length > 0) 
+								{
+								    	List entValueList = new ArrayList();
+								     	List appList = new ArrayList();
+										for(String entString : entitlementArray) 
+										{
+											 String[] entArr = entString.split("#");
+											 if(entArr != null && entArr.length == 3 && Util.isNotNullOrEmpty(entArr[0]) && Util.isNotNullOrEmpty(entArr[1]) && Util.isNotNullOrEmpty(entArr[2])) 
+											{
+												String appName = entArr[0];
+												LogEnablement.isLogDebugEnabled(logger,"initROADModelPerApplication...appName"+appName);
+												String entName = entArr[1];
+												LogEnablement.isLogDebugEnabled(logger,"initROADModelPerApplication...entName"+entName);
+												String entValue = entArr[2];
+												LogEnablement.isLogDebugEnabled(logger,"initROADModelPerApplication...entValue"+entValue);
+												if(appName!=null)
+												{
+												  if(appList!=null && !appList.contains(appName))
+												    {
+														appList.add(appName);
+													}
+													if(entValue!=null)
+													{
+													    boolean entExists=false;
+													    //Make Sure Entitlement Exists
+													    List props = new ArrayList();
+												        QueryOptions qo = new QueryOptions();
+											        	qo.addFilter(Filter.and(Filter.eq("application.name", appName),Filter.ignoreCase(Filter.eq("value", entValue))));
+										        		props.add("value");		
+												        Iterator iter = context.search(ManagedAttribute.class, qo, props);
+												        if (iter != null )
+														{
+															try 
+															{	
+															    while (iter.hasNext())
+															    {		   
+																    Object [] arrStr=(Object[]) iter.next();
+																    if(arrStr!=null && arrStr.length==1)
+																    {
+																    	String searchedEntValue = (String)arrStr[0];
+																     	if(searchedEntValue!=null)
+																     	{
+																     	entExists=true;
+																     	}
+															    	}
+														    	}
+														  	}
+													      	catch (Exception e) 
+													      	{
+													      		LogEnablement.isLogErrorEnabled(logger,e.getMessage());
+													      	}
+													      	finally
+													      	{
+													      	Util.flushIterator(iter);
+													      	}
+													    }
+													    LogEnablement.isLogDebugEnabled(logger,"entExists..."+entExists);
+													    if(entExists)
+													    {
+															entValueList.add( entValue);
+														}
+										    		}
+												}
+											}
+										}
+										 LogEnablement.isLogDebugEnabled(logger,"initROADModelPerApplication...appList"+appList);
+										 LogEnablement.isLogDebugEnabled(logger,"initROADModelPerApplication...entValueList"+entValueList);
+									    if(appList!=null && appList.size()>0)
+										{
+										roadModel.put( "ssoApp" , Util.listToCsv(appList));
+										}
+										if(entValueList!=null && entValueList.size()>0)
+										{
+										   roadModel.put( "ssoAppEnt" , entValueList);
+									    }
+								}
+							}
+						}
+				   context.decache(app);
+				}
+	   }
+        LogEnablement.isLogDebugEnabled(logger,"End initROADModelPerApplication "+roadModel);
+     }
+   ]]></Source>
+</Rule>

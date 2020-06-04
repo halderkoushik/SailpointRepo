@@ -1,0 +1,428 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule-Recover-RuleLibrary">
+  <Source><![CDATA[
+	import java.util.ArrayList;
+	import java.util.HashMap;
+	import java.util.List;
+	import java.util.Map;
+	import org.apache.commons.logging.Log;
+	import org.apache.commons.logging.LogFactory;
+	import sailpoint.api.IdentityService;
+	import sailpoint.api.SailPointContext;
+	import sailpoint.object.Application;
+	import sailpoint.object.Custom;
+	import sailpoint.object.Identity;
+	import sailpoint.object.Link;
+	import sailpoint.object.ObjectConfig;
+	import sailpoint.object.ProvisioningPlan;
+	import sailpoint.object.ProvisioningPlan.AccountRequest;
+	import sailpoint.object.ProvisioningPlan.AttributeRequest;
+	import sailpoint.object.Workflow;
+	import sailpoint.object.Attributes;
+	import sailpoint.tools.GeneralException;
+	import sailpoint.object.IdentityRequest;
+	import sailpoint.object.ProvisioningProject;
+	import sailpoint.object.IdentitySnapshot;
+	import sailpoint.api.ObjectUtil;
+	import sailpoint.object.LinkSnapshot;
+	import sailpoint.rapidapponboarding.rule.WrapperRuleLibrary;
+	import sailpoint.rapidapponboarding.rule.WorkflowUtil;
+	import sailpoint.rapidapponboarding.logger.LogEnablement;
+	private Log logger = LogFactory.getLog("rapidapponboarding.rules");
+	/**
+	 * Build Recover Plan from Existing Plan
+	 * @param identityRequestId
+	 * @param workflow
+	 * @param workItemComments
+	 * @return
+	 * @throws Exception
+	 */
+	public String buildExecuteRecoveryPlan(String identityRequestId, Workflow workflow, String workItemComments) throws Exception 
+	{
+		String result=null;
+		ProvisioningPlan plan=null;
+		ProvisioningPlan planCopy=null ;
+		IdentityRequest identityReq = context.getObjectById(IdentityRequest.class,identityRequestId);
+		String identityName=null;
+		String identityDisplayName=null;
+		if(identityReq!=null)
+		{
+			ProvisioningProject provisioningProject= identityReq.getProvisionedProject();
+			if(provisioningProject!=null)
+			{
+				//Let's check to see if it is successful
+				Map resultMap = getProvisioningStatusMap(provisioningProject);
+				if (resultMap != null && resultMap.size() > 0) 
+				{
+					if (!(boolean)resultMap.get("isProvgSuccessful")) 
+					{
+						return "This request is not eligibile for recovery "+identityReq.getName();
+					}
+				}
+				plan=provisioningProject.getMasterPlan();
+				//Create  new provisioning plan
+				planCopy = new ProvisioningPlan();
+				//Create new plan arguments
+				Attributes planAttributes = new Attributes();
+				//Set source attribute to LCM
+				planAttributes.put("source", "LCM");
+				//Set Plan Arguments
+				planCopy.setArguments(planAttributes);
+				// Account Selection will happen in wrapper workflow from Remove to ADD, or auto selector rules for roles will kick off or manual item needs to popup for roles
+				Identity identityCube = context.getObjectByName(Identity.class,provisioningProject.getIdentity());
+				if(identityCube!=null && plan!=null)
+				{
+					identityName=provisioningProject.getIdentity();
+					identityDisplayName=identityCube.getDisplayName();
+					List accountRequests=plan.getAccountRequests();
+					//This map is used, as we are not sure target aggregation has happened or not
+					HashMap mapChangeNativeId = new HashMap();
+					//Both Moved DN and Changed CN Map
+					HashMap movedChangedCN= new HashMap();
+					if(accountRequests!=null)
+					{
+						for(AccountRequest accountRequest:accountRequests)
+						{
+							List attributeRequests=accountRequest.getAttributeRequests();
+							if(attributeRequests!=null)
+							{
+								for(AttributeRequest attributeRequest:attributeRequests)
+								{
+									if(attributeRequest.getOperation().equals(ProvisioningPlan.Operation.Set) 
+											&& attributeRequest.getName()!=null && attributeRequest.getName().equalsIgnoreCase("AC_NewParent"))
+									{
+										String appNativeId=null;
+										if(accountRequest.getApplicationName()!=null && attributeRequest.getValue()!=null && accountRequest.getNativeIdentity()!=null)
+										{  
+											Object newDN=attributeRequest.getValue();
+											appNativeId=WrapperRuleLibrary.appendCNtoMovedDn(context,accountRequest.getNativeIdentity(),newDN);
+											movedChangedCN.put("newDN"+accountRequest.getApplicationName()+accountRequest.getNativeIdentity(),newDN);
+											mapChangeNativeId.put(accountRequest.getApplicationName()+accountRequest.getNativeIdentity(),appNativeId);
+										}
+									}
+									else if(attributeRequest.getOperation().equals(ProvisioningPlan.Operation.Set) 
+											&& attributeRequest.getName()!=null && attributeRequest.getName().equalsIgnoreCase("AC_NewName"))
+									{
+										if(accountRequest.getApplicationName()!=null && attributeRequest.getValue()!=null && accountRequest.getNativeIdentity()!=null)
+										{  
+											// Old OU is appended to New CN
+											String oldOU= WrapperRuleLibrary.stripCNFromNativeId(context,accountRequest.getNativeIdentity());
+											String newCN=attributeRequest.getValue();
+											if(oldOU!=null && newCN!=null)
+											{
+												movedChangedCN.put("newCN"+accountRequest.getApplicationName()+accountRequest.getNativeIdentity(),newCN);
+												mapChangeNativeId.put(accountRequest.getApplicationName()+accountRequest.getNativeIdentity(),newCN+","+oldOU);
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+					LogEnablement.isLogDebugEnabled(logger,"mapChangeNativeId..."+mapChangeNativeId);
+					if(accountRequests!=null)
+					{
+						for(AccountRequest accountRequest:accountRequests)
+						{
+							//Create new AccountvRequest
+							AccountRequest planCopyAccountRequest = new AccountRequest();
+							String appName = accountRequest.getApplication();
+							if(appName!=null)
+							{
+								//Copy Application Name
+								planCopyAccountRequest.setApplication(appName);
+							}
+							String nativeId = accountRequest.getNativeIdentity();
+							if(nativeId!=null)
+							{
+								//Copy Native Id, Both Move and Rename
+								if(appName!=null &&  movedChangedCN.containsKey("newCN"+appName+nativeId) && movedChangedCN.containsKey("newDN"+appName+nativeId) )
+								{
+									if(movedChangedCN.get("newCN"+appName+nativeId)!=null && movedChangedCN.get("newDN"+appName+nativeId)!=null)
+									{
+										planCopyAccountRequest.setNativeIdentity(movedChangedCN.get("newCN"+appName+nativeId)+","+movedChangedCN.get("newDN"+appName+nativeId) );
+									}
+									else
+									{
+										planCopyAccountRequest.setNativeIdentity(nativeId);
+									}
+								}
+								//Copy Native Id, Either Move or Rename
+								else if(appName!=null && mapChangeNativeId.containsKey(appName+accountRequest.getNativeIdentity()))
+								{
+									if(mapChangeNativeId.get(appName+accountRequest.getNativeIdentity())!=null)
+									{
+										planCopyAccountRequest.setNativeIdentity((String)mapChangeNativeId.get(appName+accountRequest.getNativeIdentity()));
+									}
+									else
+									{
+										planCopyAccountRequest.setNativeIdentity(nativeId);
+									}
+								}
+								else
+								{
+									planCopyAccountRequest.setNativeIdentity(nativeId);
+								}
+							}
+							//Reverse Operation
+							if (accountRequest.getOperation().equals(AccountRequest.Operation.Create))
+							{
+								planCopyAccountRequest.setOperation(AccountRequest.Operation.Delete);
+							}
+							if (accountRequest.getOperation().equals(AccountRequest.Operation.Delete))
+							{
+								planCopyAccountRequest.setOperation(AccountRequest.Operation.Create);
+							}
+							if (accountRequest.getOperation().equals(AccountRequest.Operation.Enable))
+							{
+								planCopyAccountRequest.setOperation(AccountRequest.Operation.Disable);
+							}
+							if (accountRequest.getOperation().equals(AccountRequest.Operation.Disable))
+							{
+								planCopyAccountRequest.setOperation(AccountRequest.Operation.Enable);
+							}
+							if(accountRequest.getOperation().equals(AccountRequest.Operation.Lock))
+							{
+								planCopyAccountRequest.setOperation(AccountRequest.Operation.Unlock);
+							}
+							if(accountRequest.getOperation().equals(AccountRequest.Operation.Unlock))
+							{
+								planCopyAccountRequest.setOperation(AccountRequest.Operation.Lock);
+							}
+							if(accountRequest.getOperation().equals(AccountRequest.Operation.Modify))
+							{
+								planCopyAccountRequest.setOperation(AccountRequest.Operation.Modify);
+							}
+							List attributeRequests=accountRequest.getAttributeRequests();
+							if(attributeRequests!=null)
+							{
+								for(AttributeRequest attributeRequest:attributeRequests)
+								{
+									//Add to Remove
+									if (attributeRequest.getOperation().equals(ProvisioningPlan.Operation.Add))
+									{
+										AttributeRequest planCopyAttributeRequest = new AttributeRequest();
+										String name = attributeRequest.getName();
+										if(name!=null)
+										{
+											//Copy Name
+											planCopyAttributeRequest.setName(name);
+										}
+										Object value = attributeRequest.getValue();
+										if(value!=null)
+										{
+											//Copy value
+											planCopyAttributeRequest.setValue(value);
+										}
+										//Create new account request arguments
+										Attributes attributeRequestAttributes = new Attributes();
+										//Set deassignEntitlements and  negativeAssignment attribute to true in case of remove operation
+										attributeRequestAttributes.putClean("deassignEntitlements", new Boolean(true));
+										attributeRequestAttributes.putClean("negativeAssignment", new Boolean(true));
+										//Set Plan Arguments
+										planCopyAttributeRequest.setArguments(attributeRequestAttributes);
+										//Reverse operation
+										planCopyAttributeRequest.setOperation(ProvisioningPlan.Operation.Remove);
+										if(planCopyAttributeRequest!=null && planCopyAccountRequest!=null)
+										{
+											planCopyAccountRequest.add(planCopyAttributeRequest);
+										}
+									}
+									//Remove to Add
+									if (attributeRequest.getOperation().equals(ProvisioningPlan.Operation.Remove))
+									{
+										AttributeRequest planCopyAttributeRequest = new AttributeRequest();
+										String name = attributeRequest.getName();
+										if(name!=null)
+										{
+											//Copy Name
+											planCopyAttributeRequest.setName(name);
+										}
+										Object value = attributeRequest.getValue();
+										if(value!=null)
+										{
+											//Copy value
+											planCopyAttributeRequest.setValue(value);
+										}
+										//Create new account request arguments
+										Attributes attributeRequestAttributes = new Attributes();
+										//Set assignment attribute to true
+										attributeRequestAttributes.put("assignment", "true");
+										//Set Plan Arguments
+										planCopyAttributeRequest.setArguments(attributeRequestAttributes);
+										//Reverse Operation
+										planCopyAttributeRequest.setOperation(ProvisioningPlan.Operation.Add);
+										if(planCopyAttributeRequest!=null && planCopyAccountRequest!=null)
+										{
+											planCopyAccountRequest.add(planCopyAttributeRequest);
+										}
+									}
+									if(attributeRequest.getOperation().equals(ProvisioningPlan.Operation.Set) && appName!=null && nativeId!=null
+											&& attributeRequest.getName()!=null && attributeRequest.getName().equalsIgnoreCase("AC_NewParent"))
+									{
+										AttributeRequest planCopyAttributeRequest = new AttributeRequest();
+										//Copy Name
+										planCopyAttributeRequest.setName( attributeRequest.getName());
+										//Create new attribute request arguments
+										Attributes attributeRequestAttributes = new Attributes();
+										//Set assignment attribute to true
+										attributeRequestAttributes.put("assignment", "true");
+										//Set Plan Arguments
+										planCopyAttributeRequest.setArguments(attributeRequestAttributes);
+										//Move DN Value
+										LogEnablement.isLogDebugEnabled(logger,"RECOVER MOVE nativeId "+nativeId);
+										//Remove CN, OLD nativeId
+										String strippedCN=WrapperRuleLibrary.stripCNFromNativeId(context,nativeId);
+										if(strippedCN!=null)
+										{
+											planCopyAttributeRequest.setValue(strippedCN);
+											//Same Set Operation
+											planCopyAttributeRequest.setOperation(attributeRequest.getOperation());
+											if(planCopyAttributeRequest!=null && planCopyAccountRequest!=null)
+											{
+												planCopyAccountRequest.add(planCopyAttributeRequest);
+											}
+										}
+									}
+									else if(attributeRequest.getOperation().equals(ProvisioningPlan.Operation.Set) && appName!=null && nativeId!=null
+											&& attributeRequest.getName()!=null && attributeRequest.getName().equalsIgnoreCase("AC_NewName"))
+									{
+										AttributeRequest planCopyAttributeRequest = new AttributeRequest();
+										//Copy Name
+										planCopyAttributeRequest.setName( attributeRequest.getName());
+										//Create new attribute request arguments
+										Attributes attributeRequestAttributes = new Attributes();
+										//Set assignment attribute to true
+										attributeRequestAttributes.put("assignment", "true");
+										//Set Plan Arguments
+										planCopyAttributeRequest.setArguments(attributeRequestAttributes);
+										//Old CN Native Id + DN
+										LogEnablement.isLogDebugEnabled(logger,"RECOVER MOVE nativeId "+nativeId);
+										//Remove DN Value, OLD nativeId
+										String oldCN=WrapperRuleLibrary.getCNFromNativeId(context,nativeId);
+										if(oldCN!=null)
+										{
+											planCopyAttributeRequest.setValue(oldCN);
+											//Same Set Operation
+											planCopyAttributeRequest.setOperation(attributeRequest.getOperation());
+											if(planCopyAttributeRequest!=null && planCopyAccountRequest!=null)
+											{
+												planCopyAccountRequest.add(planCopyAttributeRequest);
+											}
+										}
+									}
+									// Set to Set Value from SnapShot
+									else if (attributeRequest.getOperation().equals(ProvisioningPlan.Operation.Set) && appName!=null && nativeId!=null)
+									{
+										Object value=attributeRequest.getValue();
+										LogEnablement.isLogDebugEnabled(logger,"OldValue "+value);
+										String attrName=attributeRequest.getName();
+										LogEnablement.isLogDebugEnabled(logger,"attrName "+attrName);
+										Object[] info = ObjectUtil.getRecentSnapshotInfo(context, identityCube);
+										if (info != null) 
+										{
+											String snapId = (String)info[0];
+											LogEnablement.isLogDebugEnabled(logger,"snapId "+snapId);
+											Date created = (Date)info[1];
+											LogEnablement.isLogDebugEnabled(logger,"created "+created);
+											if(snapId!=null && attrName!=null)
+											{
+												IdentitySnapshot snap = context.getObjectById(IdentitySnapshot.class, snapId);
+												List linkSnaps=snap.getLinks(appName);
+												if(linkSnaps!=null)
+												{
+													for(LinkSnapshot linkSnap:linkSnaps)
+													{
+														String linkNativeId=linkSnap.getNativeIdentity();
+														LogEnablement.isLogDebugEnabled(logger,"linkNativeId "+linkNativeId);
+														String linkAppName=linkSnap.getApplication();
+														LogEnablement.isLogDebugEnabled(logger,"linkAppName "+linkAppName);
+														if(linkNativeId!=null && linkAppName!=null && linkAppName.equalsIgnoreCase(appName) && nativeId.equalsIgnoreCase(linkNativeId))
+														{
+															Attributes attributes= linkSnap.getAttributes();
+															//Found a match of attribute in the snapshot
+															if(attributes!=null && attributes.containsKey(attrName))
+															{
+																Object newValue=attributes.get(attrName);
+																LogEnablement.isLogDebugEnabled(logger,"newValue "+newValue);
+																AttributeRequest planCopyAttributeRequest = new AttributeRequest();
+																String name = attributeRequest.getName();
+																if(name!=null)
+																{
+																	//Copy Name
+																	planCopyAttributeRequest.setName(name);
+																}
+																//Create new attribute request arguments
+																Attributes attributeRequestAttributes = new Attributes();
+																//Set assignment attribute to true
+																attributeRequestAttributes.put("assignment", "true");
+																//Set Plan Arguments
+																planCopyAttributeRequest.setArguments(attributeRequestAttributes);
+																//Snapshot Value
+																planCopyAttributeRequest.setValue(newValue);
+																//Same Set Operation
+																planCopyAttributeRequest.setOperation(attributeRequest.getOperation());
+																if(planCopyAttributeRequest!=null && planCopyAccountRequest!=null)
+																{
+																	planCopyAccountRequest.add(planCopyAttributeRequest);
+																}
+															}
+														}//Match Native Ids and App Names, there could be multiple links for same app
+													}//End For Loop
+												}
+												else
+												{
+													result="No Application Snapshot for  Recovery "+identityReq.getName();
+												}
+												if(snap!=null)
+												{
+													context.decache(snap);
+												}
+											}//SnapId Null Check
+										}//Get Latest IdentityShapshot End
+										else
+										{
+											result="No Snapshot for Recovery "+identityReq.getName();
+										}
+									}//Set Operation If end
+								}//Attribute Request Loop
+							}//Null Check Attribute Request
+							if(planCopy!=null && planCopyAccountRequest!=null && !planCopyAccountRequest.isEmpty())
+							{
+								planCopy.add(planCopyAccountRequest);
+							}
+						}//Account Request Loop
+					}//Null Check Account Request
+					context.decache(identityCube);
+				}//Identity Cube Not Null and Plan Not null
+			}//Provisioning Project Not Null
+			else
+			{
+				return "No Provisioning Project for "+identityReq.getName();
+			}
+			context.decache(identityReq);
+		}//Identity Request Not Null
+		LogEnablement.isLogDebugEnabled(logger,"Exit buildRecoveryPlan result"+result);
+		if(result!=null)
+		{
+			return result;
+		}
+		else if(planCopy!=null && !planCopy.isEmpty() && identityName!=null)
+		{
+			WorkflowUtil.launchRequestManagerWorkflow(context,identityName, planCopy, "false", null, 5, null, null, "RECOVERY TOOL FEATURE", "Recovery",workItemComments);
+		}
+		return result;
+	} 
+    /**
+	 * Get Request Type
+	 * @param context
+	 * @param workflow
+	 * @return
+	 */
+    public String getRequestTypeName(SailPointContext context, Workflow workflow) {
+        String requestType = "RECOVERY TOOL FEATURE";
+        return requestType;
+    }
+	]]></Source>
+</Rule>

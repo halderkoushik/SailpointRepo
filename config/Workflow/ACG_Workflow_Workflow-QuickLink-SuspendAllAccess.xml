@@ -1,0 +1,531 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Workflow PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Workflow explicitTransitions="true" handler="sailpoint.api.StandardWorkflowHandler" name="Workflow-QuickLink-SuspendAllAccess" type="LCMProvisioning">
+  <Variable initializer="true" name="transient"/>
+  <Variable initializer="ref:launcher" name="owner">
+    <Description>Name of the user that will recieve the forms.</Description>
+  </Variable>
+  <Variable name="appNames">
+    <Description>List of App Names</Description>
+  </Variable>
+  <Variable name="allApps">
+    <Description>All Apps</Description>
+  </Variable>
+  <Variable name="switchUiTask">
+    <Description>switch UI To Task Servers</Description>
+  </Variable>
+  <Variable name="groupDefinition">
+    <Description>Exclude Admin Group Definition Name</Description>
+  </Variable>
+  <Variable name="includeGroupDefinition">
+    <Description>Include Group Definition Name</Description>
+  </Variable>
+  <Variable name="undo">
+    <Description>Restore Access</Description>
+  </Variable>
+  <Variable name="launchOptions">
+    <Description>Launch Options</Description>
+  </Variable>
+  <Variable name="postPone">
+    <Description>Postpone Date</Description>
+  </Variable>
+  <Variable name="terminateTasks">
+    <Description>Terminate Tasks</Description>
+  </Variable>
+  <Variable name="suspensionRestoreThreads">
+    <Description>Threads to create Request Objects</Description>
+  </Variable>
+  <Variable name="suspensionRestoreWait">
+    <Description>Wait Time to Process Request Objects</Description>
+  </Variable>
+  <Variable name="acceleratorPackIsWizard"/>
+  <Description>Accelerator Pack Emergency Operations Workflow</Description>
+  <Step icon="Start" name="Start" posX="28" posY="10">
+    <Transition to="Layout Selection Form"/>
+  </Step>
+  <Step name="Layout Selection Form">
+    <Approval name="Layout Approval" owner="ref:owner" return="acceleratorPackIsWizard">
+      <Form name="Layout Form" type="Workflow">
+        <Description>Layout</Description>
+        <Section label="Layout" name="apLayout">
+          <Field displayName="Select Emergency Form Layout" name="acceleratorPackIsWizard" required="true">
+            <AllowedValuesDefinition>
+              <Script>
+                <Source><![CDATA[
+			List list = new ArrayList();	
+			List displayList = new ArrayList();
+			displayList.add("True");
+			displayList.add("Wizard");
+			list.add(displayList);
+			displayList = new ArrayList();
+			displayList.add("False");
+			displayList.add("One Page");
+			list.add(displayList);
+			return list;
+			]]></Source>
+              </Script>
+            </AllowedValuesDefinition>
+          </Field>
+        </Section>
+        <Button action="cancel" label="Cancel"/>
+        <Button action="next" label="Next"/>
+      </Form>
+    </Approval>
+    <Transition to="end" when="!approved"/>
+    <Transition to="Emergency Form" when="approved"/>
+  </Step>
+  <Step name="Emergency Form">
+    <Approval description="Emergency Form" owner="ref:owner" return="appNames,groupDefinition,includeGroupDefinition,undo,launchOptions,allApps,switchUiTask,postPone,terminateTasks,suspensionRestoreThreads,suspensionRestoreWait" send="acceleratorPackIsWizard">
+      <Form>
+        <Attributes>
+          <Map>
+            <entry key="isWizard">
+              <value>
+                <Script>
+                  <Source><![CDATA[
+              
+			    if(acceleratorPackIsWizard!=null && acceleratorPackIsWizard.equalsIgnoreCase("TRUE"))
+				 {
+				    return true;
+				 }
+				 else
+				 {
+				    return false;
+				 }
+				
+			]]></Source>
+                </Script>
+              </value>
+            </entry>
+            <entry key="pageTitle" value="Emergency Action"/>
+            <entry key="title" value="Emergency Action"/>
+          </Map>
+        </Attributes>
+        <Section label="Accounts">
+          <Field displayName="Action" helpKey="Suspend action will disable accounts and Restore will enable accounts" name="undo" postBack="true" required="true">
+            <AllowedValuesDefinition>
+              <Script>
+                <Source><![CDATA[
+				List options = new ArrayList();
+				options.add("Suspend");
+				options.add("Restore");
+				return options;
+				]]></Source>
+              </Script>
+            </AllowedValuesDefinition>
+          </Field>
+        </Section>
+        <Section label="Population and Application">
+          <Attributes>
+            <Map>
+              <entry key="hidden">
+                <value>
+                  <Script>
+                    <Source><![CDATA[
+		                
+		                	if(undo!=null)
+							{
+								return false;
+							}
+							else
+							{
+								return true;
+							}
+		             	]]></Source>
+                  </Script>
+                </value>
+              </entry>
+            </Map>
+          </Attributes>
+          <Field displayName="Include Identity Population (Optional)" helpKey="Please select identity population that will be included for the suspension/restore of accounts. In case no population is selected, all Identities will be acted upon." name="includeGroupDefinition" type="sailpoint.object.GroupDefinition">
+            <Attributes>
+              <Map>
+                <entry key="valueProperty" value="name"/>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Exclude Administrative Population" helpKey="Please select administrative population that will be excluded for the suspension/restore of accounts" name="groupDefinition" required="true" type="sailpoint.object.GroupDefinition">
+            <Attributes>
+              <Map>
+                <entry key="valueProperty" value="name"/>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="All Application Accounts" helpKey="All Application Accounts will be Suspended/Restored" name="allApps" postBack="true" type="boolean"/>
+          <Field displayName="Applications" helpKey="Please select application names where access will be suspended" multi="true" name="appNames" required="true" type="sailpoint.object.Application">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+		                
+		                	 import sailpoint.object.Filter;
+		                	 import sailpoint.object.Application.Feature;
+		                	 String featureString = Feature.ENABLE.toString();
+		                	 String FEATURE = "featuresString";
+		                	if(allApps!=null && allApps)
+							{
+								return true;
+							}
+		                	 if(field!=null)
+		                	 {
+		                		 Filter filter=  Filter.like(FEATURE, featureString);
+		                		 field.setFilterString(filter.toString());
+		                	 }
+						     return false;  
+		             	]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+                <entry key="valueProperty" value="name"/>
+              </Map>
+            </Attributes>
+          </Field>
+        </Section>
+        <Section label="Provisioning">
+          <Attributes>
+            <Map>
+              <entry key="hidden">
+                <value>
+                  <Script>
+                    <Source><![CDATA[
+		                
+		                	if(undo!=null)
+							{
+								return false;
+							}
+							else
+							{
+								return true;
+							}
+		             	]]></Source>
+                  </Script>
+                </value>
+              </entry>
+            </Map>
+          </Attributes>
+          <Field displayName="Channel" helpKey="Please select provisioning channel" name="launchOptions" required="true">
+            <AllowedValuesDefinition>
+              <Script>
+                <Source><![CDATA[
+			List options = new ArrayList();
+			options.add("Workflow");
+			options.add("Workflow with No Request Id");
+			options.add("Workflow Provisioner");
+			options.add("Rule Provisioner");
+			return options;
+			]]></Source>
+              </Script>
+            </AllowedValuesDefinition>
+          </Field>
+        </Section>
+        <Section label="Environment and Task">
+          <Attributes>
+            <Map>
+              <entry key="hidden">
+                <value>
+                  <Script>
+                    <Source><![CDATA[
+		                
+		                	if(undo!=null)
+							{
+								return false;
+							}
+							else
+							{
+								return true;
+							}
+		             	]]></Source>
+                  </Script>
+                </value>
+              </entry>
+            </Map>
+          </Attributes>
+          <Field displayName="Switch UI Servers to Task and Request Servers" helpKey="Add more servers to boost performance on provisioning channel" name="switchUiTask" type="boolean"/>
+          <Field displayName="Terminate Tasks" helpKey="Terminate Executing Jobs" name="terminateTasks" type="boolean"/>
+          <Field displayName="Postpone Certification and Task Scheduled Jobs By X Days." helpKey="Postpone Scheduled Jobs" name="postPone">
+            <Script>
+              <Source><![CDATA[
+			return "10";
+			]]></Source>
+            </Script>
+            <ValidationScript>
+              <Source><![CDATA[
+             if(value!=null)
+             {
+				try
+				{
+				int days = Integer.parseInt(value);
+				}
+				catch (NumberFormatException numEx) 
+				{
+					return "Invalid X Days Format";
+				}
+				catch (Exception ex)
+				{
+					return "Invalid X Days Format";
+				}
+			}
+				]]></Source>
+            </ValidationScript>
+          </Field>
+        </Section>
+        <Section label="Request Processor">
+          <Attributes>
+            <Map>
+              <entry key="hidden">
+                <value>
+                  <Script>
+                    <Source><![CDATA[
+		                
+		                	if(undo!=null)
+							{
+								return false;
+							}
+							else
+							{
+								return true;
+							}
+		             	]]></Source>
+                  </Script>
+                </value>
+              </entry>
+            </Map>
+          </Attributes>
+          <Field displayName="Number of threads to fill up Queue for Request Processor" name="suspensionRestoreThreads">
+            <Script>
+              <Source><![CDATA[
+			return "1";
+			]]></Source>
+            </Script>
+            <ValidationScript>
+              <Source><![CDATA[
+             if(value!=null)
+             {
+				try
+				{
+				int days = Integer.parseInt(value);
+				}
+				catch (NumberFormatException numEx) 
+				{
+					return "Invalid Format";
+				}
+				catch (Exception ex)
+				{
+					return "Invalid Format";
+				}
+			}
+				]]></Source>
+            </ValidationScript>
+          </Field>
+          <Field displayName="Wait Time in Seconds for Request Processor to Process" name="suspensionRestoreWait">
+            <Script>
+              <Source><![CDATA[
+			return "5";
+			]]></Source>
+            </Script>
+            <ValidationScript>
+              <Source><![CDATA[
+             if(value!=null)
+             {
+				try
+				{
+				int days = Integer.parseInt(value);
+				}
+				catch (NumberFormatException numEx) 
+				{
+					return "Invalid Format";
+				}
+				catch (Exception ex)
+				{
+					return "Invalid Formatt";
+				}
+			}
+				]]></Source>
+            </ValidationScript>
+          </Field>
+        </Section>
+        <Button action="back" label="Cancel Request"/>
+        <Button action="next" label="Next"/>
+      </Form>
+    </Approval>
+    <Transition to="Confirm Emergency Action" when="script:approved"/>
+    <Transition to="end"/>
+  </Step>
+  <Step name="Confirm Emergency Action" posX="234" posY="114">
+    <Approval owner="ref:owner" send="appNames,includeGroupDefinition,groupDefinition,undo,launchOptions,allApps,switchUiTask,postPone,terminateTasks,suspensionRestoreThreads,suspensionRestoreWait">
+      <Form>
+        <Section label="Suspend / Restore Accounts Confirmation Form">
+          <Field displayName="Account Action" name="undo" readOnly="true"/>
+          <Field displayName="Included Identity Population" name="includeGroupDefinition" readOnly="true">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+		              
+						 if(includeGroupDefinition!=null)
+						 {
+						 return false;
+						 }
+						 else
+						 {
+						 return true;
+						 }
+						]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Excluded Administrative Population" name="groupDefinition" readOnly="true">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+		              
+						 if(groupDefinition!=null)
+						 {
+						 return false;
+						 }
+						 else
+						 {
+						 return true;
+						 }
+						]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Selected Application Names" multi="true" name="appNames" readOnly="true">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+		              
+						 if(allApps!=null && allApps)
+						 {
+						 return true;
+						 }
+						 else
+						 {
+						 return false;
+						 }
+						]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="All Applications" name="allApps" readOnly="true" type="boolean">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+		              
+						 if(appNames!=null)
+						 {
+						 return true;
+						 }
+						 else
+						 {
+						 return false;
+						 }
+						]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Selected Provisioning Channel" name="launchOptions" readOnly="true"/>
+          <Field displayName="Switch UI To Task Servers" name="switchUiTask" readOnly="true" type="boolean"/>
+          <Field displayName="Terminate Tasks" name="terminateTasks" readOnly="true" type="boolean"/>
+          <Field displayName="Postponed Scheduled Jobs By" name="postPone" readOnly="true">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+		              
+						 if(postPone!=null)
+						 {
+						 return false;
+						 }
+						 else
+						 {
+						 return true;
+						 }
+						]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Number of threads to fill up Queue for Request Processor" name="suspensionRestoreThreads" readOnly="true"/>
+          <Field displayName="Wait Time in Seconds for Request Processor to Process" name="suspensionRestoreWait" readOnly="true"/>
+        </Section>
+        <Button action="next" label="Confirm"/>
+        <Button action="back" label="Cancel"/>
+      </Form>
+    </Approval>
+    <Transition to="Execute In BackGround" when="approved"/>
+    <Transition to="end" when="!approved"/>
+  </Step>
+  <Step name="Execute In BackGround">
+    <Arg name="appNames" value="ref:appNames"/>
+    <Arg name="groupDefinition" value="ref:groupDefinition"/>
+    <Arg name="includeGroupDefinition" value="ref:includeGroupDefinition"/>
+    <Arg name="undo" value="ref:undo"/>
+    <Arg name="launchOptions" value="ref:launchOptions"/>
+    <Arg name="allApps" value="ref:allApps"/>
+    <Arg name="switch" value="ref:switchUiTask"/>
+    <Arg name="postPone" value="ref:postPone"/>
+    <Arg name="terminateTasks" value="ref:terminateTasks"/>
+    <Arg name="suspensionRestoreThreads" value="ref:suspensionRestoreThreads"/>
+    <Arg name="suspensionRestoreWait" value="ref:suspensionRestoreWait"/>
+    <Script>
+      <Source><![CDATA[
+				 
+				import sailpoint.object.Attributes;
+				import sailpoint.object.TaskResult;
+				import sailpoint.object.TaskDefinition;
+				import sailpoint.api.TaskManager;
+				Map args = new HashMap();
+				args.put("APPLICATIONAMES",appNames);
+				args.put("GROUPDEFINITION",groupDefinition);
+				args.put("INCLUDEGROUPDEFINITION",includeGroupDefinition);
+				args.put("UNDO",undo);
+				args.put("LAUNCHOPTIONS",launchOptions);
+				args.put("ALLAPS",allApps);
+				args.put("SWITCH",switchUiTask);
+				args.put("POSTPONE",postPone);
+				args.put("TERMINATETASKS",terminateTasks);
+				args.put("SUSPENSIONRESTORETHREADS",suspensionRestoreThreads);
+				args.put("SUSPENSIONRESTOREWAIT",suspensionRestoreWait);
+				Attributes attributes = new Attributes();
+				attributes.setMap(args);
+				TaskManager tm = new TaskManager(context);
+				TaskDefinition taskdef = tm.getTaskDefinition("Operations Launch Emergency Action");
+				TaskResult newTaskResult = tm.runWithResult(taskdef, attributes);
+				
+			]]></Source>
+    </Script>
+    <Transition to="end"/>
+  </Step>
+  <Step icon="Stop" name="end" posX="502" posY="10"/>
+</Workflow>

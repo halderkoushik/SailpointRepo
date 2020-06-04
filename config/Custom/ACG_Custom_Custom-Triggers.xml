@@ -1,0 +1,47 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Custom PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Custom name="Custom-Triggers">
+  <Attributes>
+    <Map>
+      <entry key="TRIGGERS">
+        <value>
+          <Map>
+            <entry key="Authoritative Sources Triggers">
+              <value>
+                <Map>
+                  <entry key="joinerProcess">
+                    <value>
+                      <List>
+                        <Map>
+                          <entry key="Operation" value="AND"/>
+                        </Map>
+                        <Map>
+                          <entry key="Attribute" value="GROUPDEFINITION"/>
+                          <entry key="NewValues" value="New Joiner Has At least One Birthright Account"/>
+                          <entry key="OldValues" value="IGNORE"/>
+                        </Map>
+                        <Map>
+                          <entry key="Attribute" value="needsJoiner"/>
+                          <entry key="NewValues" value="NEEDS PROCESSING"/>
+                          <entry key="OldValues" value="IGNORE"/>
+                        </Map>
+                      </List>
+                    </value>
+                  </entry>
+                  <entry key="loaProcess"/>
+                  <entry key="ltdProcess"/>
+                  <entry key="moverProcess"/>
+                  <entry key="rehireProcess"/>
+                  <entry key="reverseleaverProcess"/>
+                  <entry key="rtwloaProcess"/>
+                  <entry key="rtwltdProcess"/>
+                  <entry key="terminationProcess"/>
+                </Map>
+              </value>
+            </entry>
+          </Map>
+        </value>
+      </entry>
+    </Map>
+  </Attributes>
+</Custom>

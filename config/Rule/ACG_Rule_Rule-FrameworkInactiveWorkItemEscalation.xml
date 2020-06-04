@@ -1,0 +1,155 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule-FrameworkInactiveWorkItemEscalation" type="Escalation">
+  <Description>Escalates the item to its current owner's manager. If the manager cannot be found,
+or is inactive, the item is escalated to the No Manager Found work group.
+</Description>
+  <Signature returnType="String">
+    <Inputs>
+      <Argument name="log">
+        <Description>
+The log object associated with the SailPointContext.
+</Description>
+      </Argument>
+      <Argument name="context">
+        <Description>
+A sailpoint.api.SailPointContext object that can be used to query
+the database if necessary.
+</Description>
+      </Argument>
+      <Argument name="item">
+        <Description>
+The sailpoint.object.Notifiable to escalate.
+</Description>
+      </Argument>
+    </Inputs>
+    <Returns>
+      <Argument name="newOwner">
+        <Description>
+The name of the Identity object that should be the new owner of
+the notifiable.
+</Description>
+      </Argument>
+    </Returns>
+  </Signature>
+  <Source><![CDATA[
+
+import sailpoint.object.Identity;
+import sailpoint.object.Rule;
+import sailpoint.object.Notifiable;
+import sailpoint.tools.GeneralException;
+import sailpoint.rapidapponboarding.rule.WrapperRuleLibrary;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import sailpoint.rapidapponboarding.logger.LogEnablement;
+Log logger = LogFactory.getLog("rapidapponboarding.rules");
+  /**
+     * Invoke Reassignment Rule
+     * @param identityName
+     * @param item
+     * @param ruleName
+     * @return
+     * @throws GeneralException
+     */
+    public String invokeReassignmentRule(String identityName, Notifiable item, String ruleName) throws GeneralException
+     {
+        LogEnablement.isLogDebugEnabled(logger,"Enter invokeReassignmentRule");
+		Rule rule = context.getObjectByName(Rule.class, ruleName);
+		String str;
+        if (rule == null) 
+        {
+        	throw new GeneralException("Rule is not imported or Rule doesn't exist");
+        } 
+        else 
+        {
+        	HashMap params = new HashMap();
+            params.put("context", context);
+            params.put("identityName", identityName);
+            params.put("item", item);
+           	try 
+           	{
+            	LogEnablement.isLogDebugEnabled(logger,"...Run the rule");
+                str = context.runRule(rule, params);                
+            } 
+            catch (Exception re) 
+            {
+            	throw new GeneralException("Error executing Rule "+re.getMessage());
+            }
+		}
+		if(rule!=null)
+		{
+		context.decache(rule);
+		}
+		LogEnablement.isLogDebugEnabled(logger,"Exit invokeReassignmentRule "+str);
+		return str;
+    }
+LogEnablement.isLogDebugEnabled(logger,"Enter Rule-FrameworkInactiveWorkItemEscalation");
+Map globalMap= WrapperRuleLibrary.getCommonFrameworkCustom(context,null, null);
+String reassignOwnershipToManager=null;
+String reassignmentRule=null;
+String removeIIQArtifactsOwnership=null;
+if(globalMap!=null)
+{
+       //IdentityIQ Artifacts
+    if(globalMap.containsKey("reassignOwnershipToManager"))
+    {
+     reassignOwnershipToManager=(String) globalMap.get("reassignOwnershipToManager");
+    }
+    if(globalMap.containsKey("reassignmentRule"))
+    {
+     reassignmentRule=(String) globalMap.get("reassignmentRule");
+    }
+}
+//Default owner is the No Manager Found workgroup
+String defaultOwner = "No Manager Found";
+String noReassignmentGroup = "No Reassignment";
+String newOwner = null;
+//Obtain the owner of the item
+Identity owner = item.getNotificationOwner(context);
+//If no owner, escalate to default owner
+if (owner == null)
+{ 
+	LogEnablement.isLogDebugEnabled(logger,"No Item Owner Escalation");
+	newOwner=defaultOwner;
+}
+else 
+{
+  //In case there is no reassignment to manager, reassign to No Reassignmnet Workgroup
+   if(reassignOwnershipToManager!=null && reassignOwnershipToManager.equalsIgnoreCase("FALSE"))
+   {
+    LogEnablement.isLogDebugEnabled(logger,"No Reassignment To Manager Escalation");
+    newOwner=noReassignmentGroup;
+    LogEnablement.isLogDebugEnabled(logger,"Reassign to No Reassignment");
+    }
+    else
+    {
+        LogEnablement.isLogDebugEnabled(logger,"Escalate to owner's manager");
+		//Escalate to owner's manager
+		if(owner.getManager()!=null)
+		{
+			newOwner = owner.getManager().getName();
+		}
+		//If manager not found
+		if(newOwner == null ) 
+		{
+		LogEnablement.isLogDebugEnabled(logger,"No Manager Found Escalation");
+		newOwner=defaultOwner;
+		}
+	}
+}
+//Reassignment Rule Gets Preference
+ if(reassignmentRule!=null && owner!=null)
+ {
+    LogEnablement.isLogDebugEnabled(logger,"Assignment Rule Found");
+    String reassignedOwner=null;
+    reassignedOwner=invokeReassignmentRule(owner.getName(),item,reassignmentRule);
+    if(reassignedOwner!=null)
+    {
+    	newOwner=reassignedOwner;
+    }
+  }
+LogEnablement.isLogDebugEnabled(logger,"End Rule-FrameworkInactiveWorkItemEscalation "+newOwner);
+return newOwner;
+
+]]></Source>
+</Rule>

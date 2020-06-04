@@ -1,0 +1,139 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Workflow PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Workflow explicitTransitions="true" handler="sailpoint.api.StandardWorkflowHandler" name="Workflow-QuickLink-Recovery-Tool" type="LCMProvisioning">
+  <Variable initializer="true" name="transient"/>
+  <Variable initializer="ref:launcher" name="owner"/>
+  <Variable initializer="identityName"/>
+  <Variable initializer="identityDisplayName"/>
+  <Variable initializer="requestEligibility"/>
+  <Variable name="spExtAttrs"/>
+  <Variable initializer="false" name="trace"/>
+  <Variable editable="true" name="requestType"/>
+  <Variable name="plan"/>
+  <Variable name="project"/>
+  <Variable name="recoveryComments"/>
+  <Variable name="provisioningErrors"/>
+  <Variable initializer="AccessRequest" name="flow">
+    <Description>The name of the identity.</Description>
+  </Variable>
+  <Variable initializer="string:LCM" name="source">
+    <Description>The name of the identity.</Description>
+  </Variable>
+  <Variable name="identityRequestId">
+    <Description>Selected Id</Description>
+  </Variable>
+  <Description>Accelerator Pack Recover Identity Access Workflow</Description>
+  <RuleLibraries>
+    <Reference class="sailpoint.object.Rule" name="Rule-Recover-RuleLibrary"/>
+    <Reference class="sailpoint.object.Rule" name="Rule-Framework-NotificationRuleLibrary"/>
+  </RuleLibraries>
+  <Step icon="Start" name="Start" posX="28" posY="10">
+    <Transition to="Get Request Type"/>
+  </Step>
+  <Step name="Get Request Type" posX="98" posY="10" resultVariable="requestType">
+    <Script>
+      <Source><![CDATA[
+      	return getRequestTypeName(context, workflow);
+      ]]></Source>
+    </Script>
+    <Transition to="Select Identity Request"/>
+  </Step>
+  <Step name="Select Identity Request">
+    <Approval description="Identity Request" owner="ref:requester" return="identityRequestId, recoveryComments">
+      <Form>
+        <Attributes>
+          <Map>
+            <entry key="pageTitle" value="Select Identity Request To Recover"/>
+          </Map>
+        </Attributes>
+        <Section label="Select" type="text">
+          <Field value="Please enter the Identity Request Id"/>
+        </Section>
+        <Section>
+          <Field displayName="Identity Request" name="identityRequestId" required="true" type="sailpoint.object.IdentityRequest"/>
+          <Field displayName="Reason" displayType="textarea" name="recoveryComments" required="true"/>
+        </Section>
+        <Button action="back" label="Cancel Request"/>
+        <Button action="next" label="Next"/>
+      </Form>
+    </Approval>
+    <Transition to="Confirm Identity Request To Recover" when="script:approved"/>
+    <Transition to="end"/>
+  </Step>
+  <Step name="Confirm Identity Request To Recover" posX="234" posY="114">
+    <Approval owner="ref:owner" send="identityRequestId,recoveryComments">
+      <Form>
+        <Attributes>
+          <Map>
+            <entry key="hideIncompleteFields" value="true"/>
+            <entry key="pageTitle" value="Confirmation on Recovery Process"/>
+          </Map>
+        </Attributes>
+        <Button action="next" label="Confirm"/>
+        <Button action="back" label="Cancel"/>
+        <Section columns="4" label="Identity Request" type="datatable">
+          <Field displayName="ID" readOnly="true">
+            <Script>
+              <Source><![CDATA[
+							import org.apache.commons.logging.Log;
+							import org.apache.commons.logging.LogFactory;
+							import sailpoint.object.IdentityRequest;
+							import sailpoint.rapidapponboarding.logger.LogEnablement;
+							private Log logger = LogFactory.getLog("rapidapponboarding.rules");
+							String retVal = "";
+							IdentityRequest idReq=context.getObjectById(IdentityRequest.class, identityRequestId);
+							if(idReq!=null)
+							{
+								retVal = idReq.getName();
+								context.decache(idReq);
+							}
+							return retVal;
+						]]></Source>
+            </Script>
+          </Field>
+        </Section>
+        <Section columns="2" label="Reason" type="datatable">
+          <Field displayName="Comments" readOnly="true" value="ref:recoveryComments"/>
+        </Section>
+      </Form>
+    </Approval>
+    <Transition to="Build Plan" when="approved"/>
+    <Transition to="end" when="!approved"/>
+  </Step>
+  <Step name="Build Plan">
+    <Arg name="identityRequestId" value="ref:identityRequestId"/>
+    <Arg name="recoveryComments" value="ref:recoveryComments"/>
+    <Script>
+      <Source><![CDATA[
+				 
+			    import sailpoint.object.ProvisioningPlan;
+			    ProvisioningPlan recoverPlan = new ProvisioningPlan();
+			    String result=buildExecuteRecoveryPlan(identityRequestId,workflow,recoveryComments);
+			    if(result!=null && result.length()>0)
+			    {
+			    workflow.put("requestEligibility",result);
+			    }
+			   
+			]]></Source>
+    </Script>
+    <Transition to="Error Screen" when="script:(requestEligibility!=void  &amp;&amp; requestEligibility!=null)"/>
+    <Transition to="end"/>
+  </Step>
+  <Step name="Error Screen" posX="234" posY="114">
+    <Approval owner="ref:owner" send="requestEligibility">
+      <Form>
+        <Attributes>
+          <Map>
+            <entry key="hideIncompleteFields" value="true"/>
+          </Map>
+        </Attributes>
+        <Section label="Unable to complete your recovery">
+          <Field displayName="Recovery Result" name="recoveryResult" readOnly="true" value="ref:requestEligibility"/>
+        </Section>
+        <Button action="next" label="Close"/>
+      </Form>
+    </Approval>
+    <Transition to="end"/>
+  </Step>
+  <Step icon="Stop" name="end" posX="502" posY="10"/>
+</Workflow>

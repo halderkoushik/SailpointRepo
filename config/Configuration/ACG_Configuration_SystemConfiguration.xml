@@ -6,7 +6,8 @@
       <entry key="AccountGroupPermissions.challengeGenerationEmailTemplate" value="Account Group Challenge Creation Notification"/>
       <entry key="LoginAuthDurationMillis" value="3600000"/>
       <entry key="ProtectedUserLockout" value="true"/>
-      <entry key="accessRequestReminderEmailTemplate" value="Access Request Reminder"/>
+      <entry key="acceleratorPackVersion" value="8.1"/>
+      <entry key="accessRequestReminderEmailTemplate" value="EmailTemplate-FrameworkReminder"/>
       <entry key="accessRequestTypes">
         <value>
           <List>
@@ -20,6 +21,11 @@
             <String>IdentityCreateRequest</String>
             <String>IdentityEditRequest</String>
             <String>Registration</String>
+            <String>External</String>
+            <String>Lifecycle</String>
+            <String>Recovery</String>
+            <String>BatchOwner</String>
+            <String>PasswordExpiration</String>
           </List>
         </value>
       </entry>
@@ -34,7 +40,11 @@
       <entry key="allowCertificationEntityBulkApprove" value="true"/>
       <entry key="allowCertificationEntityBulkClearDecisions" value="true"/>
       <entry key="allowCertificationEntityBulkRevocation" value="true"/>
-      <entry key="allowCreatingRolesFromCertification" value="true"/>
+      <entry key="allowCreatingRolesFromCertification">
+        <value>
+          <Boolean/>
+        </value>
+      </entry>
       <entry key="allowGeneratePasswordDelegated" value="true"/>
       <entry key="allowGroupManagement" value="true"/>
       <entry key="allowIdentitySearch" value="true"/>
@@ -45,6 +55,11 @@
       <entry key="allowListViewBulkRevoke" value="true"/>
       <entry key="allowListViewSaveCustomEntityFields" value="false"/>
       <entry key="allowPopulationSearch" value="true"/>
+      <entry key="allowPriorityEditing">
+        <value>
+          <Boolean/>
+        </value>
+      </entry>
       <entry key="allowProvisioningMissingRequirements" value="false"/>
       <entry key="allowSelfCertification">
         <value>
@@ -52,6 +67,7 @@
         </value>
       </entry>
       <entry key="allowUnauthenticatedEndUserPages" value="true"/>
+      <entry key="allowWorkgroupsInIdListBean" value="false"/>
       <entry key="allowiFrame" value="false"/>
       <entry key="applicationTemplateAccountUsages" value="Create,Update,Delete,Enable,Disable,Unlock,ChangePassword"/>
       <entry key="attachmentsAllowedFileTypes" value="[&quot;txt&quot;,&quot;jpg&quot;,&quot;png&quot;]"/>
@@ -74,8 +90,21 @@
       </entry>
       <entry key="authQuestionLockoutDurationMillis" value="3600000"/>
       <entry key="authQuestionsEnabled" value="false"/>
-      <entry key="automateSignOffOnReassignment" value="false"/>
-      <entry key="automateSignOffPopup" value="true"/>
+      <entry key="autoSignOffWhenNothingToCertify">
+        <value>
+          <Boolean>true</Boolean>
+        </value>
+      </entry>
+      <entry key="automateSignOffOnReassignment">
+        <value>
+          <Boolean>true</Boolean>
+        </value>
+      </entry>
+      <entry key="automateSignOffPopup">
+        <value>
+          <Boolean>true</Boolean>
+        </value>
+      </entry>
       <entry key="automaticClosingAction">
         <value>
           <CertificationStatus>Remediated</CertificationStatus>
@@ -87,13 +116,13 @@
         </value>
       </entry>
       <entry key="automaticClosingSigner" value="spadmin"/>
-      <entry key="batchRequestAccessRequest" value="LCM Provisioning"/>
-      <entry key="batchRequestAccountsRequest" value="LCM Provisioning"/>
+      <entry key="batchRequestAccessRequest" value="Workflow-FrameWork-Wrapper"/>
+      <entry key="batchRequestAccountsRequest" value="Workflow-FrameWork-Wrapper"/>
       <entry key="batchRequestIdentityCreateRequest" value="LCM Create and Update"/>
       <entry key="batchRequestIdentityEditRequest" value="LCM Create and Update"/>
       <entry key="batchRequestPasswordsRequest" value="LCM Manage Passwords"/>
       <entry key="blockForwardWorkItemSelfCertification" value="false"/>
-      <entry key="bulkReassignmentEmailTemplate" value="Bulk Reassignment"/>
+      <entry key="bulkReassignmentEmailTemplate" value="EmailTemplate-FrameworkAccessReviewBulkReassignment"/>
       <entry key="bulkSelectionCountForConfirmation" value="25"/>
       <entry key="bundlesUIDisplayLimit" value="50"/>
       <entry key="cefActivityCorrelationRule" value="CEFActivityCorrelation"/>
@@ -146,19 +175,27 @@
         </value>
       </entry>
       <entry key="certificationArchiveMaxAge" value="0"/>
-      <entry key="certificationDecisionChallengedEmailTemplate" value="Certification Decision Challenged Notification"/>
+      <entry key="certificationDecisionChallengedEmailTemplate" value="EmailTemplate-Framework-CertificationDecisionChallengedNotification"/>
       <entry key="certificationDelegationReview" value="false"/>
       <entry key="certificationDetailedViewFilterSet" value="false"/>
-      <entry key="certificationDisableDelegationForwarding" value="false"/>
-      <entry key="certificationEmailTemplate" value="Certification"/>
+      <entry key="certificationDisableDelegationForwarding">
+        <value>
+          <Boolean>true</Boolean>
+        </value>
+      </entry>
+      <entry key="certificationEmailTemplate" value="EmailTemplate-FrameworkAccessReviewStart"/>
       <entry key="certificationEntityCompletionRule"/>
       <entry key="certificationEntityCustomizationRule"/>
       <entry key="certificationEntityDelegationEnabled" value="true"/>
       <entry key="certificationEntityRefreshRule"/>
       <entry key="certificationItemCompletionRule"/>
-      <entry key="certificationItemCustomizationRule"/>
+      <entry key="certificationItemCustomizationRule" value="Rule-Framework-Certification-Item-Rule"/>
       <entry key="certificationItemDelegationEnabled" value="false"/>
-      <entry key="certificationLimitReassignments" value="false"/>
+      <entry key="certificationLimitReassignments">
+        <value>
+          <Boolean>true</Boolean>
+        </value>
+      </entry>
       <entry key="certificationMaxAge" value="0"/>
       <entry key="certificationMitigationDuration">
         <value>
@@ -168,21 +205,22 @@
       <entry key="certificationMitigationEnabled" value="false"/>
       <entry key="certificationMitigationPopupEnabled" value="false"/>
       <entry key="certificationPageListItems" value="true"/>
-      <entry key="certificationReminderEmailTemplate" value="Certification Reminder"/>
-      <entry key="certificationSignOffApprovalEmailTemplate" value="Certification Sign Off Approval"/>
-      <entry key="challengeAcceptedEmailTemplate" value="Challenge Accepted"/>
-      <entry key="challengeDecisionExpirationEmailTemplate"/>
-      <entry key="challengeExpirationEmailTemplate"/>
-      <entry key="challengeGenerationEmailTemplate" value="Challenge Creation Notification"/>
+      <entry key="certificationReassignmentLimit" value="4"/>
+      <entry key="certificationReminderEmailTemplate" value="EmailTemplate-FrameworkAccessReviewReminder"/>
+      <entry key="certificationSignOffApprovalEmailTemplate" value="EmailTemplate-Framework-CertificationSignOffApproval"/>
+      <entry key="challengeAcceptedEmailTemplate" value="EmailTemplate-Framework-ChallengeAccepted"/>
+      <entry key="challengeDecisionExpirationEmailTemplate" value="EmailTemplate-Framework-ChallengeDecisionExpiration"/>
+      <entry key="challengeExpirationEmailTemplate" value="EmailTemplate-Framework-ChallengeExpiration"/>
+      <entry key="challengeGenerationEmailTemplate" value="EmailTemplate-Framework-ChallengeCreationNotification"/>
       <entry key="challengePeriodDuration">
         <value>
           <TimeDuration amount="1" scale="Week"/>
         </value>
       </entry>
       <entry key="challengePeriodEnabled" value="false"/>
-      <entry key="challengePeriodEndEmailTemplate" value="Challenge Period End"/>
-      <entry key="challengePeriodStartEmailTemplate" value="Challenge Period Start"/>
-      <entry key="challengeRejectedEmailTemplate" value="Challenge Rejected"/>
+      <entry key="challengePeriodEndEmailTemplate" value="EmailTemplate-Framework-ChallengePeriodEnd"/>
+      <entry key="challengePeriodStartEmailTemplate" value="EmailTemplate-Framework-ChallengePeriodStart"/>
+      <entry key="challengeRejectedEmailTemplate" value="EmailTemplate-Framework-ChallengeRejected"/>
       <entry key="checkPasswordsAgainstDictionary" value="false"/>
       <entry key="checkPasswordsAgainstIdentityAttributes" value="false"/>
       <entry key="columnSuggestBlacklist">
@@ -200,29 +238,17 @@
       <entry key="defaultEmailFromAddress" value="admin@example.com"/>
       <entry key="defaultEmailGap" value="0"/>
       <entry key="defaultEmailHost" value="mail.example.com"/>
-      <entry key="defaultHomeWidgets">
-        <value>
-          <List>
-            <String>Violations</String>
-            <String>MyAccessReviews</String>
-            <String>CertificationCampaigns</String>
-            <String>TopFiveRisks</String>
-            <String>Approvals</String>
-            <String>Forms</String>
-            <String>DirectReports</String>
-          </List>
-        </value>
-      </entry>
+      <entry key="defaultHomeWidgets" value="Violations, MyAccessReviews, CertificationCampaigns, TopFiveRisks, Approvals, Forms, DirectReports"/>
       <entry key="defaultLanguage" value="en_US"/>
       <entry key="defaultMaxReminders" value="5"/>
-      <entry key="defaultQuickLinkCards" value="Policy Violations, Access Reviews, Approvals, Request Access, Track Requests"/>
-      <entry key="defaultRemediator"/>
+      <entry key="defaultQuickLinkCards" value="Policy Violations, Access Reviews, Approvals, Request Access, Track Requests, Manage Accounts, Work Items, Mobile Violation Reviews, Forms, View Identity"/>
+      <entry key="defaultRemediator" value="spadmin"/>
       <entry key="defaultReminderStart" value="1209600000"/>
       <entry key="defaultWakeUpInterval" value="86400000"/>
       <entry key="defaultWorkItemDuration" value="30"/>
-      <entry key="delegationEmailTemplate" value="Delegation"/>
-      <entry key="delegationFinishedEmailTemplate" value="Delegation Finished"/>
-      <entry key="delegationRevocationEmailTemplate" value="Delegation Revocation"/>
+      <entry key="delegationEmailTemplate" value="EmailTemplate-FrameworkAccessReviewDelegation"/>
+      <entry key="delegationFinishedEmailTemplate" value="EmailTemplate-FrameworkAccessReviewDelegationCompletion"/>
+      <entry key="delegationRevocationEmailTemplate" value="EmailTemplate-Framework-DelegationRevocation"/>
       <entry key="disableDefaultToAppOwnerRemediation" value="false"/>
       <entry key="disableRoleModelerTreeView" value="false"/>
       <entry key="displayClassificationsInAccessRequest" value="true"/>
@@ -238,11 +264,15 @@
       <entry key="enableOverrideViolationDefaultRemediator" value="true"/>
       <entry key="enableProvisioningTransactionLog" value="true"/>
       <entry key="enableRoleSunActivate" value="false"/>
-      <entry key="enableRoleSunAssign" value="false"/>
+      <entry key="enableRoleSunAssign">
+        <value>
+          <Boolean>true</Boolean>
+        </value>
+      </entry>
       <entry key="enableSyslog" value="true"/>
       <entry key="entitlementMiningMaxAppBuckets" value="25"/>
       <entry key="entitlementMiningMaxBuckets" value="25"/>
-      <entry key="escalationEmailTemplate" value="Work Item Escalation"/>
+      <entry key="escalationEmailTemplate" value="EmailTemplate-FrameworkAccessReviewDelinquent"/>
       <entry key="flattenCertificationManagerHierarchy" value="false"/>
       <entry key="formsTypeFilter">
         <value>
@@ -288,6 +318,7 @@
           </Map>
         </value>
       </entry>
+      <entry key="inactiveOwnerWorkItemForwadRule" value="Rule-FrameworkInactiveWorkItemEscalation"/>
       <entry key="includePasswordPolicyDetailsInHelp">
         <value>
           <Boolean>true</Boolean>
@@ -356,18 +387,18 @@
       <entry key="maxAuthQuestionFailures" value="3"/>
       <entry key="mitigationExpirationAction" value="NOTHING"/>
       <entry key="mitigationExpirationActionParameters"/>
-      <entry key="mitigationExpirationEmailTemplate" value="Mitigation Expiration"/>
+      <entry key="mitigationExpirationEmailTemplate" value="EmailTemplate-Framework-MitigationExpiration"/>
       <entry key="mobileQuickLinkCards" value="Request Access, Manage Passwords, Manage Accounts, Mobile Access Reviews, Mobile Approvals, Forms, Mobile Violation Reviews"/>
       <entry key="notifyRemediation" value="false"/>
       <entry key="numAuthQuestionAnswersRequired" value="3"/>
       <entry key="numAuthQuestionsForAuthn" value="2"/>
-      <entry key="openCertsEmailTemplate" value="Open Certifications"/>
+      <entry key="openCertsEmailTemplate" value="EmailTemplate-Framework-OpenCertifications"/>
       <entry key="passwordSpecialCharacters" value="~!@#$%^*_+-={}\\][:;?,."/>
       <entry key="pendingRoleRequestDeleteEmailTemplate" value="Pending Role Request Deleted"/>
       <entry key="pluginProhibitScripting" value="false"/>
       <entry key="pluginRelaxExportDeclarationEnforcement" value="false"/>
-      <entry key="policyViolationDelegationEmailTemplate" value="Policy Violation Delegation"/>
-      <entry key="policyViolationEmailTemplate" value="Policy Violation"/>
+      <entry key="policyViolationDelegationEmailTemplate" value="EmailTemplate-Framework-PolicyViolationDelegation"/>
+      <entry key="policyViolationEmailTemplate" value="EmailTemplate-Framework-PolicyViolation"/>
       <entry key="policyViolationWorkItemTemplate" value="Policy Violation Details"/>
       <entry key="promptForAuthQuestionAnswersAfterLogin" value="false"/>
       <entry key="provisioningRequestExpirationDays" value="7"/>
@@ -379,15 +410,19 @@
             <QuickLinkCategory cssClass="quickLinkCategoryTasks" messageKey="quicklink_category_all_tasks" name="Tasks" ordering="1"/>
             <QuickLinkCategory cssClass="quickLinkCategoryAccess" messageKey="quicklink_category_access" name="Access" ordering="2"/>
             <QuickLinkCategory cssClass="quickLinkCategoryManage" messageKey="quicklink_category_manage" name="Manage" ordering="3"/>
+            <QuickLinkCategory cssClass="quickLinkCategoryCustom" messageKey="quicklink_category_road" name="ROAD" ordering="4"/>
+            <QuickLinkCategory cssClass="quickLinkCategoryCustom" messageKey="quicklink_category_admin" name="Admin" ordering="7"/>
+            <QuickLinkCategory cssClass="quickLinkCategoryCustom" messageKey="quicklink_category_smart_config" name="SmartConfig" ordering="5"/>
+            <QuickLinkCategory cssClass="quickLinkCategoryCustom" messageKey="quicklink_category_operations" name="Operations" ordering="6"/>
           </List>
         </value>
       </entry>
       <entry key="redirectingEmailNotifierAddress" value="admin@example.com"/>
       <entry key="redirectingEmailNotifierFilename" value="/tmp/iiqmbox"/>
       <entry key="registerForm" value="Self-service Registration Form"/>
-      <entry key="remediationEmailTemplate" value="Remediation Work Item"/>
-      <entry key="remediationItemAssignmentEmailTemplate" value="Remediation Item Assignment"/>
-      <entry key="remediationItemAssignmentRemovalEmailTemplate" value="Remediation Item Assignment Removal"/>
+      <entry key="remediationEmailTemplate" value="EmailTemplate-Framework-RemediationWorkItem"/>
+      <entry key="remediationItemAssignmentEmailTemplate" value="EmailTemplate-FrameworkRemediationAssignment"/>
+      <entry key="remediationItemAssignmentRemovalEmailTemplate" value="EmailTemplate-FrameworkRemediationAssignmentRemoval"/>
       <entry key="remediationNotificationEmailTemplate" value="Remediation Notification"/>
       <entry key="remediationPeriodDuration">
         <value>
@@ -396,7 +431,7 @@
       </entry>
       <entry key="remediationPeriodEnabled" value="true"/>
       <entry key="remediationScanInterval" value="86400000"/>
-      <entry key="reminderEmailTemplate" value="Work Item Reminder"/>
+      <entry key="reminderEmailTemplate" value="EmailTemplate-FrameworkAccessReviewReminder"/>
       <entry key="reportCompletionEmailTemplate" value="Report Completion"/>
       <entry key="reportingResultRowThreshold" value="200000"/>
       <entry key="requestMaxAge" value="0"/>
@@ -405,10 +440,23 @@
       <entry key="requestRolesAssignableSubordinateEnabled" value="true"/>
       <entry key="requestRolesPermittedSelfEnabled" value="true"/>
       <entry key="requestRolesPermittedSubordinateEnabled" value="true"/>
-      <entry key="requireBulkCertifyConfirmation" value="false"/>
+      <entry key="requireBatchRequestApproval">
+        <value>
+          <Boolean/>
+        </value>
+      </entry>
+      <entry key="requireBulkCertifyConfirmation">
+        <value>
+          <Boolean>true</Boolean>
+        </value>
+      </entry>
       <entry key="requireDelegationCompletion" value="false"/>
       <entry key="requireOldPasswordAtChange" value="true"/>
-      <entry key="requireReassignmentCompletion" value="true"/>
+      <entry key="requireReassignmentCompletion">
+        <value>
+          <Boolean/>
+        </value>
+      </entry>
       <entry key="roleSunsetNotificationDaysReminder" value="0"/>
       <entry key="scimSearchMaxResults" value="1000"/>
       <entry key="scopePathsDenormalized">
@@ -659,7 +707,7 @@
       <entry key="showCertificationRoleRevocationDetails" value="false"/>
       <entry key="showChangePasswordTab" value="true"/>
       <entry key="showEditForwarding" value="true"/>
-      <entry key="signoffEmailTemplate" value="Task Result Signoff"/>
+      <entry key="signoffEmailTemplate" value="EmailTemplate-Framework-TaskResultSignOff"/>
       <entry key="smReadTimeout" value="10"/>
       <entry key="subordinateCertificationEnabled">
         <value>
@@ -684,6 +732,11 @@
         </value>
       </entry>
       <entry key="suppressDuplicateEmails" value="true"/>
+      <entry key="suppressEmailWhenNothingToCertify">
+        <value>
+          <Boolean>true</Boolean>
+        </value>
+      </entry>
       <entry key="syncSchema" value="true"/>
       <entry key="syslogLevel" value="ERROR"/>
       <entry key="syslogPurgeAge" value="0"/>
@@ -708,24 +761,40 @@
       <entry key="unscopedObjectsGloballyAccessible" value="true"/>
       <entry key="unsupportedBrowserNotification" value="true"/>
       <entry key="useManagedAttributesForRemediation" value="true"/>
-      <entry key="workItemAssignmentEmailTemplate" value="Work Item Assignment"/>
-      <entry key="workItemAssignmentRemovalEmailTemplate" value="Work Item Assignment Removal"/>
-      <entry key="workItemCommentEmailTemplate" value="Work Item Comment"/>
-      <entry key="workItemForwardEmailTemplate" value="Work Item Forward"/>
+      <entry key="workItemArchiveTypes" value="Certification, Remediation, Delegation, Approval, ViolationReview, Form, PolicyViolation, Challenge, ImpactAnalysis, Signoff, ManualAction"/>
+      <entry key="workItemAssignmentEmailTemplate" value="EmailTemplate-FrameworkWorkItemAssignment"/>
+      <entry key="workItemAssignmentNotification">
+        <value>
+          <Boolean>true</Boolean>
+        </value>
+      </entry>
+      <entry key="workItemAssignmentNotificationRemoval">
+        <value>
+          <Boolean>true</Boolean>
+        </value>
+      </entry>
+      <entry key="workItemAssignmentRemovalEmailTemplate" value="EmailTemplate-FrameworkWorkItemAssignmentRemoval"/>
+      <entry key="workItemCommentEmailTemplate" value="EmailTemplate-FrameworkWorkItemComment"/>
+      <entry key="workItemForwardEmailTemplate" value="EmailTemplate-FrameworkWorkItemForward"/>
       <entry key="workItemNotificationsInterval" value="300"/>
+      <entry key="workItemPriorityEditingEnabled">
+        <value>
+          <Boolean/>
+        </value>
+      </entry>
       <entry key="workflowIdentityRefresh" value="Identity Refresh"/>
       <entry key="workflowIdentityUpdate" value="Identity Update"/>
-      <entry key="workflowLCMAccessRequest" value="LCM Provisioning"/>
-      <entry key="workflowLCMAccountsRequest" value="LCM Provisioning"/>
-      <entry key="workflowLCMEntitlementsRequest" value="LCM Provisioning"/>
+      <entry key="workflowLCMAccessRequest" value="Workflow-FrameWork-Wrapper"/>
+      <entry key="workflowLCMAccountsRequest" value="Workflow-FrameWork-Wrapper"/>
+      <entry key="workflowLCMEntitlementsRequest" value="Workflow-FrameWork-Wrapper"/>
       <entry key="workflowLCMExpirePassword" value="LCM Manage Passwords"/>
       <entry key="workflowLCMForgotPassword" value="LCM Manage Passwords"/>
       <entry key="workflowLCMIdentityCreateRequest" value="LCM Create and Update"/>
       <entry key="workflowLCMIdentityEditRequest" value="LCM Create and Update"/>
       <entry key="workflowLCMPasswordsRequest" value="LCM Manage Passwords"/>
-      <entry key="workflowLCMRolesRequest" value="LCM Provisioning"/>
+      <entry key="workflowLCMRolesRequest" value="Workflow-FrameWork-Wrapper"/>
       <entry key="workflowLCMSelfServiceRegistrationRequest" value="LCM Registration"/>
-      <entry key="workflowLCMUnlockAccount" value="LCM Provisioning"/>
+      <entry key="workflowLCMUnlockAccount" value="Workflow-FrameWork-Wrapper"/>
       <entry key="workflowManagedAttribute" value="Entitlement Update"/>
       <entry key="workflowPasswordIntercept" value="Password Intercept"/>
       <entry key="workflowRoleApproval" value="Role Modeler - Impact Analysis"/>

@@ -1,0 +1,66 @@
+<!-- Copyright © 2018 SailPoint Technologies, Inc. All Rights Reserved.
+All logos, text, content, and works of authorship, including but not limited to underlying code, programming or scripting language, designs, and/or graphics,
+that are used and/or depicted herein are protected under United States and international copyright and trademark laws and treaties,
+and may not be used or reproduced without the prior express written permission of SailPoint Technologies, Inc. -->
+<!--
+Link correlation keys.
+There are a fixed number of these but you may need to adjust their
+sizes and indexes.
+The maximum size of an indexed string on SQL Server is 450.  
+If you are not using SQL Server you may raise this.
+-->
+<!--OOTB START-->  
+<property name="key1" type="string" length="450" index="spt_link_key1_ci"/>
+<property name="key2" type="string" length="255"/>
+<property name="key3" type="string" length="255"/>
+<property name="key4" type="string" length="255"/>
+<!--
+Extended attribute mappings for Link.
+See comments in IdentityExtended.hbm.xml for more on how to manage
+extended attribute mappings.
+-->
+<property name="extended1" type="string" length="450"
+          index="spt_link_extended1_ci"/>
+<property name="extended2" type="string" length="450"/>
+<property name="extended3" type="string" length="450"/>
+<property name="extended4" type="string" length="450"/>
+<property name="extended5" type="string" length="450"/>
+<!--
+<property name="extended6" type="string" length="450"/>
+<property name="extended7" type="string" length="450"/>
+<property name="extended8" type="string" length="450"/>
+<property name="extended9" type="string" length="450"/>
+<property name="extended10" type="string" length="450"/>
+<property name="extended11" type="string" length="450"/>
+<property name="extended12" type="string" length="450"/>
+<property name="extended13" type="string" length="450"/>
+<property name="extended14" type="string" length="450"/>
+<property name="extended15" type="string" length="450"/>
+<property name="extended16" type="string" length="450"/>
+<property name="extended17" type="string" length="450"/>
+<property name="extended18" type="string" length="450"/>
+<property name="extended19" type="string" length="450"/>
+<property name="extended20" type="string" length="450"/>
+-->
+<!--OOTB END-->  
+<!--AGGREGATION, PRIVILEGED SERVICE ACCOUNT, MOVER, JOINER, LEAVER, ATTRIBUTE SYNC, PASSWORD SYNC, REPORTING START-->   
+<property name="psAccount" type="string" length="450"
+              access="sailpoint.persistence.ExtendedPropertyAccessor"
+              index="spt_link_psAccount_ci"/>
+<!--AGGREGATION, PRIVILEGED SERVICE ACCOUNT, MOVER, JOINER, LEAVER, ATTRIBUTE SYNC, PASSWORD SYNC, REPORTING END-->  
+<!--AGGREGATION, REPORTING,REPORTING START-->              
+<property name="disabledAccount" type="string" length="450"
+              access="sailpoint.persistence.ExtendedPropertyAccessor" 
+              index="spt_link_disabledAccount_ci"/>
+<property name="lockedAccount" type="string" length="450"
+              access="sailpoint.persistence.ExtendedPropertyAccessor"
+              index="spt_link_lockedAccount_ci"/>
+<!--<property name="sAccount" type="string" length="450"
+              access="sailpoint.persistence.ExtendedPropertyAccessor"
+              index="spt_link_sAccount_ci"/>--> 
+<!--AGGREGATION, REPORTING, REPORTING END UNCOMMENT THIS FOR SERVICE ACCOUNTT BETA FEATURE-->
+<!--PRIVILEGED ACCOUNT TYPE START UNCOMMENT THIS FOR PRIVILEGED ACCOUNT FEATURE-->
+<!--<property name="apaccountType" type="string" length="450"
+          access="sailpoint.persistence.ExtendedPropertyAccessor"
+          index="spt_link_apAccttype_ci"/>-->
+<!--PRIVILEGED ACCOUNT TYPE END-->

@@ -1,0 +1,3 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE LocalizedAttribute PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<LocalizedAttribute attribute="description" locale="en_US" name="Business Application Roles:description:en_US" targetClass="Bundle" targetName="Business Application Roles" value="This container is used for ONLY one Business Application and Technology/Platform Associations"/>

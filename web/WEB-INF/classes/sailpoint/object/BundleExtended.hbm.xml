@@ -1,0 +1,56 @@
+<!-- Copyright © 2018 SailPoint Technologies, Inc. All Rights Reserved.
+All logos, text, content, and works of authorship, including but not limited to underlying code, programming or scripting language, designs, and/or graphics,
+that are used and/or depicted herein are protected under United States and international copyright and trademark laws and treaties,
+and may not be used or reproduced without the prior express written permission of SailPoint Technologies, Inc. -->
+<!--
+Extended attribute mappings for Bundle (roles).
+See comments in IdentityExtended.hbm.xml for more on how to manage
+extended attribute mappings.
+-->
+<!--OOTB START--> 
+<property name="extended1" type="string" length="450" index="spt_bundle_extended1_ci"/>
+<property name="extended2" type="string" length="450"/>
+<property name="extended3" type="string" length="450"/>
+<property name="extended4" type="string" length="450"/>
+<!--
+<property name="extended5" type="string" length="450"/>
+<property name="extended6" type="string" length="450"/>
+<property name="extended7" type="string" length="450"/>
+<property name="extended8" type="string" length="450"/>
+<property name="extended9" type="string" length="450"/>
+<property name="extended10" type="string" length="450"/>
+<property name="extended11" type="string" length="450"/>
+<property name="extended12" type="string" length="450"/>
+<property name="extended13" type="string" length="450"/>
+<property name="extended14" type="string" length="450"/>
+<property name="extended15" type="string" length="450"/>
+<property name="extended16" type="string" length="450"/>
+<property name="extended17" type="string" length="450"/>
+<property name="extended18" type="string" length="450"/>
+<property name="extended19" type="string" length="450"/>
+<property name="extended20" type="string" length="450"/>
+-->
+<!--OOTB END--> 
+<!--JOINER, CERTIFICATION, ACCESS REQUEST, REPORTING START--> 
+<property name="isBirthright" type="string" length="450"
+           access="sailpoint.persistence.ExtendedPropertyAccessor"
+           index="spt_bundle_birthright_ci"/>
+<!--JOINER, CERTIFICATION, ACCESS REQUEST, REPORTING END-->     
+<!--LOGICAL APPLICATIONS, CERTIFICATION, ACCESS REQUEST (REQUESTOR EXTENDED FORM) , REPORTING START-->  
+ <property name="appName" type="string" length="450"
+           access="sailpoint.persistence.ExtendedPropertyAccessor"
+           index="spt_bundle_appName_ci"/>
+<!--LOGICAL APPLICATIONS, CERTIFICATION, ACCESS REQUEST (REQUESTOR EXTENDED FORM), REPORTING END-->  
+<!--ACCESS REQUEST, REPORTING START-->      
+<property name="roleBusApprovers" type="string" length="450"
+           access="sailpoint.persistence.ExtendedPropertyAccessor"
+           index="spt_bundle_roleBusApprs_ci"/>
+<property name="additionalRoleBusApprovers" type="string" length="450"
+              access="sailpoint.persistence.ExtendedPropertyAccessor"
+              index="spt_bundle_addRoleBusApprs_ci"/>
+<!--ACCESS REQUEST, REPORTING END-->       
+<!--PRIVILEGED SERVICE ACCOUNT,ACCESS REQUEST, REPORTING START--> 
+ <property name="rolePrivileged" type="string" length="450"
+           access="sailpoint.persistence.ExtendedPropertyAccessor"
+           index="spt_bundle_rolePriv_ci"/>
+<!--PRIVILEGED SERVICE ACCOUNT, ACCESS REQUEST, REPORTING  END--> 

@@ -1,0 +1,232 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule-Reverse-Leaver-RuleLibrary">
+  <Description> Reverse Termination Plan </Description>
+  <Signature returnType="Map"/>
+  <Source><![CDATA[
+    
+    import java.util.ArrayList;
+    import java.util.HashMap;
+    import java.util.List;
+    import java.util.Map;
+    import org.apache.commons.logging.Log;
+    import org.apache.commons.logging.LogFactory;
+    import sailpoint.api.IdentityService;
+    import sailpoint.api.SailPointContext;
+    import sailpoint.object.Application;
+    import sailpoint.object.Custom;
+    import sailpoint.object.Attributes;
+    import sailpoint.object.Identity;
+    import sailpoint.object.Link;
+    import sailpoint.object.ObjectConfig;
+    import sailpoint.object.ProvisioningProject;
+    import sailpoint.object.ProvisioningPlan;
+    import sailpoint.object.ProvisioningPlan.AccountRequest;
+    import sailpoint.object.Workflow;
+    import sailpoint.tools.GeneralException;
+    import sailpoint.rapidapponboarding.rule.WrapperRuleLibrary;
+    import sailpoint.rapidapponboarding.rule.ROADUtil;
+    import sailpoint.rapidapponboarding.rule.ReverseLeaverRuleLibrary;
+    import sailpoint.rapidapponboarding.logger.LogEnablement;
+    private Log logger = LogFactory.getLog("rapidapponboarding.rules");
+   /**
+     * Build Reverse Termination Plan
+     * @param context
+     * @param identityName
+     * @param workflow
+     * @param recentReverseLeaverId
+     * @return
+     */
+    public ProvisioningPlan buildReverseTerminationPlan(SailPointContext context, String identityName, Workflow workflow, String recentLeaverId, ProvisioningProject project) throws Exception {
+        LogEnablement.isLogDebugEnabled(logger,"Enter buildReverseTerminationPlan");
+        Identity identity = context.getObjectByName(Identity.class, identityName);
+        IdentityService idService = new IdentityService(context);
+        String applicationProcess = "reverseleaverProcess";
+        int countLinks=0;
+        countLinks=idService.countLinks(identity);
+        ProvisioningPlan plan = null;
+        LogEnablement.isLogDebugEnabled(logger,"...Start building ProvisioningPlan");
+        List links;
+        boolean validReverseLeaverPlan=true;
+        if (recentLeaverId!=null)
+        {
+            validReverseLeaverPlan=ReverseLeaverRuleLibrary.validateReverseLeaverPlan( context, recentLeaverId);
+            LogEnablement.isLogDebugEnabled(logger,"...validReverseLeaverPlan.."+validReverseLeaverPlan);
+        }
+        if(!validReverseLeaverPlan)
+        {
+            recentLeaverId=null;
+        }
+        if (countLinks>0 && identity!=null) 
+        {
+            plan = new ProvisioningPlan();
+            plan.setIdentity(identity);
+            links = idService.getLinks(identity,0,0);
+            List processedApps = new ArrayList();
+            HashMap roles = new HashMap();
+            for (Link link : links) 
+            {
+                if (link != null) 
+                {
+                    String appName= link.getApplicationName();
+                    LogEnablement.isLogDebugEnabled(logger,"...appName..");
+                    String nativeId = link.getNativeIdentity();
+                    LogEnablement.isLogDebugEnabled(logger,"...nativeId ="+nativeId);
+                    String psa="";
+                    psa=((String)link.getAttribute("psAccount"));
+                    LogEnablement.isLogDebugEnabled(logger,"...psa ="+psa);
+                    String iiqDisabled = "";
+                    iiqDisabled=ROADUtil.isLinkDisabled(link);
+                    LogEnablement.isLogDebugEnabled(logger,"...iiqDisabled ="+iiqDisabled);
+                    String iiqLocked = "";
+                    iiqLocked=ROADUtil.isLinkLocked(link);
+                    LogEnablement.isLogDebugEnabled(logger,"...iiqLocked ="+iiqLocked);
+                    List ar = addToProvisioningPlan(context,psa,applicationProcess,nativeId,appName,identity,iiqDisabled,iiqLocked,workflow,recentLeaverId,processedApps,roles, project);
+                    if (!ar.isEmpty() && plan != null) 
+                    {
+                        for (AccountRequest acctReq : ar) 
+                        {
+                            plan.add(acctReq);
+                            processedApps.add(link.getApplicationName());
+                        }
+                    }
+                    LogEnablement.isLogDebugEnabled(logger,"...processedApps ="+processedApps);
+                    LogEnablement.isLogDebugEnabled(logger,"...processed roles ="+roles);
+                }
+            }
+        }
+        if(identity!=null)
+        {
+            context.decache(identity);
+        }
+        if (null != plan && plan.getAllRequests() == null) 
+        {
+            plan = null;
+        }
+        LogEnablement.isLogDebugEnabled(logger,"Exit buildReverseTerminationPlan");
+        return plan;
+    }
+   /**
+     * Build Provisioning Plan Per Application Link
+     * @param context
+     * @param psa
+     * @param applicationProcess
+     * @param nativeId
+     * @param appName
+     * @param identity
+     * @param iiqDisabled
+     * @param iiqLocked
+     * @param workflow
+     * @param recentLeaverId
+     * @param processedApps
+     * @param roles
+     * @return
+     */
+    public List addToProvisioningPlan(SailPointContext context,String psa,String applicationProcess,String nativeId,String appName,
+    Identity identity,String iiqDisabled,String iiqLocked,Workflow workflow, String recentLeaverId, List processedApps, HashMap roles, ProvisioningProject project) 
+    {
+            LogEnablement.isLogDebugEnabled(logger,"Enter addToProvisioningPlan");
+            List allRequests = new ArrayList();
+            Application app = context.getObjectByName(Application.class, appName);
+            AccountRequest acctReq = null;
+            boolean skipAddAccountReq=false;
+            LogEnablement.isLogDebugEnabled(logger,"recentLeaverId..."+recentLeaverId);
+            LogEnablement.isLogDebugEnabled(logger,"appName..."+appName);
+            LogEnablement.isLogDebugEnabled(logger,"applicationProcess..."+applicationProcess);
+            if (app != null && applicationProcess!=null) 
+            {
+                Object extObj = app.getAttributeValue(applicationProcess);
+                String extSetting = (String) extObj;
+                LogEnablement.isLogDebugEnabled(logger,"application extSetting..."+extSetting);
+                String extendedRule = "";
+                String reqType = "";
+                if (extSetting == null) 
+                {
+                    ObjectConfig config = Application.getObjectConfig();
+                    if (config != null) 
+                    {
+                        extSetting = (String) config.getObjectAttribute(applicationProcess).getDefaultValue();
+                        //Default Value
+                        LogEnablement.isLogDebugEnabled(logger,"default extSetting..."+extSetting);
+                    }
+                }
+                if (applicationProcess.equalsIgnoreCase("reverseleaverProcess")) 
+                {
+                    extendedRule = "reverseTerminationExtendedRule";
+                    reqType = getRequestTypeNameReverseTermination(context, workflow);
+                    LogEnablement.isLogDebugEnabled(logger,"reqType..."+reqType);
+                }
+                else 
+                {
+                    extendedRule = "";
+                }
+                if (extSetting != null) 
+                {
+                    LogEnablement.isLogDebugEnabled(logger,"...nativeId ="+nativeId);
+                    LogEnablement.isLogDebugEnabled(logger,"...extSetting ="+extSetting);
+                    LogEnablement.isLogDebugEnabled(logger,"...processedApps ="+processedApps);
+                    if(recentLeaverId!=null && !processedApps.isEmpty()
+                    && processedApps.contains(appName))
+                    {
+                        Map populationMap=ReverseLeaverRuleLibrary.overrideApplicationReverseLeaverSettingsOnPopulationMatch(context, app,identity);
+                        if (populationMap!=null && populationMap.containsKey(ReverseLeaverRuleLibrary.OPTIONSREVTOKEN) && populationMap.get(ReverseLeaverRuleLibrary.OPTIONSREVTOKEN)!=null)
+                        {
+                            extSetting=populationMap.get(ReverseLeaverRuleLibrary.OPTIONSREVTOKEN);
+                            LogEnablement.isLogDebugEnabled(logger,"Override Application Debug extSetting.."+extSetting);
+                        }
+                        if(extSetting!=null && extSetting.equalsIgnoreCase("Restore All Access Immediately"))
+                        {
+                           //Skip Multiple Links / Application, In a request Id we will have all links to process
+                           LogEnablement.isLogDebugEnabled(logger,"...Skip Already Processed ="+appName);
+                           skipAddAccountReq=true;
+                        }
+                    }
+                    LogEnablement.isLogDebugEnabled(logger,"...skipAddAccountReq ="+skipAddAccountReq);
+                    if(!skipAddAccountReq)
+                    {
+                        allRequests=getAccountRequest(psa, extSetting, extendedRule, appName, nativeId, identity, iiqDisabled, iiqLocked, reqType,workflow,recentLeaverId,roles,processedApps, project);
+                    }
+                }//Ext Setting Not null
+            context.decache(app);
+        }                       
+        LogEnablement.isLogDebugEnabled(logger,"Exit addToProvisioningPlan");
+        return allRequests;
+    }
+    /**
+     * Get Request Type
+     * @param context
+     * @param workflow
+     * @return
+     */
+     public String getRequestTypeNameReverseTermination(SailPointContext context, Workflow workflow) {
+        String requestType = "REVERSE LEAVER FEATURE";
+        return requestType;
+    }
+    /**
+     * Execute Post Reverse Leaver Rule
+     * @param identityName
+     * @param project
+     * @param requestType
+     */
+    public void postReverseLeaverRule(String identityName, String requestType, ProvisioningProject project)
+    {
+        LogEnablement.isLogDebugEnabled(logger,"Start  postReverseLeaverRule" );
+        LogEnablement.isLogDebugEnabled(logger,"..identityName..."+identityName );
+        LogEnablement.isLogDebugEnabled(logger,"..requestType..."+requestType );
+        LogEnablement.isLogDebugEnabled(logger,"..project..."+project );
+        Map map = new HashMap();
+        //Common Configuration
+        map = ROADUtil.getCustomGlobalMap(context);
+        if(map!=null && map.containsKey("postReverseLeaverRule"))
+        {
+            String ruleName=map.get("postReverseLeaverRule");
+            if(ruleName!=null && ruleName.length()>0)
+            {
+            ROADUtil.invokePostExtendedRuleNoObjectReferences(context,null,ruleName, null,  requestType, null, null, null, identityName,null, project);
+            }
+         }
+        LogEnablement.isLogDebugEnabled(logger,"End  postReverseLeaverRule" );
+    }
+    
+    ]]></Source>
+</Rule>

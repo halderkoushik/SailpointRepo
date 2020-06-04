@@ -1,0 +1,195 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Interactive Request Provisioning Rules Library">
+  <Source><![CDATA[
+	
+	import java.util.List;
+	import org.apache.commons.logging.Log;
+	import org.apache.commons.logging.LogFactory;
+	import sailpoint.api.SailPointContext;
+	import sailpoint.object.Identity;
+	import sailpoint.object.ProvisioningPlan;
+	import sailpoint.object.ProvisioningProject;
+	import sailpoint.workflow.WorkflowContext;
+	import sailpoint.object.Workflow;
+	import sailpoint.object.Application;
+	import sailpoint.object.Bundle;
+	import sailpoint.object.Link;
+	import sailpoint.object.Schema;
+	import sailpoint.object.AttributeDefinition;
+	import sailpoint.object.ProvisioningPlan.AccountRequest;
+	import sailpoint.object.ProvisioningPlan.AttributeRequest;
+	import sailpoint.object.Attributes;
+	import sailpoint.object.Field;
+	import sailpoint.object.Form;
+	import sailpoint.object.WorkItem;
+	import sailpoint.tools.Util;
+	import sailpoint.api.IdentityService;
+	import sailpoint.rapidapponboarding.rule.WorkflowUtil;
+	import sailpoint.rapidapponboarding.logger.LogEnablement;
+	private Log plogger = LogFactory.getLog("rapidapponboarding.rules");
+	/**
+	 * Launch Extended Requestor Form Additionla Fields Provisoning Plan 
+	 * Fields that are part of requested application schema will be sent to the application
+	 * Fields that are not part of requested application schema will be sent to the application "Extended Form"
+	 * @param workflow
+	 * @param context
+	 * @param attr
+	 */
+public void launchExtendedRequestFormPlan(Workflow workflow,SailPointContext context, Attributes attr)
+{           
+  	LogEnablement.isLogDebugEnabled(plogger,"Enter launchExtendedRequestFormPlan");
+   	String identityName=null;
+ 	 ProvisioningProject project=null;
+		if (null != workflow && attr!=null) 
+			{	
+				project = (ProvisioningProject) workflow.get("project");
+				identityName=project.getIdentity();
+				if (null != project) 
+				{
+				 	List plans = project.getPlans(); 
+					if (null != plans && plans.size() > 0) 
+					{
+						for (ProvisioningPlan plan : plans) 
+						{
+							List acctReqs = plan.getAccountRequests();
+							if (null != acctReqs || !acctReqs.isEmpty()) 
+							{
+								for (AccountRequest acctReq : acctReqs) 
+								{
+									String appName = acctReq.getApplicationName();
+									 List attrRequests= acctReq.getAttributeRequests();
+									 if(attrRequests!=null && attrRequests.size()>0)
+									 {
+									 	for (AttributeRequest attrReq : attrRequests) 
+										{
+										     if (attrReq.getName().equalsIgnoreCase(ProvisioningPlan.ATT_IIQ_ASSIGNED_ROLES))
+											 {
+											    String roleName = (String) attrReq.getValue();
+											    Bundle bundle = context.getObjectByName(Bundle.class, roleName);
+											    if(bundle != null && bundle.getAttribute("formappName") != null) 
+											    {
+											           Map appSchemaAttrNameMap=getApplicationSchemaAttributes(((String)bundle.getAttribute("formappName")));
+											           if(!isBusinessRoleWithItRole(bundle) || isBusinessRoleInFormRole(bundle) ) 
+							    						{
+							    						 	ProvisioningPlan newPlan = new ProvisioningPlan();
+							    							//Start Manual Account Request
+							    							AccountRequest acctReqManual = new AccountRequest();
+							    							acctReqManual.setApplication("Extended Form");
+															acctReqManual.setOperation(ProvisioningPlan.AccountRequest.Operation.Modify);
+															Attributes args = new Attributes();
+															args.put("assignment", "true");
+															acctReqManual.setArguments(args);
+															//End Manual Account Request
+															//Start Direct Account Request
+							    							AccountRequest acctReqDirect = new AccountRequest();
+							    							acctReqDirect.setApplication(((String)bundle.getAttribute("formappName")));
+															acctReqDirect.setOperation(ProvisioningPlan.AccountRequest.Operation.Modify);
+															Attributes argsDir = new Attributes();
+															argsDir.put("assignment", "true");
+															acctReqDirect.setArguments(argsDir);
+															//End Direct Account Request
+							    				           for ( String key : attr.keySet() ) 
+															{
+															 	if(key.contains("FORM") )
+															    {
+															        //Start Manual or Direct Attribute Request
+																    AttributeRequest attrReqNeworDirect = new AttributeRequest();	
+																	int index=key.length();
+																	int formElementIndex=key.indexOf("IIQEXTENDEDFORMIIQ");
+																	String attrName=key.substring(formElementIndex+18, index);
+																	if(attrName!=null)
+																	{
+																		attrReqNeworDirect.setName(attrName);
+																		attrReqNeworDirect.setValue(attr.get(key));
+																		attrReqNeworDirect.setOperation(ProvisioningPlan.Operation.Add);
+																		//In case Form Field Name Matches With Schema Field Name, Add Attribute Request
+																		//To Direct Provisioning Account Request
+																		if(appSchemaAttrNameMap!=null && appSchemaAttrNameMap.containsKey(attrName))
+																		{
+																		    Boolean multiSchemaAttr=(Boolean)appSchemaAttrNameMap.get(attrName);
+																		    if(!multiSchemaAttr)
+																		    {
+																			    //It is not a multi-valued Schema Attribute
+																			    //Change Default Add Operation to Set
+																			    attrReqNeworDirect.setOperation(ProvisioningPlan.Operation.Set);
+																		    }
+																			acctReqDirect.add(attrReqNeworDirect);
+																		}
+																		else
+																		{
+																		    //No Match, Add Attribute Request to Manual or Ticket Based "Extended Form" Application
+																			acctReqManual.add(attrReqNeworDirect);
+																		}
+																	}
+															    }
+															}
+															if((acctReqManual!=null && !acctReqManual.isEmpty())||(acctReqDirect!=null && !acctReqDirect.isEmpty()) && identityName!=null)
+															{
+																if(acctReqManual!=null && !acctReqManual.isEmpty())
+																{
+																   newPlan.add(acctReqManual);
+																}
+																if(acctReqDirect!=null && !acctReqDirect.isEmpty())
+																{
+																   newPlan.add(acctReqDirect);
+																}
+																LogEnablement.isLogDebugEnabled(plogger,"Enter Direct or Manual Extended Form launchRequestManagerWorkflow ");
+																WorkflowUtil.launchRequestManagerWorkflow(context,identityName, newPlan,"false","",5,null, null, null,"FormRole",null);
+																LogEnablement.isLogDebugEnabled(plogger,"End Direct or Manual Extended Form launchRequestManagerWorkflow ");
+															}
+							    						}
+    											}
+    											if(bundle!=null)
+    											{
+    											context.decache(bundle);
+    											}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+			workflow.put("project",project);
+			LogEnablement.isLogDebugEnabled(plogger,"Exit launchExtendedRequestFormPlan " );
+}
+/**
+ * Get Application Schema Attribues in a Map
+ * @param appName
+ * @return
+ * @throws Exception
+ */
+public Map getApplicationSchemaAttributes (String appName) throws Exception 
+{
+  	Map map = new HashMap();
+  	if(appName!=null)
+  	{
+       Application app = context.getObjectByName(Application.class, appName);
+       if(app!=null)
+       {
+	        Schema schema = app.getAccountSchema();
+	        if(schema!=null)
+	        {
+		        List attributeDefinitions= schema.getAttributes();
+		        if(attributeDefinitions!=null)
+		        {
+		            	for(AttributeDefinition attributeDefinition:attributeDefinitions)
+		            	{
+			              	if(attributeDefinition!=null)
+			              	{
+				       	 		map.put(attributeDefinition.getName(),attributeDefinition.isMulti());
+				       	 	}
+				        }
+				}
+			}
+			context.decache(app);
+			}
+		}
+      return map;
+  }
+	
+	]]></Source>
+</Rule>

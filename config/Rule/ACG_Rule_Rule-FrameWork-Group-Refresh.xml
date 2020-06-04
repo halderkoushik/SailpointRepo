@@ -1,0 +1,190 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule-FrameWork-Group-Refresh" type="GroupAggregationRefresh">
+  <Description>This rule is used to set the owner or modify the account group before it is persisted to the database.</Description>
+  <Signature returnType="Object">
+    <Inputs>
+      <Argument name="log">
+        <Description>
+          The log object associated with the SailPointContext.
+        </Description>
+      </Argument>
+      <Argument name="context">
+        <Description>
+          A sailpoint.api.SailPointContext object that can be used to query the database if necessary.
+        </Description>
+      </Argument>
+      <Argument name="environment" type="Map">
+        <Description>
+          Arguments passed to the aggregation task.
+        </Description>
+      </Argument>
+      <Argument name="obj" type="ResourceObject">
+        <Description>
+          A sailpoint.object.ResourceObject generated from the application
+          and the ProvisioningPlan's ObjectRequest.
+        </Description>
+      </Argument>
+      <Argument name="accountGroup" type="ManagedAttribute">
+        <Description>
+          The account group being refreshed.
+        </Description>
+      </Argument>
+      <Argument name="groupApplication" type="Application">
+        <Description>
+          Application being aggregated.
+        </Description>
+      </Argument>
+    </Inputs>
+    <Returns>
+      <Argument name="accountGroup" type="ManagedAttribute">
+        <Description>
+          The refreshed account group object.
+        </Description>
+      </Argument>
+    </Returns>
+  </Signature>
+  <Source><![CDATA[
+  	import sailpoint.tools.Util;
+	import sailpoint.object.Attributes;
+	import sailpoint.rapidapponboarding.rule.AggregationRuleLibrary;
+	import sailpoint.rapidapponboarding.rule.ObjectConfigAttributesRuleLibrary;
+	HashMap params = new HashMap();
+	params.put("context", context);
+	params.put("accountGroup", accountGroup);
+	params.put("groupApplication", groupApplication);
+	params.put("obj", obj);
+	params.put("environment", environment);
+	//Step 1:Start Privileged Entitlement Data Classification
+    String privilegedAccessEnabled=ObjectConfigAttributesRuleLibrary.extendedAggrPrivEntEnabled(context);
+    String manualOverrideEnabled=ObjectConfigAttributesRuleLibrary.extendedAttrManualOverrideEnabled(context);
+	boolean privAccessEnabled=false;
+	boolean manualOverride=false;
+	boolean manualOverrideEnab=false;
+	Attributes groupSchemaAttrs=accountGroup.getAttributes();
+	String type=accountGroup.getType();
+	//The attr is picked up from application account schema
+	String attr=accountGroup.getAttribute();
+	Object text=accountGroup.getValue();
+	if(privilegedAccessEnabled!=null && privilegedAccessEnabled.length()>0 && privilegedAccessEnabled.equalsIgnoreCase("TRUE"))
+	{
+		privAccessEnabled=true;
+	}
+	if(manualOverrideEnabled!=null && manualOverrideEnabled.length()>0 && manualOverrideEnabled.equalsIgnoreCase("TRUE"))
+	{
+		manualOverrideEnab=true;
+	}
+    if(manualOverrideEnab && accountGroup!=null && accountGroup.getAttribute("manualOverride")!=null && ((String)accountGroup.getAttribute("manualOverride")).equalsIgnoreCase("TRUE"))
+    {
+    	manualOverride=true;
+    }
+	if(privAccessEnabled && !manualOverride)
+	{		
+		  String privilegedEntAttrExpression=groupApplication.getAttributeValue("privilegedEntAttrExpression");
+		  if(privilegedEntAttrExpression!=null && text!=null && attr!=null)
+		   {
+			  String[] entPrivilegedAttrExpressionArr = privilegedEntAttrExpression.split("#IIQEntitlementPrivileged#");
+			  String attrExpression=null;
+			  String regex=null;
+			  String operation=null;
+			  if(entPrivilegedAttrExpressionArr != null && entPrivilegedAttrExpressionArr.length == 3 && 
+			  Util.isNotNullOrEmpty(entPrivilegedAttrExpressionArr[0]) && Util.isNotNullOrEmpty(entPrivilegedAttrExpressionArr[1])
+			  && Util.isNotNullOrEmpty(entPrivilegedAttrExpressionArr[2]))
+			  {
+				 attrExpression=entPrivilegedAttrExpressionArr[0];
+				 regex=entPrivilegedAttrExpressionArr[1];
+				 operation=entPrivilegedAttrExpressionArr[2];
+				 if(attrExpression.contains("."))
+				 {
+				 	AggregationRuleLibrary.setPrivBirthEntsStrCompareDotNotation(attrExpression,attr,operation,text,regex,accountGroup,"entPrivileged",groupSchemaAttrs,type,groupApplication);
+				 }
+				 else
+				 {
+				 	AggregationRuleLibrary.setPrivBirthEntsStrCompare(attrExpression,attr,operation,text,regex,accountGroup,"entPrivileged",groupSchemaAttrs,groupApplication);
+				 }
+			  }
+			  else if(entPrivilegedAttrExpressionArr != null && entPrivilegedAttrExpressionArr.length == 2 && Util.isNotNullOrEmpty(entPrivilegedAttrExpressionArr[0]) && Util.isNotNullOrEmpty(entPrivilegedAttrExpressionArr[1]))
+			  {
+				 attrExpression=entPrivilegedAttrExpressionArr[0];
+				 regex=entPrivilegedAttrExpressionArr[1];
+				 if(attrExpression.contains("."))
+				 {
+				  	AggregationRuleLibrary.setPrivBirthEntsRegexDotNotation(attrExpression,attr,text,regex,accountGroup,"entPrivileged",groupSchemaAttrs,type,groupApplication);
+				 }
+				 else
+				 {
+				 	AggregationRuleLibrary.setPrivBirthEntsRegex(attrExpression,attr,text,regex,accountGroup,"entPrivileged",groupSchemaAttrs,groupApplication);
+				 }
+			  }
+		}
+	}
+	//End Privileged Entitlement Data Classification
+	//Step 2: Birthright Entitlement Data Classification
+	String joinerDisabled=ObjectConfigAttributesRuleLibrary.extendedAttrJoinerBirthrightAppDisabled(context);
+	boolean enabledJoiner=true;
+	if(joinerDisabled!=null && joinerDisabled.length()>0 && joinerDisabled.equalsIgnoreCase("TRUE"))
+	{
+		enabledJoiner=false;
+	}
+	if(enabledJoiner && !manualOverride)
+	{
+		String birthrightEntAttrExpression=groupApplication.getAttributeValue("birthrightEntAttrExpression");
+		if(birthrightEntAttrExpression!=null && text!=null && attr!=null)
+	   {
+		 String attrExpression=null;
+	     String regex=null;
+	     String operation=null;
+		 String[] entBirthrightAttrExpressionArr = birthrightEntAttrExpression.split("#IIQEntitlementBirthright#");
+		 if(entBirthrightAttrExpressionArr != null && entBirthrightAttrExpressionArr.length == 3 && Util.isNotNullOrEmpty(entBirthrightAttrExpressionArr[0]) 
+		 && Util.isNotNullOrEmpty(entBirthrightAttrExpressionArr[1]) && Util.isNotNullOrEmpty(entBirthrightAttrExpressionArr[2]))
+		  {
+			 attrExpression=entBirthrightAttrExpressionArr[0];
+			 regex=entBirthrightAttrExpressionArr[1];
+			 operation=entBirthrightAttrExpressionArr[2];
+			 if(attrExpression.contains("."))
+			 {
+			 	AggregationRuleLibrary.setPrivBirthEntsStrCompareDotNotation(attrExpression,attr,operation,text,regex,accountGroup,"isBirthright",groupSchemaAttrs,type,groupApplication);
+			 }
+			 else
+			 {
+		 	 	AggregationRuleLibrary.setPrivBirthEntsStrCompare(attrExpression,attr,operation,text,regex,accountGroup,"isBirthright",groupSchemaAttrs,groupApplication);
+		 	 }
+		  }
+		  else if(entBirthrightAttrExpressionArr != null && entBirthrightAttrExpressionArr.length == 2 && Util.isNotNullOrEmpty(entBirthrightAttrExpressionArr[0]) && Util.isNotNullOrEmpty(entBirthrightAttrExpressionArr[1]))
+		  {
+			 attrExpression=entBirthrightAttrExpressionArr[0];
+			 regex=entBirthrightAttrExpressionArr[1];
+			 if(attrExpression.contains("."))
+			 {
+			  	AggregationRuleLibrary.setPrivBirthEntsRegexDotNotation(attrExpression,attr,text,regex,accountGroup,"isBirthright",groupSchemaAttrs,type,groupApplication);
+			 }
+			 else
+			 {
+		     	AggregationRuleLibrary.setPrivBirthEntsRegex(attrExpression,attr,text,regex,accountGroup,"isBirthright",groupSchemaAttrs,groupApplication);
+		     }
+		  }
+		}
+	}
+	//End Birthright Entitlement Data Classification
+	//Step 3:Start Entitlement Logical Application Classification and Infrastructure/Technology Entitlement Requestability
+	String businessAppEnabled=ObjectConfigAttributesRuleLibrary.extendedAttrBusAppEnabled(context);
+	boolean enabledBusinessApp=false;
+	if(businessAppEnabled!=null && businessAppEnabled.length()>0 && businessAppEnabled.equalsIgnoreCase("TRUE"))
+	{
+		enabledBusinessApp=true;
+	}
+	String logicalAppEnabled=ObjectConfigAttributesRuleLibrary.extendedAttrLogicalAppEnabled(context);
+	boolean logApp=false;
+	if(logicalAppEnabled!=null && logicalAppEnabled.length()>0 && logicalAppEnabled.equalsIgnoreCase("TRUE"))
+	{
+		logApp=true;
+	}
+	if(logApp && enabledBusinessApp && !manualOverride)
+	{
+		AggregationRuleLibrary.setEntititlementRequestability(accountGroup,groupApplication);
+	}
+	//End Entitlement Logical Application Classification and Infrastructure/Technology Entitlement Requestability
+	accountGroup=AggregationRuleLibrary.runApGroupRefreshRuleRule(context,groupApplication,accountGroup,params);
+	return accountGroup;
+]]></Source>
+</Rule>

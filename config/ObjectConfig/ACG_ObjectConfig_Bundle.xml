@@ -42,9 +42,42 @@ a specific action within a target system.
                 <Reference class="sailpoint.object.SPRight" name="ManageEntitlementRoles"/>
               </RequiredRights>
             </RoleTypeDefinition>
+            <RoleTypeDefinition displayName="Birthright" icon="entitlementIcon" name="birthright" noAutoAssignment="true" noIIQ="true" noPermits="true" noRequirements="true" noSubs="true" notPermittable="true" notRequired="true">
+              <Description>Birthright Roles (Make sure they are marked as birthright)</Description>
+            </RoleTypeDefinition>
           </List>
         </value>
       </entry>
     </Map>
   </Attributes>
+  <ObjectAttribute categoryName="Joiner" defaultValue="" displayName="Birthright Role" editMode="Permanent" name="isBirthright" namedColumn="true">
+    <Description>Exclude Birthright Entitlements</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Approval" displayName="Requestor Form Application Name" editMode="Permanent" name="formappName">
+    <Description>Input Form For Requestor / Application</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Approval" displayName="IdentityIQ 1st Level Business Approvers" editMode="Permanent" name="roleBusApprovers" namedColumn="true">
+    <Description>Enter a comma separated  Cube Ids or WorkGroups</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Approval" defaultValue="" displayName="Omit or Override IdentityIQ 1st Level Business Approvers Rule" editMode="Permanent" name="roleBusApprovalRule">
+    <Description> This rule can be used to override 1st Level Business Approvers</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Approval" displayName="IdentityIQ 2nd Level Business Approvers" editMode="Permanent" name="additionalRoleBusApprovers" namedColumn="true">
+    <Description>Enter a comma separated  Cube Ids or WorkGroups</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Approval" defaultValue="" displayName="Omit or Override IdentityIQ 2nd Level Business Approvers Rule" editMode="Permanent" name="additionalRoleBusApprovalRule">
+    <Description> This rule can be used to override 2nd Level Business Approvers</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Multiple Acces Request Workflows" displayName="Accelerator Pack Enabled" editMode="Permanent" name="acceleratorPackEnabled">
+    <Description>Used to make sure access request is redirected to Accelerator Pack Wrapper Workflow</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Logical Applications" displayName="Logical Business Application Name" editMode="Permanent" name="appName" namedColumn="true">
+    <Description>Either Single or Comma separated Logical Business Aplications(Shared Databases, Shared Groups, etc)</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Privileged Role" defaultValue="" displayName="Privileged Role" editMode="Permanent" name="rolePrivileged" namedColumn="true">
+    <Description>Privileged Role</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Privileged Role" defaultValue="" displayName="Privileged Role Account Types" editMode="Permanent" name="apaccountType">
+    <Description>Comma Separated Privileged Role Types</Description>
+  </ObjectAttribute>
 </ObjectConfig>

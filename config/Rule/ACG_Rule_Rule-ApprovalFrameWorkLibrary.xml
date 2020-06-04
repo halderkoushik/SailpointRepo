@@ -1,0 +1,1952 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule-ApprovalFrameWorkLibrary">
+  <Source><![CDATA[
+	
+	import java.util.ArrayList;
+	import java.util.Arrays;
+	import java.util.HashMap;
+	import java.util.Iterator;
+	import java.util.LinkedHashMap;
+	import java.util.List;
+	import java.util.Map;
+	import java.util.Set;
+	import sailpoint.api.SailPointContext;
+	import sailpoint.object.Application;
+	import sailpoint.object.ApprovalItem;
+	import sailpoint.object.ApprovalSet;
+	import sailpoint.object.Attributes;
+	import sailpoint.object.Bundle;
+	import sailpoint.object.Comment;
+	import sailpoint.object.WorkItem;
+	import sailpoint.tools.Util;
+	import sailpoint.object.Filter;
+	import sailpoint.object.Form;
+	import sailpoint.object.Identity;
+	import sailpoint.object.ManagedAttribute;
+	import sailpoint.object.ProvisioningPlan;
+	import sailpoint.object.QueryOptions;
+	import sailpoint.object.Rule;
+	import sailpoint.object.Workflow;
+	import sailpoint.object.Workflow.Approval;
+	import sailpoint.rapidapponboarding.logger.LogEnablement;
+	import sailpoint.rapidapponboarding.rule.ApprovalRuleLibrary;
+	import sailpoint.rapidapponboarding.rule.ObjectConfigAttributesRuleLibrary;
+	import sailpoint.rapidapponboarding.rule.ROADUtil;
+	import sailpoint.rapidapponboarding.rule.WrapperRuleLibrary;
+	import sailpoint.tools.GeneralException;
+	import sailpoint.tools.xml.XMLObjectFactory;
+	import sailpoint.workflow.WorkflowContext;
+	import org.apache.commons.logging.Log;
+	import org.apache.commons.logging.LogFactory;
+	import sailpoint.rapidapponboarding.logger.LogEnablement;
+	Log dynamicApprovalLogger = LogFactory.getLog("rapidapponboarding.rules");
+	/**
+	 * 1st Level Manager Rule Exceptions
+	 * 
+	 * @param context
+	 * @param params
+	 * @return
+	 * @throws Exception 
+	 */
+	public Map skipOrOverrideorGetSupervisorLevelApprovals(
+			SailPointContext context, Map params) throws Exception {
+		return skipOrOverrideorGetSupervisorLevelApprovals(context,
+				(ApprovalItem)params.get("item"), (Workflow)params.get("workflow"),
+				(String)params.get("defaultApprovalMode"));
+	}
+	/**
+	 * 1st Level Manager Rule Exceptions
+	 * 
+	 * @param context
+	 * @param item
+	 * @param workflow
+	 * @param defaultApprovalMode
+	 * @return
+	 * @throws Exception 
+	 */
+	public Map skipOrOverrideorGetSupervisorLevelApprovals(
+			SailPointContext context, ApprovalItem item, Workflow workflow,
+			String defaultApprovalMode) throws Exception 
+	 {
+		LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"Enter skipOrOverrideorGetSupervisorLevelApprovals");
+		//Get Auto Approve Flag
+		Map commonMap = ROADUtil.getCustomGlobalMap(context);
+		boolean autoApprove=false;
+		if (commonMap != null && commonMap.containsKey("apEnableAutoApprovalsAccessAccountRequest")) 
+		{
+			String apEnableAutoApprovalsAccessAccountRequest = (String) commonMap.get("apEnableAutoApprovalsAccessAccountRequest");
+			LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"..apEnableAutoApprovalsAccessAccountRequest..."+apEnableAutoApprovalsAccessAccountRequest);
+			if(apEnableAutoApprovalsAccessAccountRequest!=null && apEnableAutoApprovalsAccessAccountRequest.equalsIgnoreCase("TRUE"))
+			{
+				autoApprove=true;
+			}
+		}
+		LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"..autoApprove..."+autoApprove);
+		String privilegedAccessInteractiveEnabled=ObjectConfigAttributesRuleLibrary.extendedAttrSkipManagerApprovalPrivelegedEnabled(context);
+		String privilegedAccessEnabled=ObjectConfigAttributesRuleLibrary.extendedAttrPrivRoleEntitlementEnabled(context);
+		boolean privAccessEnabled = false;
+		if (privilegedAccessInteractiveEnabled != null
+				&& privilegedAccessInteractiveEnabled.length() > 0
+				&& privilegedAccessInteractiveEnabled.equalsIgnoreCase("TRUE") &&
+				privilegedAccessEnabled != null
+				&& privilegedAccessEnabled.length() > 0
+				&& privilegedAccessEnabled.equalsIgnoreCase("TRUE")) {
+			privAccessEnabled = true;
+		}
+		//Default, Manager Approval Is Required
+		boolean needsApproval = true;
+		boolean managerIsRequester = false;
+		boolean isRole = false;
+		String rolePrivileged = null;
+		Map returnMap = new HashMap();
+		String approvers = "";
+		String saccountOwnerone = null;
+		Identity adminObj=null;
+		Identity saccountOwnerOneId = null;
+	    //Identity TYPE ENABLED
+		String identityTypeEnabled = ObjectConfigAttributesRuleLibrary.extendedAttrIdentityTypeEnabled(context);
+		boolean identityTypeEnab=false;
+		if(identityTypeEnabled!=null && identityTypeEnabled.length()>0 && identityTypeEnabled.equalsIgnoreCase("TRUE"))
+		{
+			identityTypeEnab=true;
+		}
+		String serviceAccountEnabled = ObjectConfigAttributesRuleLibrary.extendedAttrServiceAccountEnabled(context);
+		boolean servAccEnabled = false;
+		if (serviceAccountEnabled != null && serviceAccountEnabled.length() > 0
+				&& serviceAccountEnabled.equalsIgnoreCase("TRUE")) {
+			servAccEnabled = true;
+		}
+		String logicalAppEnabled=ObjectConfigAttributesRuleLibrary.extendedAttrLogicalAppEnabled(context);
+		boolean logApp = false;
+		if (logicalAppEnabled != null && logicalAppEnabled.length() > 0
+				&& logicalAppEnabled.equalsIgnoreCase("TRUE")) {
+			logApp = true;
+		}
+		if (item != null) {
+			String requestType = (String) workflow.get("requestType");
+			String identityName = (String) workflow.get("identityName");
+			String launcher = (String) workflow.get("launcher");
+			String managerName = null;
+			// If launcher is null get from workflow requestor
+			if (launcher == null) {
+				launcher = (String) workflow.get("requestor");
+			}
+			// Get Identity Cube Id
+			Identity id = context.getObjectByName(Identity.class, identityName);
+			// Start Service Cube Approval Logic
+			if (id != null && servAccEnabled) {
+				String serviceCube = (String) id.getAttribute("serviceCube");
+				if (serviceCube != null && serviceCube.equalsIgnoreCase("TRUE")) {
+					saccountOwnerone = (String) id.getAttribute("saccountOwnerone");
+					if(identityTypeEnab)
+					{
+						adminObj=id.getAdministrator();
+					}
+					// Check if one of the owner is there
+					if ((saccountOwnerone != null && saccountOwnerone.length() > 0) ||  adminObj!=null) {
+						if (saccountOwnerone != null) {
+							saccountOwnerOneId = context.getObjectByName(
+									Identity.class, saccountOwnerone);
+						}
+						// Step 1: Check if the one of the owner of the identity is the requestor
+						if (saccountOwnerOneId != null
+								&& saccountOwnerOneId.getName()
+										.equalsIgnoreCase(launcher)
+								 || (adminObj!=null && adminObj.getName().equalsIgnoreCase(launcher)) && autoApprove && ApprovalRuleLibrary.eSigDisabled(workflow)) {
+							needsApproval = false;
+							returnMap.put("ApprovalRequired",
+									Boolean.toString(needsApproval));
+							returnMap.put("Approvers", approvers);
+							LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"Exit skipOrOverrideorGetSupervisorLevelApprovals - one of the owner of the identity is the requestor:"
+									+ returnMap);
+							return returnMap;
+						}
+						// Step 2: Check if the owner one of the identity is the
+						// there and owner two is empty
+						else if (saccountOwnerOneId != null
+								&& adminObj == null) {
+							needsApproval = true;
+							returnMap.put("ApprovalRequired",
+									Boolean.toString(needsApproval));
+							returnMap.put("Approvers",
+									saccountOwnerOneId.getName());
+							LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"Exit skipOrOverrideorGetSupervisorLevelApprovals - owner one of the identity is the there and owner two is empty:"
+									+ returnMap);
+							return returnMap;
+						}
+						// Step 3: Check if the owner admin is
+						// there and owner one is empty
+						else if (adminObj != null
+								&& saccountOwnerOneId == null) {
+							needsApproval = true;
+							returnMap.put("ApprovalRequired",
+									Boolean.toString(needsApproval));
+							returnMap.put("Approvers",
+									adminObj.getName());
+							LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"Exit skipOrOverrideorGetSupervisorLevelApprovals - owner two of the identity is  there and owner one is empty:"
+									+ returnMap);
+							return returnMap;
+						}
+					}
+					// Step 4: Check if the both owners of the identity are not
+					// there and administrator is not there
+					else {
+						needsApproval = true;
+						approvers = "No Service Account Owner";
+						returnMap.put("ApprovalRequired",
+								Boolean.toString(needsApproval));
+						returnMap.put("Approvers", approvers);
+						LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"Exit skipOrOverrideorGetSupervisorLevelApprovals both owners  of the identity are not there:"
+								+ returnMap);
+						return returnMap;
+					}
+					if (saccountOwnerOneId != null) {
+						context.decache(saccountOwnerOneId);
+					}
+				}
+				context.decache(id);
+			}
+			// End Service Cube Approval Logic
+			// Step 1: Check if the manager of the identity is the requestor
+			if (id != null) {
+				Identity mgr = id.getManager();
+				if (mgr != null) {
+					managerName = mgr.getName();
+					// If manager is the requester, no manager approval is
+					// needed
+					if (managerName.equals(launcher) && autoApprove && ApprovalRuleLibrary.eSigDisabled(workflow)) {
+						needsApproval = false;
+						managerIsRequester = true;
+						LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"The manager " + managerName
+								+ " for user " + identityName
+								+ " is the requester. Manager approval skipped");
+					}
+					// If not, then set the manager name as the approver for now
+					else {
+						approvers = mgr.getName();
+					}
+				}
+				// If no manager exists, then assign to No Manager Found
+				// workgroup
+				else {
+					LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"No manager found for user " + identityName);
+					approvers = "No Manager Found";
+				}
+			}
+			// If the manager is not the requester, then proceed to check the
+			// skipSupervisorApprovalRule rule
+			if (!managerIsRequester) {
+				// Step 2: Check if the application of the approval item
+				// contains a skipSupervisorApprovalRule
+				String appName = item.getApplicationName();
+				// If the approval item contains a role, then check the role's
+				// appName extended attribute for the application name
+				if (item.getName() != null
+						&& (item.getName().equalsIgnoreCase(
+								ProvisioningPlan.ATT_IIQ_ASSIGNED_ROLES) || item
+								.getName()
+								.equalsIgnoreCase(
+										ProvisioningPlan.ATT_IIQ_DETECTED_ROLES))
+						&& item.getDisplayName() != null
+						&& item.getDisplayName().equalsIgnoreCase("Role")) {
+					LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"Approval item contains a role. Getting role appName");
+					String roleName = "";
+					if (item.getValue() instanceof List) {
+						if (((List) item.getValue()).size() > 0) {
+							roleName = ((List) item.getValue()).get(0).toString();
+						}
+					} else {
+						roleName = item.getValue().toString();
+					}
+					Bundle role = context.getObjectByName(Bundle.class,
+							roleName);
+					if (role != null) {
+						isRole = true;
+						appName = (String) role.getAttribute("appName");
+						if (privAccessEnabled) {
+							rolePrivileged = (String) role
+									.getAttribute("rolePrivileged");
+						} else {
+							rolePrivileged = null;
+						}
+						if (appName != null && logApp) {
+							Application applicationFound = context
+									.getObjectByName(Application.class, appName);
+							// appName is a logical application
+							// appName is comma separated logical applications
+							// appName is comma separated logical and physical
+							// applications
+							// appName is comma separated physical applications
+							if (applicationFound == null) {
+								// Defined appName doesn't exist
+								appName = ROADUtil.setRoleAppName(
+										role.getRequirements(),
+										role.getApplications());
+							} else {
+								context.decache(applicationFound);
+							}
+						} else {
+							// appName is not defined on role or Logical
+							// Application is Disabled
+							appName = ROADUtil.setRoleAppName(
+									role.getRequirements(),
+									role.getApplications());
+						}
+						LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"Application name from role: " + appName);
+						context.decache(role);
+					}
+				}
+				LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"Searching for appName: " + appName);
+				Application application = null;
+				// Application Name for Entitlement is from ApprovalSet,
+				// ApprovalItem
+				if (appName == null) {
+					needsApproval = true;
+				} else {
+					application = context.getObjectByName(Application.class,
+							appName);
+					if (application != null) {
+						Boolean omitmanagerPrivgaccess = (Boolean) application
+								.getAttributeValue("omitmanagerPrivgaccess");
+						if (application
+								.getAttributeValue("skipSupervisorApproval") != null
+								&& application
+										.getAttributeValue(
+												"skipSupervisorApproval")
+										.toString().trim().length() > 0) {
+							String skipSupervisorRuleName = (String) application
+									.getAttributeValue("skipSupervisorApproval");
+							Map resultMap = (Map) executeRuleFromMappings(context,workflow,
+									skipSupervisorRuleName, appName,
+									identityName, requestType, item);
+							if (resultMap != null
+									&& resultMap
+											.containsKey("ApprovalRequired")) {
+								needsApproval = Boolean.parseBoolean((String) resultMap
+										.get("ApprovalRequired"));
+								if (!needsApproval) {
+									//ApprovalItem State as WorkItem.State.Finished
+									item.approve();
+									item.add(new Comment(
+											"Auto approve skip manager approval",
+											"spadmin"));
+								}
+							}
+							// If the map returned by the rule is null or
+							// doesn't contain the ApprovalRequired key, then
+							// manager approval is required
+							else {
+								needsApproval = true;
+							}
+							// If there is a specific approver or list of
+							// supervisor approvers then use that
+							if (resultMap != null
+									&& resultMap.containsKey("Approvers")
+									&& resultMap.get("Approvers").toString()
+											.trim().length() > 0) {
+								approvers = (String) resultMap.get("Approvers");
+							}
+						}
+						// If skipSupervisorApprovalRule is not defined, then
+						// manager approval is required
+						else {
+							LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"skipSupervisorApprovalRule rule is not defined for application "
+									+ appName);
+							needsApproval = true;
+							if (privAccessEnabled
+									&& omitmanagerPrivgaccess != null
+									&& omitmanagerPrivgaccess.booleanValue()) {
+								if (isRole
+										&& rolePrivileged != null
+										&& rolePrivileged
+												.equalsIgnoreCase("TRUE")) {
+									// Skip Privileged Access Approval
+									item.approve();
+									item.add(new Comment(
+											"Auto approve role privileged access skip manager approval",
+											"spadmin"));
+									needsApproval = false;
+								} else if (!isRole && isEntPrivileged(context,item)) {
+									// Skip Privileged Access Approval
+									item.approve();
+									item.add(new Comment(
+											"Auto approve entitlement privileged access skip manager approval",
+											"spadmin"));
+									needsApproval = false;
+								}
+							}
+						}
+						context.decache(application);
+					}
+				}
+			}
+		}
+		returnMap.put("ApprovalRequired", Boolean.toString(needsApproval));
+		returnMap.put("Approvers", approvers);
+		LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"Exit skipOrOverrideorGetSupervisorLevelApprovals - Result:"+ returnMap);
+		return returnMap;
+	}
+	/**
+	 * 1st Level Application Approval Level Exceptions
+	 * 
+	 * @param context
+	 * @param params
+	 * @return
+	 * @throws Exception 
+	 */
+	public Map skipOrOverrideorGetApplicationFirstLevelApprovals(
+			SailPointContext context, Map params) throws Exception {
+		return skipOrOverrideorGetApplicationFirstLevelApprovals(context,
+				(ApprovalItem)params.get("item"), (String)params.get("applicationName"),
+				(Workflow)params.get("workflow"), (String)params.get("defaultApprovalMode"));
+	}
+	/**
+	 * 1st Level Application Approval Level Exceptions
+	 * 
+	 * @param context
+	 * @param item
+	 * @param applicationName
+	 * @param workflow
+	 * @param defaultApprovalMode
+	 * @return
+	 * @throws Exception
+	 */
+	public Map skipOrOverrideorGetApplicationFirstLevelApprovals(
+			SailPointContext context, ApprovalItem item,
+			String applicationName, Workflow workflow,
+			String defaultApprovalMode) throws Exception {
+		LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"Enter skipOrOverrideorGetApplicationFirstLevelApprovals");
+		boolean needsApproval = false;
+		String attributeName = "appBusApprovers";
+		String attributeRuleName = "appBusApprovalRule";
+		if (Util.isNullOrEmpty(applicationName)) {
+			applicationName = item.getApplicationName();
+		}
+		String appBusApprovers = "";
+		String appBusApproversRule = "";
+		Map returnMap = new HashMap();
+		String approvers = "";
+		Application app = context.getObjectByName(Application.class,
+				applicationName);
+		if (app != null) {
+			appBusApprovers = (String) app.getAttributeValue(attributeName);
+			appBusApproversRule = (String) app
+					.getAttributeValue(attributeRuleName);
+			context.decache(app);
+		}
+		LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"Application name: " + applicationName
+				+ " appBusApprovers= " + appBusApprovers
+				+ " appBusApproversRule= " + appBusApproversRule);
+		Rule appRule = context.getObjectByName(Rule.class, appBusApproversRule);
+		if (appRule != null) {
+			String requestType = (String) workflow.get("requestType");
+			String identityName = (String) workflow.get("identityName");
+			Map mpRule = (Map) executeRuleFromMappings(context,workflow,appRule.getName(),
+					applicationName, identityName, requestType, item);
+			if (mpRule == null || mpRule.isEmpty()) {
+				needsApproval = false;
+			} else {
+				if (mpRule.containsKey("ApprovalRequired")) {
+					if (mpRule.get("ApprovalRequired").toString()
+							.equalsIgnoreCase("true"))
+						needsApproval = true;
+					else {
+						needsApproval = false;
+					}
+				} else {
+					needsApproval = false;
+				}
+				if (mpRule != null
+						&& mpRule.containsKey("Approvers")
+						&& mpRule.get("Approvers").toString().trim().length() > 0) {
+					approvers = (String) mpRule.get("Approvers");
+				}
+			}
+			context.decache(appRule);
+		} else {
+			if (appBusApprovers != null && !appBusApprovers.isEmpty()) {
+				needsApproval = true;
+				approvers = appBusApprovers;
+			} else {
+				needsApproval = false;
+			}
+		}
+		returnMap.put("ApprovalRequired", Boolean.toString(needsApproval));
+		returnMap.put("Approvers", approvers);
+		LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"Exit skipOrOverrideorGetApplicationFirstLevelApprovals: "+ returnMap);
+		return returnMap;
+	}
+	/**
+	 * 2nd Level Application Approval Level Exceptions
+	 * 
+	 * @param context
+	 * @param params
+	 * @return
+	 * @throws Exception 
+	 */
+	public Map skipOrOverrideorGetApplicationSecondLevelApprovals(
+			SailPointContext context, Map params) throws Exception {
+		return skipOrOverrideorGetApplicationSecondLevelApprovals(context,
+				(ApprovalItem)params.get("item"), (String)params.get("applicationName"),
+				(Workflow)params.get("workflow"), (String)params.get("defaultApprovalMode"));
+	}
+	/**
+	 * 2nd Level Application Approval Level Exceptions
+	 * 
+	 * @param context
+	 * @param item
+	 * @param applicationName
+	 * @param workflow
+	 * @param defaultApprovalMode
+	 * @return
+	 * @throws Exception
+	 */
+	public Map skipOrOverrideorGetApplicationSecondLevelApprovals(
+			SailPointContext context, ApprovalItem item,
+			String applicationName, Workflow workflow,
+			String defaultApprovalMode) throws Exception {
+		LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"Enter skipOrOverrideorGetApplicationSecondLevelApprovals");
+		boolean needsApproval = false;
+		String attributeName = "additionalAppBusApprovers";
+		String attributeRuleName = "additionalAppBusApprovalRule";
+		if (Util.isNullOrEmpty(applicationName)) {
+			applicationName = item.getApplicationName();
+		}
+		String appBusApprovers = "";
+		String appBusApproversRule = "";
+		Map returnMap = new HashMap();
+		String approvers = "";
+		Application app = context.getObjectByName(Application.class,
+				applicationName);
+		if (app != null) {
+			appBusApprovers = (String) app.getAttributeValue(attributeName);
+			appBusApproversRule = (String) app
+					.getAttributeValue(attributeRuleName);
+			context.decache(app);
+		}
+		Rule appRule = context.getObjectByName(Rule.class, appBusApproversRule);
+		if (appRule != null) {
+			String requestType = (String) workflow.get("requestType");
+			String identityName = (String) workflow.get("identityName");
+			Map mpRule = (Map) executeRuleFromMappings(context,workflow,appRule.getName(),
+					applicationName, identityName, requestType, item);
+			if (mpRule == null || mpRule.isEmpty()) {
+				needsApproval = false;
+			} else {
+				if (mpRule.containsKey("ApprovalRequired")) {
+					if (mpRule.get("ApprovalRequired").toString()
+							.equalsIgnoreCase("true"))
+						needsApproval = true;
+					else {
+						needsApproval = false;
+					}
+				} else {
+					needsApproval = false;
+				}
+				if (mpRule != null
+						&& mpRule.containsKey("Approvers")
+						&& mpRule.get("Approvers").toString().trim().length() > 0) {
+					approvers = (String) mpRule.get("Approvers");
+				}
+			}
+			context.decache(appRule);
+		} else {
+			if (appBusApprovers != null && !appBusApprovers.isEmpty()) {
+				needsApproval = true;
+				approvers = appBusApprovers;
+			} else {
+				needsApproval = false;
+			}
+		}
+		returnMap.put("ApprovalRequired", Boolean.toString(needsApproval));
+		returnMap.put("Approvers", approvers);
+		LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"Exit skipOrOverrideorGetApplicationSecondLevelApprovals "
+				+ returnMap);
+		return returnMap;
+	}
+	/**
+	 * 1st Level Entitlement Approval Level Exceptions
+	 * 
+	 * @param context
+	 * @param params
+	 * @return
+	 * @throws Exception 
+	 */
+	public Map skipOrOverrideorGetEntitlementFirstLevelApprovals(
+			SailPointContext context, Map params) throws Exception {
+		return skipOrOverrideorGetEntitlementFirstLevelApprovals(context,
+				(ApprovalItem)params.get("item"), (Workflow)params.get("workflow"),
+				(String)params.get("defaultApprovalMode"));
+	}
+	/**
+	 * 1st Level Entitlement Approval Level Exceptions
+	 * 
+	 * @param context
+	 * @param item
+	 * @param workflow
+	 * @param defaultApprovalMode
+	 * @return
+	 * @throws Exception
+	 */
+	public Map skipOrOverrideorGetEntitlementFirstLevelApprovals(
+			SailPointContext context, ApprovalItem item, Workflow workflow,
+			String defaultApprovalMode) throws Exception {
+		LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"Enter skipOrOverrideorGetEntitlementFirstLevelApprovals");
+		boolean needsApproval = false;
+		String name = item.getName();
+		Object val = item.getValue();
+		String attributeName = "entBusApprovers";
+		String attributeRuleName = "entBusApprovalRule";
+		String entBusApprovers = "";
+		String entBusApproversRule = "";
+		String application = item.getApplicationName();
+		Map returnMap = new HashMap();
+		String approvers = "";
+		String lVal = "";
+		if (val instanceof String) {
+			lVal = (String) val;
+		} else if (val instanceof List) {
+			if (((List) val).size() > 1) {
+				dynamicApprovalLogger.warn("Has more than one item.  ");
+			}
+			lVal = ((List) val).get(0).toString();
+		}
+		QueryOptions qo = new QueryOptions();
+		Filter f1 = Filter.eq("attribute", name);
+		Filter f2 = Filter.eq("value", lVal);
+		Filter f3 = Filter.eq("application.name", application);
+		qo.addFilter(f1);
+		qo.addFilter(f2);
+		qo.addFilter(f3);
+		ManagedAttribute mat = null;
+		Iterator resultIterator = (Iterator) context.search(ManagedAttribute.class, qo);
+		if (resultIterator != null && resultIterator.hasNext()) {
+			mat = (ManagedAttribute) resultIterator.next();
+		}
+		if (mat != null) {
+			entBusApprovers = (String) mat.getAttribute(attributeName);
+			entBusApproversRule = (String) mat.getAttribute(attributeRuleName);
+		}
+		if (mat != null) {
+			context.decache(mat);
+		}
+		Util.flushIterator(resultIterator);
+		Rule appRule = context.getObjectByName(Rule.class, entBusApproversRule);
+		if (appRule != null) {
+			String requestType = (String) workflow.get("requestType");
+			String identityName = (String) workflow.get("identityName");
+			Map mpRule = (Map) executeRuleFromMappings(context,workflow,appRule.getName(),
+					application, identityName, requestType, item);
+			if (mpRule == null || mpRule.isEmpty()) {
+				needsApproval = false;
+			} else {
+				if (mpRule.containsKey("ApprovalRequired")) {
+					if (mpRule.get("ApprovalRequired").toString()
+							.equalsIgnoreCase("true"))
+						needsApproval = true;
+					else {
+						needsApproval = false;
+					}
+				} else {
+					needsApproval = false;
+				}
+				if (mpRule != null
+						&& mpRule.containsKey("Approvers")
+						&& mpRule.get("Approvers").toString().trim().length() > 0) {
+					approvers = (String) mpRule.get("Approvers");
+				}
+			}
+			context.decache(appRule);
+		} else {
+			if (entBusApprovers != null && !entBusApprovers.isEmpty()) {
+				needsApproval = true;
+				approvers = entBusApprovers;
+			} else {
+				needsApproval = false;
+			}
+		}
+		returnMap.put("ApprovalRequired", Boolean.toString(needsApproval));
+		returnMap.put("Approvers", approvers);
+		LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"Exit skipOrOverrideorGetEntitlementFirstLevelApprovals "
+				+ returnMap);
+		return returnMap;
+	}
+	/**
+	 * 2nd Level Entitlement Approval Level Exceptions
+	 * 
+	 * @param context
+	 * @param params
+	 * @return
+	 * @throws Exception 
+	 */
+	public Map skipOrOverrideorGetEntitlementSecondLevelApprovals(
+			SailPointContext context, Map params) throws Exception {
+		return skipOrOverrideorGetEntitlementSecondLevelApprovals(context,
+				(ApprovalItem)params.get("item"), (Workflow)params.get("workflow"),
+				(String)params.get("defaultApprovalMode"));
+	}
+	/**
+	 * 2nd Level Entitlement Approval Level Exceptions
+	 * 
+	 * @param context
+	 * @param item
+	 * @param workflow
+	 * @param defaultApprovalMode
+	 * @return
+	 * @throws Exception
+	 */
+	public Map skipOrOverrideorGetEntitlementSecondLevelApprovals(
+			SailPointContext context, ApprovalItem item, Workflow workflow,
+			String defaultApprovalMode) throws Exception {
+		LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"Enter skipOrOverrideorGetEntitlementSecondLevelApprovals");
+		boolean needsApproval = false;
+		String name = item.getName();
+		Object val = item.getValue();
+		String attributeName = "additionalEntBusApprovers";
+		String attributeRuleName = "additionalEntBusApproversRule";
+		String entBusApprovers = "";
+		String entBusApproversRule = "";
+		String application = item.getApplicationName();
+		Map returnMap = new HashMap();
+		String approvers = "";
+		String lVal = "";
+		if (val instanceof String) {
+			lVal = (String) val;
+		} else if (val instanceof List) {
+			if (((List) val).size() > 1) {
+				dynamicApprovalLogger.warn("Has more than one item.  ");
+			}
+			lVal = ((List) val).get(0).toString();
+		}
+		QueryOptions qo = new QueryOptions();
+		Filter f1 = Filter.eq("attribute", name);
+		Filter f2 = Filter.eq("value", lVal);
+		Filter f3 = Filter.eq("application.name", application);
+		qo.addFilter(f1);
+		qo.addFilter(f2);
+		qo.addFilter(f3);
+		ManagedAttribute mat = null;
+		Iterator resultIterator = context.search(ManagedAttribute.class, qo);
+		if (resultIterator.hasNext()) {
+			mat = (ManagedAttribute) resultIterator.next();
+		}
+		if (mat != null) {
+			entBusApprovers = (String) mat.getAttribute(attributeName);
+			entBusApproversRule = (String) mat.getAttribute(attributeRuleName);
+		}
+		if (mat != null) {
+			context.decache(mat);
+		}
+		Util.flushIterator(resultIterator);
+		Rule appRule = context.getObjectByName(Rule.class, entBusApproversRule);
+		if (appRule != null) {
+			String requestType = (String) workflow.get("requestType");
+			String identityName = (String) workflow.get("identityName");
+			Map mpRule = (Map) executeRuleFromMappings(context,workflow,appRule.getName(),
+					application, identityName, requestType, item);
+			if (mpRule == null || mpRule.isEmpty()) {
+				needsApproval = false;
+			} else {
+				if (mpRule.containsKey("ApprovalRequired")) {
+					if (mpRule.get("ApprovalRequired").toString()
+							.equalsIgnoreCase("true"))
+						needsApproval = true;
+					else {
+						needsApproval = false;
+					}
+				} else {
+					needsApproval = false;
+				}
+				if (mpRule != null
+						&& mpRule.containsKey("Approvers")
+						&& mpRule.get("Approvers").toString().trim().length() > 0) {
+					approvers = (String) mpRule.get("Approvers");
+				}
+			}
+			context.decache(appRule);
+		} else {
+			if (entBusApprovers != null && !entBusApprovers.isEmpty()) {
+				needsApproval = true;
+				approvers = entBusApprovers;
+			} else {
+				needsApproval = false;
+			}
+		}
+		returnMap.put("ApprovalRequired", Boolean.toString(needsApproval));
+		returnMap.put("Approvers", approvers);
+		LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"Exit skipOrOverrideorGetEntitlementSecondLevelApprovals "
+				+ returnMap);
+		return returnMap;
+	}
+	/**
+	 * 1 Level Role Approval Level Exceptions
+	 * 
+	 * @param context
+	 * @param params
+	 * @return
+	 * @throws Exception 
+	 */
+	public Map skipOrOverrideorGetRoleFirstLevelApprovals(
+			SailPointContext context, Map params) throws Exception {
+		return skipOrOverrideorGetRoleFirstLevelApprovals(context,
+				(ApprovalItem)params.get("item"), (Workflow)params.get("workflow"),
+				(String)params.get("defaultApprovalMode"));
+	}
+	/**
+	 * 1 Level Role Approval Level Exceptions
+	 * 
+	 * @param context
+	 * @param item
+	 * @param workflow
+	 * @param defaultApprovalMode
+	 * @return
+	 * @throws Exception
+	 */
+	public Map skipOrOverrideorGetRoleFirstLevelApprovals(
+			SailPointContext context, ApprovalItem item, Workflow workflow,
+			String defaultApprovalMode) throws Exception {
+		LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"Enter skipOrOverrideorGetRoleFirstLevelApprovals");
+		boolean needsApproval = false;
+		String attributeName = "roleBusApprovers";
+		String attributeRuleName = "roleBusApprovalRule";
+		String roleBusApprovers = "";
+		String roleBusApproversRule = "";
+		Map returnMap = new HashMap();
+		String approvers = "";
+		Object val = item.getValue();
+		String lVal = "";
+		if (val instanceof String) {
+			lVal = (String) val;
+		} else if (val instanceof List) {
+			if (((List) val).size() > 1) {
+				dynamicApprovalLogger.warn("Has more than one item.  ");
+			}
+			lVal = ((List) val).get(0).toString();
+		}
+		Bundle bun = context.getObjectByName(Bundle.class, lVal);
+		if (bun != null) {
+			roleBusApprovers = (String) bun.getAttribute(attributeName);
+			roleBusApproversRule = (String) bun.getAttribute(attributeRuleName);
+			String fallbackAppName = roadGetFallbackApplicationName(context,
+					item);
+			Rule appRule = context.getObjectByName(Rule.class,
+					roleBusApproversRule);
+			if (appRule != null) {
+				String requestType = (String) workflow.get("requestType");
+				String identityName = (String) workflow.get("identityName");
+				Map mpRule = (Map) executeRuleFromMappings(context,workflow,appRule.getName(),
+						fallbackAppName, identityName, requestType, item);
+				if (mpRule == null || mpRule.isEmpty()) {
+					needsApproval = false;
+				} else {
+					if (mpRule.containsKey("ApprovalRequired")) {
+						if (mpRule.get("ApprovalRequired").toString()
+								.equalsIgnoreCase("true"))
+							needsApproval = true;
+						else {
+							needsApproval = false;
+						}
+					} else {
+						needsApproval = false;
+					}
+					if (mpRule != null
+							&& mpRule.containsKey("Approvers")
+							&& mpRule.get("Approvers").toString().trim()
+									.length() > 0) {
+						approvers = (String) mpRule.get("Approvers");
+					}
+				}
+				context.decache(appRule);
+			} else {
+				if (roleBusApprovers != null && !roleBusApprovers.isEmpty()) {
+					needsApproval = true;
+					approvers = roleBusApprovers;
+				} else {
+					needsApproval = false;
+					if (bun != null
+							&& bun.getType().equalsIgnoreCase("business")) {
+						returnMap
+								.put("FallBackApproval",
+										"ApplicationBusApprovers,AdditionalApplicationBusApprovers");
+						returnMap.put("FallBackApprovalAppName",
+								fallbackAppName);
+					}
+				}
+			}
+			context.decache(bun);
+		}
+		returnMap.put("ApprovalRequired", Boolean.toString(needsApproval));
+		returnMap.put("Approvers", approvers);
+		LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"Exit skipOrOverrideorGetRoleFirstLevelApprovals "
+				+ returnMap);
+		return returnMap;
+	}
+	/**
+	 * 2nd Level Role Approval Level Exceptions
+	 * 
+	 * @param context
+	 * @param params
+	 * @return
+	 * @throws Exception 
+	 */
+	public Map skipOrOverrideorGetRoleSecondLevelApprovals(
+			SailPointContext context, Map params) throws Exception {
+		return skipOrOverrideorGetRoleSecondLevelApprovals(context,
+				(ApprovalItem)params.get("item"), (Workflow)params.get("workflow"),
+				(String)params.get("defaultApprovalMode"));
+	}
+	/**
+	 * 2nd Level Role Approval Level Exceptions
+	 * 
+	 * @param context
+	 * @param item
+	 * @param workflow
+	 * @param defaultApprovalMode
+	 * @return
+	 * @throws Exception
+	 */
+	public Map skipOrOverrideorGetRoleSecondLevelApprovals(
+			SailPointContext context, ApprovalItem item, Workflow workflow,
+			String defaultApprovalMode) throws Exception {
+		LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"Enter skipOrOverrideorGetRoleSecondLevelApprovals");
+		boolean needsApproval = false;
+		String attributeName = "additionalRoleBusApprovers";
+		String attributeRuleName = "additionalRoleBusApprovalRule";
+		String additionalRoleBusApprovers = "";
+		String roleBusApproversRule = "";
+		Map returnMap = new HashMap();
+		String approvers = "";
+		Object val = item.getValue();
+		String lVal = "";
+		if (val instanceof String) {
+			lVal = (String) val;
+		} else if (val instanceof List) {
+			if (((List) val).size() > 1) {
+				dynamicApprovalLogger.warn("Has more than one item.  ");
+			}
+			lVal = ((List) val).get(0).toString();
+		}
+		Bundle bun = context.getObjectByName(Bundle.class, lVal);
+		if (bun != null) {
+			additionalRoleBusApprovers = (String) bun.getAttribute(attributeName);
+			roleBusApproversRule = (String) bun.getAttribute(attributeRuleName);
+			String fallbackAppName = roadGetFallbackApplicationName(context,
+					item);
+			Rule appRule = context.getObjectByName(Rule.class,
+					roleBusApproversRule);
+			if (appRule != null) {
+				String requestType = (String) workflow.get("requestType");
+				String identityName = (String) workflow.get("identityName");
+				Map mpRule = (Map) executeRuleFromMappings(context,workflow,appRule.getName(),
+						fallbackAppName, identityName, requestType, item);
+				if (mpRule == null || mpRule.isEmpty()) {
+					needsApproval = false;
+				} else {
+					if (mpRule.containsKey("ApprovalRequired")) {
+						if (mpRule.get("ApprovalRequired").toString()
+								.equalsIgnoreCase("true"))
+							needsApproval = true;
+						else {
+							needsApproval = false;
+						}
+					} else {
+						needsApproval = false;
+					}
+					if (mpRule != null
+							&& mpRule.containsKey("Approvers")
+							&& mpRule.get("Approvers").toString().trim()
+									.length() > 0) {
+						approvers = (String) mpRule.get("Approvers");
+					}
+				}
+				context.decache(appRule);
+			} else {
+				if (additionalRoleBusApprovers != null && !additionalRoleBusApprovers.isEmpty()) {
+					needsApproval = true;
+					approvers = additionalRoleBusApprovers;
+				} else {
+					needsApproval = false;
+				}
+			}
+			context.decache(bun);
+		}
+		returnMap.put("ApprovalRequired", Boolean.toString(needsApproval));
+		returnMap.put("Approvers", approvers);
+		LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"Exit skipOrOverrideorGetRoleSecondLevelApprovals "
+				+ returnMap);
+		return returnMap;
+	}
+	/**
+	 * Batch Approval Level Exceptions
+	 * 
+	 * @param context
+	 * @param params
+	 * @return
+	 * @throws Exception 
+	 */
+	public Map skiporGetBatchLevelApprovals(SailPointContext context, Map params) throws Exception {
+		return skiporGetBatchLevelApprovals(context, (ApprovalItem)params.get("item"),
+				(Workflow)params.get("workflow"), (String)params.get("defaultApprovalMode"));
+	}
+	/**
+	 * Batch Approval Level Exceptions
+	 * 
+	 * @param context
+	 * @param item
+	 * @param workflow
+	 * @param defaultApprovalMode
+	 * @return
+	 * @throws Exception
+	 */
+	public Map skiporGetBatchLevelApprovals(SailPointContext context,
+			ApprovalItem item, Workflow workflow, String defaultApprovalMode)
+			throws Exception {
+		LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"Enter skiporGetBatchLevelApprovals");
+		boolean needsApproval = !ApprovalRuleLibrary.skipBatchApprovals(context, workflow,"Operations");
+		Map returnMap = new HashMap();
+		returnMap.put("ApprovalRequired", Boolean.toString(needsApproval));
+		returnMap.put("Approvers", "");
+		return returnMap;
+	}
+	/**
+	 * Is Privileged Entitlement
+	 * 
+	 * @param item
+	 * @return
+	 * @throws Exception
+	 */
+	public boolean isEntPrivileged(SailPointContext context,ApprovalItem item) throws Exception {
+		LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"Enter isEntPrivileged");
+		boolean result = false;
+		String name = item.getName();
+		Object val = item.getValue();
+		String application = item.getApplicationName();
+		String lVal = "";
+		if (val instanceof String) {
+			lVal = (String) val;
+		} else if (val instanceof List) {
+			if (((List) val).size() > 1) {
+				dynamicApprovalLogger.warn("Has more than one item.  ");
+			}
+			lVal = ((List) val).get(0).toString();
+		}
+		QueryOptions qo = new QueryOptions();
+		Filter f1 = Filter.eq("attribute", name);
+		Filter f2 = Filter.eq("value", lVal);
+		Filter f3 = Filter.eq("application.name", application);
+		qo.addFilter(f1);
+		qo.addFilter(f2);
+		qo.addFilter(f3);
+		List props = new ArrayList();
+		props.add("entPrivileged");
+		String entitlementPrivileged = null;
+		Iterator iter = context.search(ManagedAttribute.class, qo, props);
+		if (iter != null && iter.hasNext()) {
+			try {
+				Object[] arrStr = (Object[]) iter.next();
+				if (arrStr != null && arrStr.length == 1) {
+					entitlementPrivileged = (String) arrStr[0];
+				}
+				LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"entitlementPrivileged= " + entitlementPrivileged);
+				if (entitlementPrivileged != null
+						&& entitlementPrivileged.equalsIgnoreCase("TRUE")) {
+					result = true;
+				}
+			} catch (Exception e) {
+				LogEnablement.isLogErrorEnabled(dynamicApprovalLogger,e.getMessage());
+				LogEnablement.isLogErrorEnabled(dynamicApprovalLogger, e);
+			}
+			Util.flushIterator(iter);
+		}
+		return result;
+	}
+	/**
+	 * Get Requestor Form
+	 * 
+	 * @param context
+	 * @param params
+	 * @return
+	 * @throws GeneralException 
+	 */
+	public Object getExtendedForm(SailPointContext context, Map params) throws GeneralException {
+		LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"Enter getExtendedForm");
+		return getExtendedFormFormRule(context, (Workflow)params.get("workflow"));
+	}
+	/**
+	 * Get Extended Form Rule
+	 * 
+	 * @param context
+	 * @param workflow
+	 * @return
+	 * @throws GeneralException 
+	 */
+	public Object getExtendedFormFormRule(SailPointContext context,
+			Workflow workflow) throws GeneralException {
+		LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"Enter getExtendedFormFormRule");
+		Form dynamicForm = null;
+		String appName = (String) workflow.get("requestedAppName");
+		Application requestedApp;
+		LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"Enter getExtendedFormrule requestedAppName "
+				+ appName);
+		if (Util.isNotNullOrEmpty(appName)) {
+			requestedApp = context.getObjectByName(Application.class, appName);
+			if (requestedApp != null
+					&& requestedApp.getExtendedAttribute("displayFormRule") != null) {
+				Form displayForm = null;
+				String displayFormRuleName = (String) requestedApp
+						.getExtendedAttribute("displayFormRule");
+				if (displayFormRuleName != null
+						&& displayFormRuleName.length() > 0) {
+					Rule displayFormRule = context.getObjectByName(Rule.class,
+							displayFormRuleName);
+					if (displayFormRule != null) {
+						Map returnValue = (Map) context.runRule(
+								displayFormRule, null);
+						if (returnValue != null
+								&& returnValue.containsKey("dynamicForm")) {
+							dynamicForm = (Form) returnValue.get("dynamicForm");
+							LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"Return Dynamic Form: "
+									+ dynamicForm.getName());
+						}
+						context.decache(displayFormRule);
+					} else {
+						// Let's check if it is just a form
+						displayForm = context.getObjectByName(Form.class,
+								displayFormRuleName);
+						if (displayForm != null) {
+							context.decache(displayForm);
+							LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"Exit getExtendedFormFormRule "
+									+ displayForm);
+							return displayForm;
+						}
+					}
+				}
+			}
+			if (requestedApp != null) {
+				context.decache(requestedApp);
+			}
+		}
+		return dynamicForm;
+	}
+	/**
+	 * Get All Level Approvers
+	 * 
+	 * @param context
+	 * @param params
+	 * @return
+	 * @throws Exception 
+	 */
+	public Object frameWorkApproversRule(SailPointContext context, Map params) throws Exception {
+		return frameWorkApproversRule(context, (Workflow)params.get("workflow"));
+	}
+	/**
+	 * Get All Level Approvers
+	 * 
+	 * @param context
+	 * @param workflow
+	 * @return
+	 * @throws Exception 
+	 */
+	public Object frameWorkApproversRule(SailPointContext context,
+			Workflow workflow) throws Exception {
+		LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"Enter frameWorkApproversRule");
+		ApprovalSet tmpApprovalSet = (ApprovalSet) workflow
+				.get("tmpApprovalSet");
+		ProvisioningPlan plan = (ProvisioningPlan) workflow.get("plan");
+		String identityName = (String) workflow.get("identityName");
+		String fallbackApprover = (String) workflow.get("fallbackApprover");
+		String launcher = (String) workflow.get("launcher");
+		String currentApprovalType = (String) workflow
+				.get("currentApprovalType");
+		List approvals = new ArrayList();
+		Map ownerMap=null;
+		//Get Auto Approve Flag
+		Map commonMap = ROADUtil.getCustomGlobalMap(context);
+		boolean autoApprove=false;
+		if (commonMap != null && commonMap.containsKey("apEnableAutoApprovalsAccessAccountRequest")) 
+		{
+			String apEnableAutoApprovalsAccessAccountRequest = (String) commonMap.get("apEnableAutoApprovalsAccessAccountRequest");
+			LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"..apEnableAutoApprovalsAccessAccountRequest..."+apEnableAutoApprovalsAccessAccountRequest);
+			if(apEnableAutoApprovalsAccessAccountRequest!=null && apEnableAutoApprovalsAccessAccountRequest.equalsIgnoreCase("TRUE"))
+			{
+				autoApprove=true;
+			}
+		}
+		//Override Auto Approval if Electronic Signature enabled and Auto Approve is enabled
+		if(autoApprove && !ApprovalRuleLibrary.eSigDisabled(workflow))
+		{
+			autoApprove=false;
+		}
+		LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"..autoApprove..."+autoApprove);
+		if (tmpApprovalSet != null) 
+		{
+			if (currentApprovalType != null && currentApprovalType.equalsIgnoreCase("ApplicationBusApprovers")) 
+			{
+				ownerMap = roadBuildOwnerMap(context,"owner", tmpApprovalSet,
+						fallbackApprover, identityName, autoApprove,
+						currentApprovalType, workflow,launcher);
+			} 
+			else if (currentApprovalType != null
+					&& currentApprovalType
+							.equalsIgnoreCase("AdditionalApplicationBusApprovers")) {
+				ownerMap = roadBuildOwnerMap(context,"owner", tmpApprovalSet,
+						fallbackApprover, identityName, autoApprove,
+						currentApprovalType, workflow,launcher);
+			} else if (currentApprovalType != null
+					&& currentApprovalType
+							.equalsIgnoreCase("EntitlementBusApprovers")) {
+				ownerMap = roadBuildOwnerMap(context,"owner", tmpApprovalSet,
+						fallbackApprover, identityName, autoApprove,
+						currentApprovalType, workflow,launcher);
+			} else if (currentApprovalType != null
+					&& currentApprovalType
+							.equalsIgnoreCase("AdditionalEntitlementBusApprovers")) {
+				ownerMap = roadBuildOwnerMap(context,"owner", tmpApprovalSet,
+						fallbackApprover, identityName, autoApprove,
+						currentApprovalType, workflow,launcher);
+			} else if (currentApprovalType != null
+					&& currentApprovalType.equalsIgnoreCase("RoleBusApprovers")) {
+				ownerMap = roadBuildOwnerMap(context,"owner", tmpApprovalSet,
+						fallbackApprover, identityName, autoApprove,
+						currentApprovalType, workflow,launcher);
+			} else if (currentApprovalType != null
+					&& currentApprovalType.equalsIgnoreCase("AdditionalRoleBusApprovers")) {
+				ownerMap = roadBuildOwnerMap(context,"owner", tmpApprovalSet,
+						fallbackApprover, identityName, autoApprove,
+						currentApprovalType, workflow,launcher);
+			} else if (currentApprovalType != null
+					&& currentApprovalType.equalsIgnoreCase("Operations")) {
+				ownerMap = roadBuildOwnerMap(context,"owner", tmpApprovalSet,
+						fallbackApprover, identityName, autoApprove,
+						currentApprovalType, workflow,launcher);
+			} else if (currentApprovalType != null
+					&& currentApprovalType.equalsIgnoreCase("BatchOwners")) {
+				ownerMap = roadBuildOwnerMap(context,"owner", tmpApprovalSet,
+						fallbackApprover, identityName, autoApprove,
+						currentApprovalType, workflow,launcher);
+			} else if (currentApprovalType != null
+					&& currentApprovalType
+							.equalsIgnoreCase("ManagerOrServiceAccountOwner")) {
+				ownerMap = roadBuildOwnerMap(context,"owner", tmpApprovalSet,
+						fallbackApprover, identityName, autoApprove,
+						currentApprovalType, workflow,launcher);
+			}
+			if (ownerMap != null) {
+				approvals = roadBuildApprovalsFromMap(context,workflow,ownerMap,
+						identityName, launcher,autoApprove);
+			}
+		}
+		return (Util.size(approvals) > 0) ? approvals : null;
+	}
+	/**
+	 * Build Owner for each Approval Set
+	 * @param context
+	 * @param scheme
+	 * @param approvalSet
+	 * @param fallbackApprover
+	 * @param identity
+	 * @param autoApprove
+	 * @param approvalType
+	 * @param workflow
+	 * @param launcher
+	 * @return
+	 * @throws Exception 
+	 */
+	public Map roadBuildOwnerMap(SailPointContext context,String scheme, ApprovalSet approvalSet,
+			String fallbackApprover, String identity, boolean autoApprove,
+			String approvalType, Workflow workflow, String launcher) throws Exception {
+		LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"Enter roadBuildOwnerMap");
+		Map ownerToSet = new LinkedHashMap();
+		List items = approvalSet.getItems();
+		for (ApprovalItem item : items) {
+			List approvers = roadGetApproverNames(context,scheme, item, approvalType,
+					workflow);
+			if (approvers != null && approvers.size() == 0
+					&& fallbackApprover != null) {
+				LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"Building fallback approvers");
+				approvers.add(fallbackApprover);
+			}
+			if (Util.size(approvers) > 0) {
+				LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"Building actual approvers");
+				for (String approver : approvers) {
+					ApprovalSet set = (ApprovalSet) ownerToSet.get(approver);
+					if (set == null) {
+						set = new ApprovalSet();
+					}
+					// Make a copy of the item here so they are independent of
+					// the the
+					// cart's item.
+					ApprovalItem itemCopy = (ApprovalItem) XMLObjectFactory.getInstance()
+							.clone(item, context);
+					set.add(itemCopy);
+					ownerToSet.put(approver, set);
+					if (autoApprove) {
+						// when we come across the launcher who is also the
+						// approver or requestee is the approver
+						// auto approve the item, this will allow us to
+						// audit/report on
+						// the request but not force an approval. We won't
+						// create an
+						// Approval object if all of the items are acccepted
+						if (approver.equals(launcher)
+								|| approver.equals(identity)) 
+						{
+							itemCopy.setState(WorkItem.State.Finished);
+							if(approver.equals(launcher))
+							{
+								LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"Requestor is same as Approver");
+							}
+							if(approver.equals(identity))
+							{
+								LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"Requestee is same as Approver");
+							}
+							// If there is just one approver AND we are marking
+							// this
+							// Auto-Approved also mark the master approvalSets
+							// item
+							// finished
+							if (approvers.size() == 1) 
+							{
+								item.setState(WorkItem.State.Finished);
+							}
+						}
+					}
+				}
+				item.setOwner((String) approvers.get(0));
+			}
+		}
+		LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"End roadBuildOwnerMap");
+		return ownerToSet;
+	}
+	/**
+	 * Get Approver Names from Approval Items
+	 * 
+	 * @param scheme
+	 * @param item
+	 * @param approvalType
+	 * @param workflow
+	 * @return
+	 * @throws Exception 
+	 */
+	public List roadGetApproverNames(SailPointContext context, String scheme, ApprovalItem item,
+			String approvalType, Workflow workflow) throws Exception {
+		LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"Enter roadGetApproverNames");
+		LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"Enter roadGetApproverNames approvalType " + approvalType);
+		List owners = null;
+		String approvalsString = null;
+		if (scheme.contains("owner")) {
+			if (approvalType != null
+					&& approvalType.equalsIgnoreCase("Operations")) {
+				approvalsString = (String) roadGetApproversOperationsRule(context, item,
+						workflow);
+			}
+			if (approvalType != null
+					&& approvalType.equalsIgnoreCase("ApplicationBusApprovers")) {
+				approvalsString = (String) roadGetApproversAppBusApproversRule(context,
+						item, workflow);
+			}
+			if (approvalType != null
+					&& approvalType
+							.equalsIgnoreCase("AdditionalApplicationBusApprovers")) {
+				approvalsString = (String) roadGetApproversAdditionalAppBusApproversRule(
+						context, item, workflow);
+			}
+			if (approvalType != null
+					&& approvalType.equalsIgnoreCase("EntitlementBusApprovers")) {
+				approvalsString = (String) roadGetApproversEntitlementBusApproversRule(
+						context, item, workflow);
+			}
+			if (approvalType != null
+					&& approvalType
+							.equalsIgnoreCase("AdditionalEntitlementBusApprovers")) {
+				approvalsString = (String) roadGetApproversAdditionalEntitlementBusApproversRule(
+						context, item, workflow);
+			}
+			if (approvalType != null
+					&& approvalType.equalsIgnoreCase("RoleBusApprovers")) {
+				approvalsString = (String) roadGetApproversRoleBusApproversRule(context,
+						item, workflow);
+			}
+			if (approvalType != null
+					&& approvalType.equalsIgnoreCase("AdditionalRoleBusApprovers")) {
+				approvalsString = (String) roadGetApproversAdditionalRoleBusApproversRule(context,
+						item, workflow);
+			}
+			if (approvalType != null
+					&& approvalType.equalsIgnoreCase("BatchOwners")) {
+				approvalsString = (String) roadGetApproversBatchOwnersRule(context, item,
+						workflow);
+			}
+			if (approvalType != null
+					&& approvalType
+							.equalsIgnoreCase("ManagerOrServiceAccountOwner")) {
+				approvalsString = (String) roadGetApproversManagerRule(context, item,
+						workflow);
+			}
+		}
+		if (approvalsString != null) {
+			owners = roadGetApprovalsStringList(approvalsString);
+		}
+		LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"End roadGetApproverNames");
+		return owners;
+	}
+	/**
+	 * Build Approvals from Map
+	 * 
+	 * @param context
+	 * @param ownerToSet
+	 * @param workflow
+	 * @param identityName
+	 * @param launcher
+	 * @param autoApprove
+	 * @return
+	 * @throws Exception 
+	 */
+	public List roadBuildApprovalsFromMap(SailPointContext context,
+			Workflow workflow, Map ownerToSet, String identityName, String launcher, boolean autoApprove) throws Exception {
+		LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"Enter roadBuildApprovalsFromMap");
+		List approvals = new ArrayList();
+		if (ownerToSet == null)
+			return null;
+		Iterator keys = null;
+		Set keySet = ownerToSet.keySet();
+		if (keySet != null)
+			keys = keySet.iterator();
+		if (keys != null) {
+			while (keys.hasNext()) {
+				String key = (String) keys.next();
+				if (key == null)
+					continue;
+				ApprovalSet set = (ApprovalSet) ownerToSet.get(key);
+				if (set != null) {
+					List workGroupMembers = ROADUtil.getWorkGroupMemberNames(context,
+							key);
+					setApprovalsPerItem(context,workflow,key, workGroupMembers,
+							identityName, launcher, set, approvals,autoApprove);
+				}
+			}
+		}
+		LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"End roadBuildApprovalsFromMap");
+		return approvals;
+	}
+	/**
+	 * Set Approvers Per Approval Item
+	 * @param context
+	 * @param workflow
+	 * @param key
+	 * @param item
+	 * @param workGroupMembers
+	 * @param identityName
+	 * @param launcher
+	 * @param set
+	 * @param approvals
+	 * @param autoApprove
+	 * @throws Exception 
+	 */
+	public void setApprovalsPerItem(SailPointContext context,Workflow workflow, String key, List workGroupMembers, String identityName, String launcher, ApprovalSet set, List approvals,boolean autoApprove ) throws Exception {
+		LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"..wfcontext..."+wfcontext);
+		LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"..key..."+key);
+		LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"..launcher..."+launcher);
+		LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"..identityName..."+identityName);
+		LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"..set.isAllApproved()..."+set.isAllApproved());
+		LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"..autoApprove..."+autoApprove);
+		boolean disabledElectronicSig=ApprovalRuleLibrary.eSigDisabled(workflow);
+		LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"..disabledElectronicSig..."+disabledElectronicSig);
+		if (autoApprove && disabledElectronicSig  && (key.compareTo(launcher) == 0 || key.compareTo(identityName) == 0) && set.isAllApproved() ) 
+		{
+			//Skip Approval Only if Electronic Signature is Disabled
+			List approvalItems=set.getItems();
+			if(approvalItems!=null && approvalItems.size()>0)
+			{
+				for(ApprovalItem approvalItem:approvalItems)
+				{
+					sailpoint.workflow.IdentityLibrary.auditDecision(wfcontext, approvalItem);
+				}
+			}
+			LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"All Approval Set is Approved");
+			LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"Either Approver is Requester or Approver is User");
+		} 
+		else 
+		{
+			//Either Approver is WorkGroup or Approver is Active/Inactive
+			Approval newApproval = new Approval();
+			Identity activeInactiveIdentityCube=context.getObjectByName(Identity.class,key);
+		 	boolean isIdentityActive = WrapperRuleLibrary.isIdentityActive(context, activeInactiveIdentityCube);
+		 	LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"..isIdentityActive..."+isIdentityActive);
+		 	if((isIdentityActive && activeInactiveIdentityCube != null) || activeInactiveIdentityCube.isWorkgroup()) 
+		 	{
+				newApproval.setOwner(key);  
+				newApproval.setApprovalSet(set);
+				newApproval.addArg(Workflow.ARG_WORK_ITEM_TARGET_CLASS, "sailpoint.object.Identity");
+				newApproval.addArg(Workflow.ARG_WORK_ITEM_TARGET_NAME, identityName);
+				approvals.add(newApproval);
+			}
+			else if(activeInactiveIdentityCube != null)	
+			{
+				//Inactive Approver
+				LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"..Inactive Approver...");
+				if(null != activeInactiveIdentityCube.getManager() ) 
+				{
+					key = activeInactiveIdentityCube.getManager().getName();
+					newApproval.setOwner(key);  
+					newApproval.setApprovalSet(set);
+					newApproval.addArg(Workflow.ARG_WORK_ITEM_TARGET_CLASS, "sailpoint.object.Identity");
+					newApproval.addArg(Workflow.ARG_WORK_ITEM_TARGET_NAME, key);
+					approvals.add(newApproval);
+				}
+				else 
+				{
+					key = "No Manager Found";
+					newApproval.setOwner(key);  
+					newApproval.setApprovalSet(set);
+					newApproval.addArg(Workflow.ARG_WORK_ITEM_TARGET_CLASS, "sailpoint.object.Identity");
+					newApproval.addArg(Workflow.ARG_WORK_ITEM_TARGET_NAME, key);
+					approvals.add(newApproval);
+				}
+			}
+			if(activeInactiveIdentityCube!=null)
+			{
+			context.decache(activeInactiveIdentityCube);
+			}
+		} 
+	}
+	/**
+	 * Get Approver String in a List Format
+	 * 
+	 * @param reqApprovals
+	 * @return
+	 */
+	public List roadGetApprovalsStringList(String reqApprovals) {
+		List rApps = new ArrayList();
+		if (reqApprovals!=null && reqApprovals.indexOf(",") > 0) {
+			LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"Split out required approvals");
+			String[] split = reqApprovals.split(",");
+			rApps = Arrays.asList(split);
+		} else if (reqApprovals != null && reqApprovals.trim().length() > 0) {
+			LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"Add single item");
+			rApps.add(reqApprovals);
+		}
+		return rApps;
+	}
+	/**
+	 * Get Managers Approver Rule
+	 * 
+	 * @param context
+	 * @param item
+	 * @param workflow
+	 * @return
+	 * @throws Exception 
+	 */
+	public Object roadGetApproversManagerRule(SailPointContext context,
+			ApprovalItem item, Workflow workflow) throws Exception {
+		LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"Enter roadGetApproversManagerRule");
+		String approvers = null;
+		if (item != null) {
+			Map resultMap = skipOrOverrideorGetSupervisorLevelApprovals(
+					context, item, workflow, "");
+			if (resultMap != null && resultMap.get("ApprovalRequired") != null) {
+				boolean isApprovalNeeded = Boolean.parseBoolean((String) resultMap
+						.get("ApprovalRequired"));
+				// If this approval type is needed, get the approvers
+				if (isApprovalNeeded && resultMap.get("Approvers") != null) {
+					approvers = (String) resultMap.get("Approvers");
+				}
+			}
+		}
+		LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"Exit roadGetApproversManagerRule - Approvers: "
+				+ approvers);
+		return approvers;
+	}
+	/**
+	 * Get Application Business Approvers Rule
+	 * 
+	 * @param context
+	 * @param item
+	 * @param workflow
+	 * @return
+	 * @throws Exception 
+	 */
+	public Object roadGetApproversAppBusApproversRule(SailPointContext context,
+			ApprovalItem item, Workflow workflow) throws Exception {
+		LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"Enter roadGetApproversAppBusApproversRule");
+		String approvers = null;
+		if (item != null) {
+			// Check if the approval item contains a role. If so, it means this
+			// was a fallback approval type
+			String fallbackAppName = roadGetFallbackApplicationName(context,
+					item);
+			Map resultMap = skipOrOverrideorGetApplicationFirstLevelApprovals(
+					context, item, fallbackAppName, workflow, "");
+			if (resultMap != null && resultMap.get("ApprovalRequired") != null) {
+				boolean isApprovalNeeded = Boolean.parseBoolean((String) resultMap
+						.get("ApprovalRequired"));
+				// If this approval type is needed, add the approvers to the
+				// list
+				if (isApprovalNeeded && resultMap.get("Approvers") != null) {
+					approvers = (String) resultMap.get("Approvers");
+				}
+			}
+		}
+		LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"Exit roadGetApproversAppBusApproversRule - Approvers: "
+				+ approvers);
+		return approvers;
+	}
+	/**
+	 * Get Operations Approvers Rule
+	 * 
+	 * @param context
+	 * @param item
+	 * @param workflow
+	 * @return
+	 * @throws GeneralException 
+	 */
+	public Object roadGetApproversOperationsRule(SailPointContext context,
+			ApprovalItem item, Workflow workflow) throws GeneralException {
+		LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"Enter roadGetApproversOperationsRule");
+		Map commonMap = ROADUtil.getCustomGlobalMap(context);
+		String operationsApprover = "";
+		if (commonMap != null
+				&& commonMap.containsKey("temporaryApprovalsWorkGroup")) {
+			operationsApprover = (String) commonMap.get("temporaryApprovalsWorkGroup");
+		}
+		LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"End roadGetApproversOperationsRule." + operationsApprover);
+		return operationsApprover;
+	}
+	/**
+	 * Get Additional Application Business Approvers Rule
+	 * 
+	 * @param context
+	 * @param item
+	 * @param workflow
+	 * @return
+	 * @throws Exception 
+	 */
+	public Object roadGetApproversAdditionalAppBusApproversRule(
+			SailPointContext context, ApprovalItem item, Workflow workflow) throws Exception {
+		LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"Enter roadGetApproversAdditionalAppBusApproversRule");
+		String approvers = null;
+		if (item != null) {
+			// Check if the approval item contains a role. If so, it means this
+			// was a fallback approval type
+			String fallbackAppName = roadGetFallbackApplicationName(context,
+					item);
+			Map resultMap = skipOrOverrideorGetApplicationSecondLevelApprovals(
+					context, item, fallbackAppName, workflow, "");
+			if (resultMap != null && resultMap.get("ApprovalRequired") != null) {
+				boolean isApprovalNeeded = Boolean.parseBoolean((String) resultMap
+						.get("ApprovalRequired"));
+				// If this approval type is needed, add the approvers to the
+				// list
+				if (isApprovalNeeded && resultMap.get("Approvers") != null) {
+					approvers = (String) resultMap.get("Approvers");
+				}
+			}
+		}
+		LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"Exit roadGetApproversAdditionalAppBusApproversRule - Approvers: "
+				+ approvers);
+		return approvers;
+	}
+	/**
+	 * Get Entitlement Business Approvers Rule
+	 * 
+	 * @param context
+	 * @param item
+	 * @param workflow
+	 * @return
+	 * @throws Exception 
+	 */
+	public Object roadGetApproversEntitlementBusApproversRule(
+			SailPointContext context, ApprovalItem item, Workflow workflow) throws Exception {
+		LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"Enter roadGetApproversEntitlementBusApproversRule");
+		String approvers = null;
+		if (item != null) {
+			Map resultMap = skipOrOverrideorGetEntitlementFirstLevelApprovals(
+					context, item, workflow, "");
+			if (resultMap != null && resultMap.get("ApprovalRequired") != null) {
+				boolean isApprovalNeeded = Boolean.parseBoolean((String) resultMap
+						.get("ApprovalRequired"));
+				// If this approval type is needed, add the approvers to the
+				// list
+				if (isApprovalNeeded && resultMap.get("Approvers") != null) {
+					approvers = (String) resultMap.get("Approvers");
+				}
+			}
+		}
+		LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"Exit roadGetApproversEntitlementBusApproversRule - Approvers: "
+				+ approvers);
+		return approvers;
+	}
+	/**
+	 * Get Additional Entitlement Business Approvers Rule
+	 * 
+	 * @param context
+	 * @param item
+	 * @param workflow
+	 * @return
+	 * @throws Exception 
+	 */
+	public Object roadGetApproversAdditionalEntitlementBusApproversRule(
+			SailPointContext context, ApprovalItem item, Workflow workflow) throws Exception {
+		LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"Enter roadGetApproversAdditionalEntitlementBusApproversRule");
+		String approvers = null;
+		if (item != null) {
+			Map resultMap = skipOrOverrideorGetEntitlementSecondLevelApprovals(
+					context, item, workflow, "");
+			if (resultMap != null && resultMap.get("ApprovalRequired") != null) {
+				boolean isApprovalNeeded = Boolean.parseBoolean((String) resultMap
+						.get("ApprovalRequired"));
+				// If this approval type is needed, add the approvers to the
+				// list
+				if (isApprovalNeeded && resultMap.get("Approvers") != null) {
+					approvers = (String) resultMap.get("Approvers");
+				}
+			}
+		}
+		LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"Exit roadGetApproversAdditionalEntitlementBusApproversRule - Approvers: "
+				+ approvers);
+		return approvers;
+	}
+	/**
+	 * Get Batch Owners Business Approvers Rule
+	 * 
+	 * @param context
+	 * @param item
+	 * @param workflow
+	 * @return
+	 */
+	public Object roadGetApproversBatchOwnersRule(SailPointContext context,
+			ApprovalItem item, Workflow workflow) {
+		LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"Enter roadGetApproversBatchOwnersRule");
+		String approvers = null;
+		approvers = (String) workflow.get("batchRequestApprover");
+		LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"Exit roadGetApproversBatchOwnersRule - Approvers: "
+				+ approvers);
+		return approvers;
+	}
+	/**
+	 * Get Role 1st Level Business Approvers Rule
+	 * 
+	 * @param context
+	 * @param item
+	 * @param workflow
+	 * @return
+	 * @throws Exception 
+	 */
+	public Object roadGetApproversRoleBusApproversRule(
+			SailPointContext context, ApprovalItem item, Workflow workflow) throws Exception {
+		LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"Enter roadGetApproversRoleBusApproversRule");
+		String approvers = null;
+		if (item != null) {
+			Map resultMap = skipOrOverrideorGetRoleFirstLevelApprovals(context,
+					item, workflow, "");
+			if (resultMap != null && resultMap.get("ApprovalRequired") != null) {
+				boolean isApprovalNeeded = Boolean.parseBoolean((String) resultMap
+						.get("ApprovalRequired"));
+				// If this approval type is needed, add the approvers to the
+				// list
+				if (isApprovalNeeded && resultMap.get("Approvers") != null) {
+					approvers = (String) resultMap.get("Approvers");
+				}
+			}
+		}
+		LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"Exit roadGetApproversRoleBusApproversRule - Approvers: "
+				+ approvers);
+		return approvers;
+	}
+	/**
+	 * Get Role 2nd Level Business Approvers Rule
+	 * 
+	 * @param context
+	 * @param item
+	 * @param workflow
+	 * @return
+	 * @throws Exception 
+	 */
+	public Object roadGetApproversAdditionalRoleBusApproversRule(
+			SailPointContext context, ApprovalItem item, Workflow workflow) throws Exception {
+		LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"Enter roadGetApproversAdditionalRoleBusApproversRule");
+		String approvers = null;
+		if (item != null) {
+			Map resultMap = skipOrOverrideorGetRoleSecondLevelApprovals(context,
+					item, workflow, "");
+			if (resultMap != null && resultMap.get("ApprovalRequired") != null) {
+				boolean isApprovalNeeded = Boolean.parseBoolean((String) resultMap
+						.get("ApprovalRequired"));
+				// If this approval type is needed, add the approvers to the
+				// list
+				if (isApprovalNeeded && resultMap.get("Approvers") != null) {
+					approvers = (String) resultMap.get("Approvers");
+				}
+			}
+		}
+		LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"Exit roadGetApproversAdditionalRoleBusApproversRule - Approvers: "
+				+ approvers);
+		return approvers;
+	}
+	/**
+	 * Execute Extended Rule
+	 * 
+	 * @param ruleName
+	 * @param appName
+	 * @param identityName
+	 * @param requestType
+	 * @param item
+	 * @return
+	 * @throws GeneralException 
+	 */
+	private Object executeRuleFromMappings(SailPointContext context, Workflow workflow, String ruleName, String appName,
+			String identityName, String requestType, ApprovalItem item) throws GeneralException {
+		Rule rule = context.getObjectByName(Rule.class, ruleName);
+		Map params = new HashMap();
+		if (Util.isNotNullOrEmpty(appName)) {
+			params.put("applicationName", appName);
+		}
+		if (Util.isNotNullOrEmpty(identityName)) {
+			params.put("identityName", identityName);
+		}
+		params.put("plan", workflow.get("plan"));
+		if (workflow.get("requestType") != null) {
+			params.put("requestType", workflow.get("requestType"));
+		} else {
+			params.put("requestType", requestType);
+		}
+		if (item != null) {
+			params.put("item", item);
+		}
+		Object obj = context.runRule(rule, params);
+		if (rule != null) {
+			context.decache(rule);
+		}
+		return obj;
+	}
+	/**
+	 * Get Fall Back Application Name for Role Approvals
+	 * 
+	 * @param context
+	 * @param item
+	 * @return
+	 * @throws GeneralException 
+	 */
+	public String roadGetFallbackApplicationName(SailPointContext context,
+			ApprovalItem item) throws GeneralException {
+		LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"Enter roadGetFallbackApplicationName");
+		String fallbackAppName = "";
+		String logicalAppEnabled=ObjectConfigAttributesRuleLibrary.extendedAttrLogicalAppEnabled(context);
+		boolean logApp = false;
+		if (logicalAppEnabled != null && logicalAppEnabled.length() > 0
+				&& logicalAppEnabled.equalsIgnoreCase("TRUE")) {
+			logApp = true;
+		}
+		if (item != null && item.getName()!=null) {
+			// Check if the approval item contains a role, whose appName
+			// extended attribute contains an application name
+			// to use in case of fallback approval
+			if ((item.getApplicationName().equalsIgnoreCase(
+					ProvisioningPlan.IIQ_APPLICATION_NAME) || item
+					.getApplicationName().equalsIgnoreCase(
+							ProvisioningPlan.APP_IIQ))
+					&& item.getName().equalsIgnoreCase(
+							ProvisioningPlan.ATT_IIQ_ASSIGNED_ROLES)
+					|| item.getName().equalsIgnoreCase(
+							ProvisioningPlan.ATT_IIQ_DETECTED_ROLES)) {
+				Object val = item.getValue();
+				String roleName = "";
+				if (val != null) {
+					if (val instanceof String) {
+						roleName = (String) val;
+					} else if (val instanceof List) {
+						if (((List) val).size() > 0) {
+							roleName = ((List) val).get(0).toString();
+						}
+					}
+				}
+				Bundle bundle = context.getObjectByName(Bundle.class, roleName);
+				if (logApp
+						&& bundle != null
+						&& bundle.getAttribute("appName") != null
+						&& Util.isNotNullOrEmpty(bundle.getAttribute("appName")
+								.toString())) {
+					fallbackAppName = bundle.getAttribute("appName").toString();
+					if (fallbackAppName != null) {
+						Application applicationFound = context.getObjectByName(
+								Application.class, fallbackAppName);
+						// fallbackAppName is a logical application
+						// fallbackAppName is comma separated logical
+						// applications
+						// fallbackAppName is comma separated logical and
+						// physical applications
+						// fallbackAppName is comma separated physical
+						// applications
+						if (applicationFound == null) {
+							// Defined appName doesn't exist
+							fallbackAppName = ROADUtil.setRoleAppName(
+									bundle.getRequirements(),
+									bundle.getApplications());
+						} else {
+							context.decache(applicationFound);
+						}
+					} else {
+						// appName is not defined on role
+						fallbackAppName = ROADUtil.setRoleAppName(
+								bundle.getRequirements(),
+								bundle.getApplications());
+					}
+				} else if (bundle != null) {
+					// appName is not defined on role
+					fallbackAppName = ROADUtil.setRoleAppName(
+							bundle.getRequirements(), bundle.getApplications());
+				}
+				if (bundle != null) {
+					context.decache(bundle);
+				}
+			}
+		}
+		LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"Exit roadGetFallbackApplicationName - Returning app name: "
+				+ fallbackAppName);
+		return fallbackAppName;
+	}
+	/**
+	 * Create Temporary Approval Set
+	 * 
+	 * @param masterSet
+	 * @return
+	 */
+	public ApprovalSet createTempApprovalset(ApprovalSet masterSet) {
+		ApprovalSet filtered = new ApprovalSet();
+		if (masterSet != null) {
+			List items = masterSet.getItems();
+			if (Util.size(items) > 0) {
+				for (ApprovalItem item : items) {
+					filtered.add(item);
+				}
+			}
+		}
+		return filtered;
+	}
+	/**
+	 * Get Approval Mode Per Approval Level
+	 * 
+	 * @param context
+	 * @param workflow
+	 * @param currentApprovalType
+	 * @param tmpApprovalSet
+	 * @return
+	 */
+	public Object roadGetApprovalMode(SailPointContext context,Workflow workflow, String currentApprovalType,ApprovalSet tmpApprovalSet) 
+	{
+		LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"Enter roadGetApprovalMode");
+		String approvalMode = "";
+	    approvalMode=ApprovalRuleLibrary.getRequestTypePropertyValue(context, workflow, ApprovalRuleLibrary.DEFAULTAPPROVALMODEKEY);
+		if (approvalMode == null) 
+		{
+			return "serial";
+		}
+		LogEnablement.isLogDebugEnabled(dynamicApprovalLogger,"Exit roadGetApprovalMode "+approvalMode);
+		//This is used for filter rejects
+		workflow.put("approvalMode", approvalMode);
+		return approvalMode;
+	}
+	
+	]]></Source>
+</Rule>

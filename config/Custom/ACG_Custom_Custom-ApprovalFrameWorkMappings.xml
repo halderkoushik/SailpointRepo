@@ -1,0 +1,345 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Custom PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Custom name="Custom-ApprovalFrameWorkMappings">
+  <Attributes>
+    <Map>
+      <entry key="Approval Types">
+        <value>
+          <Attributes>
+            <Map>
+              <entry key="AdditionalApplicationBusApprovers">
+                <value>
+                  <Attributes>
+                    <Map>
+                      <entry key="checkApprovalRequiredRule" value="method:skipOrOverrideorGetApplicationSecondLevelApprovals"/>
+                      <entry key="displayName" value="2nd Level Application Business Approvers"/>
+                      <entry key="getApprovalBusApproversRule" value="method:frameWorkApproversRule"/>
+                      <entry key="template" value="Common Approvals Template"/>
+                    </Map>
+                  </Attributes>
+                </value>
+              </entry>
+              <entry key="AdditionalEntitlementBusApprovers">
+                <value>
+                  <Attributes>
+                    <Map>
+                      <entry key="checkApprovalRequiredRule" value="method:skipOrOverrideorGetEntitlementSecondLevelApprovals"/>
+                      <entry key="displayName" value="2nd Level Entitlement Business Approvers"/>
+                      <entry key="getApprovalBusApproversRule" value="method:frameWorkApproversRule"/>
+                      <entry key="template" value="Common Approvals Template"/>
+                    </Map>
+                  </Attributes>
+                </value>
+              </entry>
+              <entry key="AdditionalRoleBusApprovers">
+                <value>
+                  <Attributes>
+                    <Map>
+                      <entry key="checkApprovalRequiredRule" value="method:skipOrOverrideorGetRoleSecondLevelApprovals"/>
+                      <entry key="displayName" value="2nd Level Role Business Approvers"/>
+                      <entry key="getApprovalBusApproversRule" value="method:frameWorkApproversRule"/>
+                      <entry key="template" value="Common Approvals Template"/>
+                    </Map>
+                  </Attributes>
+                </value>
+              </entry>
+              <entry key="ApplicationBusApprovers">
+                <value>
+                  <Attributes>
+                    <Map>
+                      <entry key="checkApprovalRequiredRule" value="method:skipOrOverrideorGetApplicationFirstLevelApprovals"/>
+                      <entry key="displayName" value="1st Level Application Business Approvers"/>
+                      <entry key="getApprovalBusApproversRule" value="method:frameWorkApproversRule"/>
+                      <entry key="template" value="Common Approvals Template"/>
+                    </Map>
+                  </Attributes>
+                </value>
+              </entry>
+              <entry key="BatchOwners">
+                <value>
+                  <Attributes>
+                    <Map>
+                      <entry key="checkApprovalRequiredRule" value="method:skiporGetBatchLevelApprovals"/>
+                      <entry key="displayName" value="Batch Request"/>
+                      <entry key="getApprovalBusApproversRule" value="method:frameWorkApproversRule"/>
+                      <entry key="notifyEmailTemplate" value="EmailTemplate-FrameworkBatch"/>
+                      <entry key="template" value="Common Approvals Template"/>
+                    </Map>
+                  </Attributes>
+                </value>
+              </entry>
+              <entry key="Common Approvals Template">
+                <value>
+                  <Attributes>
+                    <Map>
+                      <entry key="defaultApprovalMode" value="serialPoll"/>
+                      <entry key="displayName" value="Owner"/>
+                      <entry key="useDefaultWorkItemConfig" value="true"/>
+                    </Map>
+                  </Attributes>
+                </value>
+              </entry>
+              <entry key="EntitlementBusApprovers">
+                <value>
+                  <Attributes>
+                    <Map>
+                      <entry key="checkApprovalRequiredRule" value="method:skipOrOverrideorGetEntitlementFirstLevelApprovals"/>
+                      <entry key="displayName" value="1st Level Entitlement Business Approvers"/>
+                      <entry key="getApprovalBusApproversRule" value="method:frameWorkApproversRule"/>
+                      <entry key="template" value="Common Approvals Template"/>
+                    </Map>
+                  </Attributes>
+                </value>
+              </entry>
+              <entry key="ManagerOrServiceAccountOwner">
+                <value>
+                  <Attributes>
+                    <Map>
+                      <entry key="checkApprovalRequiredRule" value="method:skipOrOverrideorGetSupervisorLevelApprovals"/>
+                      <entry key="displayName" value="Manager or Service Owner"/>
+                      <entry key="getApprovalBusApproversRule" value="method:frameWorkApproversRule"/>
+                      <entry key="template" value="Common Approvals Template"/>
+                    </Map>
+                  </Attributes>
+                </value>
+              </entry>
+              <entry key="Operations">
+                <value>
+                  <Attributes>
+                    <Map>
+                      <entry key="displayName" value="Operations"/>
+                      <entry key="getApprovalBusApproversRule" value="method:frameWorkApproversRule"/>
+                      <entry key="notifyEmailTemplate" value="EmailTemplate-FrameworkOperationsReview"/>
+                      <entry key="template" value="Common Approvals Template"/>
+                    </Map>
+                  </Attributes>
+                </value>
+              </entry>
+              <entry key="RoleBusApprovers">
+                <value>
+                  <Attributes>
+                    <Map>
+                      <entry key="checkApprovalRequiredRule" value="method:skipOrOverrideorGetRoleFirstLevelApprovals"/>
+                      <entry key="displayName" value="1st Level Role Business Approvers"/>
+                      <entry key="getApprovalBusApproversRule" value="method:frameWorkApproversRule"/>
+                      <entry key="template" value="Common Approvals Template"/>
+                    </Map>
+                  </Attributes>
+                </value>
+              </entry>
+              <entry key="Workgroup">
+                <value>
+                  <Attributes>
+                    <Map>
+                      <entry key="displayName" value="Workgroup"/>
+                      <entry key="getApprovalBusApproversRule" value="rule:Rule-FrameWorkApproversRule"/>
+                      <entry key="template" value="Common Approvals Template"/>
+                    </Map>
+                  </Attributes>
+                </value>
+              </entry>
+            </Map>
+          </Attributes>
+        </value>
+      </entry>
+      <entry key="Default WorkItem Config">
+        <value>
+          <Attributes>
+            <Map>
+              <entry key="accountSelectionNotifyEmailTemplate" value="EmailTemplate-FrameworkAccountSelectionNotification"/>
+              <entry key="disableApprovalNotifications" value="false"/>
+              <entry key="electronicSignature" value="No Electronic Signature Required"/>
+              <entry key="escalationEmailTemplate" value="EmailTemplate-FrameworkEscalation"/>
+              <entry key="escalationRule" value="Rule-FrameworkEscalationType"/>
+              <entry key="escalationSameLevelRule"/>
+              <entry key="escalationStyle" value="both"/>
+              <entry key="escalationType" value="emailToManager"/>
+              <entry key="hoursBetweenReminders" value="24"/>
+              <entry key="hoursTillEscalation" value="24"/>
+              <entry key="hoursTillExpiration" value="168"/>
+              <entry key="maxReminders" value="3"/>
+              <entry key="notifyEmailTemplate" value="EmailTemplate-FrameworkApproval"/>
+              <entry key="reminderEmailTemplate" value="EmailTemplate-FrameworkReminder"/>
+            </Map>
+          </Attributes>
+        </value>
+      </entry>
+      <entry key="Eligible Request Type Approvals">
+        <value>
+          <Map>
+            <entry key="ATTRIBUTE SYNCHRONIZATION FEATURE">
+              <value>
+                <List>
+                  <String>Operations</String>
+                </List>
+              </value>
+            </entry>
+            <entry key="BATCH REQUEST FEATURE">
+              <value>
+                <List>
+                  <String>BatchOwners</String>
+                </List>
+              </value>
+            </entry>
+            <entry key="CART REQUEST FEATURE">
+              <value>
+                <List>
+                  <String>ManagerOrServiceAccountOwner</String>
+                  <String>ApplicationBusApprovers</String>
+                  <String>AdditionalApplicationBusApprovers</String>
+                  <String>EntitlementBusApprovers</String>
+                  <String>AdditionalEntitlementBusApprovers</String>
+                  <String>RoleBusApprovers</String>
+                  <String>AdditionalRoleBusApprovers</String>
+                </List>
+              </value>
+            </entry>
+            <entry key="CHANGE PASSWORD FEATURE"/>
+            <entry key="CREATE IDENTITY FEATURE">
+              <value>
+                <List>
+                  <String>ManagerOrServiceAccountOwner</String>
+                  <String>Workgroup</String>
+                </List>
+              </value>
+            </entry>
+            <entry key="EDIT IDENTITY FEATURE">
+              <value>
+                <List>
+                  <String>ManagerOrServiceAccountOwner</String>
+                  <String>Workgroup</String>
+                </List>
+              </value>
+            </entry>
+            <entry key="EXTERNAL FEATURE"/>
+            <entry key="FIREFIGHTER FEATURE"/>
+            <entry key="IMMEDIATE TERMINATION FEATURE"/>
+            <entry key="JOINER FEATURE">
+              <value>
+                <List>
+                  <String>Operations</String>
+                </List>
+              </value>
+            </entry>
+            <entry key="JOINER LOA FEATURE">
+              <value>
+                <List>
+                  <String>Operations</String>
+                </List>
+              </value>
+            </entry>
+            <entry key="JOINER LTD FEATURE">
+              <value>
+                <List>
+                  <String>Operations</String>
+                </List>
+              </value>
+            </entry>
+            <entry key="JOINER REHIRE FEATURE">
+              <value>
+                <List>
+                  <String>Operations</String>
+                </List>
+              </value>
+            </entry>
+            <entry key="LEAVER FEATURE">
+              <value>
+                <List>
+                  <String>Operations</String>
+                </List>
+              </value>
+            </entry>
+            <entry key="LEAVER LOA FEATURE">
+              <value>
+                <List>
+                  <String>Operations</String>
+                </List>
+              </value>
+            </entry>
+            <entry key="LEAVER LTD FEATURE">
+              <value>
+                <List>
+                  <String>Operations</String>
+                </List>
+              </value>
+            </entry>
+            <entry key="MANAGE ACCOUNTS FEATURE">
+              <value>
+                <List>
+                  <String>ManagerOrServiceAccountOwner</String>
+                  <String>ApplicationBusApprovers</String>
+                  <String>AdditionalApplicationBusApprovers</String>
+                </List>
+              </value>
+            </entry>
+            <entry key="MANAGE PASSWORDS FEATURE"/>
+            <entry key="MANAGER CERTIFICATION ALLOW EXCEPTION FEATURE">
+              <value>
+                <List>
+                  <String>Operations</String>
+                </List>
+              </value>
+            </entry>
+            <entry key="MOVER FEATURE"/>
+            <entry key="NATIVE CHANGE DETECTION FEATURE">
+              <value>
+                <List>
+                  <String>Operations</String>
+                </List>
+              </value>
+            </entry>
+            <entry key="PASSWORD INTERCEPTOR FEATURE">
+              <value>
+                <List>
+                  <String>Operations</String>
+                </List>
+              </value>
+            </entry>
+            <entry key="PRIVILEGED SERVICE PASSWORD EXPIRATION FEATURE">
+              <value>
+                <List>
+                  <String>Operations</String>
+                </List>
+              </value>
+            </entry>
+            <entry key="RECOVERY TOOL FEATURE"/>
+            <entry key="REGISTRATION FEATURE">
+              <value>
+                <List>
+                  <String>ManagerOrServiceAccountOwner</String>
+                  <String>Workgroup</String>
+                </List>
+              </value>
+            </entry>
+            <entry key="REQUEST MANAGER FEATURE"/>
+            <entry key="REVERSE LEAVER FEATURE">
+              <value>
+                <List>
+                  <String>Operations</String>
+                </List>
+              </value>
+            </entry>
+            <entry key="SER LINK FEATURE"/>
+            <entry key="SER UNLINK FEATURE"/>
+            <entry key="SUSPEND FEATURE"/>
+          </Map>
+        </value>
+      </entry>
+      <entry key="Split Eligibility">
+        <value>
+          <Map>
+            <entry key="AdditionalApplicationBusApprovers" value="false"/>
+            <entry key="AdditionalEntitlementBusApprovers" value="false"/>
+            <entry key="AdditionalRoleBusApprovers" value="false"/>
+            <entry key="ApplicationBusApprovers" value="false"/>
+            <entry key="BatchOwners" value="false"/>
+            <entry key="EntitlementBusApprovers" value="false"/>
+            <entry key="Operations" value="false"/>
+            <entry key="RoleBusApprovers" value="false"/>
+            <entry key="Workgroup" value="false"/>
+          </Map>
+        </value>
+      </entry>
+    </Map>
+  </Attributes>
+</Custom>

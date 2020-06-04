@@ -73,4 +73,6 @@
   <ObjectAttribute displayName="att_identity_type" name="type" standard="true" type="string"/>
   <ObjectAttribute displayName="att_software_version" name="softwareVersion" standard="true" type="string"/>
   <ObjectAttribute displayName="att_administrator" name="administrator" standard="true" type="sailpoint.object.Identity"/>
+  <ObjectAttribute categoryName="Joiner" displayName="Implicit Joiner" editMode="ReadOnly" name="needsJoiner" namedColumn="true" type="string"/>
+  <ObjectAttribute displayName="Middle Name" editMode="ReadOnly" name="middleName" namedColumn="true" type="string"/>
 </ObjectConfig>

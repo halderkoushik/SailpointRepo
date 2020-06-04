@@ -1,0 +1,133 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule-FrameWork-Creation-Joiner-Authoritative-Source" type="IdentityCreation">
+  <Description>
+    Creation rule
+  </Description>
+  <Signature returnType="Map">
+    <Inputs>
+      <Argument name="log">
+        <Description>
+         Log
+        </Description>
+      </Argument>
+      <Argument name="context">
+        <Description>
+          A sailpoint.api.SailPointContext object that can be used to
+          query the database to aid in correlation.
+        </Description>
+      </Argument>
+      <Argument name="environment" type="Map">
+        <Description>
+          Arguments passed to the aggregation task.
+        </Description>
+      </Argument>
+      <Argument name="application">
+        <Description>
+          Application being aggregated.
+        </Description>
+      </Argument>
+      <Argument name="account">
+        <Description>
+          A sailpoint.object.ResourceObject returned from the
+          collector.
+        </Description>
+      </Argument>
+      <Argument name="identity">
+        <Description>
+          Identity Object
+        </Description>
+      </Argument>
+    </Inputs>
+  </Signature>
+  <Source><![CDATA[
+    
+    import sailpoint.rapidapponboarding.rule.AggregationRuleLibrary;
+    import sailpoint.rapidapponboarding.rule.ObjectConfigAttributesRuleLibrary;
+    import sailpoint.rapidapponboarding.rule.JoinerRuleLibrary;
+	import sailpoint.rapidapponboarding.logger.LogEnablement;
+	import sailpoint.object.Attributes;
+	import org.apache.commons.logging.Log;
+	import org.apache.commons.logging.LogFactory;
+	Log aggLogger = LogFactory.getLog("rapidapponboarding.rules");
+	String serviceAccountEnabled = ObjectConfigAttributesRuleLibrary.extendedAttrServiceAccountEnabled(context);
+	boolean servAccEnabled=false;
+	if(serviceAccountEnabled!=null && serviceAccountEnabled.length()>0 && serviceAccountEnabled.equalsIgnoreCase("TRUE"))
+	{
+		servAccEnabled=true;
+	}
+	//Set Joiner Flag
+    identity.setAttribute(JoinerRuleLibrary.JOINERATTRNEEDSJOINER,JoinerRuleLibrary.JOINERNEEDPROCESSING);
+    //Let's Run Application Specific Rule Here
+	HashMap params = new HashMap();
+	params.put("context", context);
+	params.put("environment", environment);
+	params.put("application", application);
+	params.put("account", account);
+	params.put("identity", identity);
+	 //Identity TYPE ENABLED
+	String identityTypeEnabled = ObjectConfigAttributesRuleLibrary.extendedAttrIdentityTypeEnabled(context);
+	boolean identityTypeEnab=false;
+	if(identityTypeEnabled!=null && identityTypeEnabled.length()>0 && identityTypeEnabled.equalsIgnoreCase("TRUE"))
+	{
+		identityTypeEnab=true;
+	}
+	//Set Identity as Contractor based on Contractor Repository
+	boolean contractorRepo=false;
+	Attributes attrs = application.getAttributes();
+	String repoName="authoritativeNonEmployee";
+	if (attrs != null && attrs.containsKey(repoName) && attrs.get(repoName) != null && ((String) attrs.get(repoName)).equalsIgnoreCase("True")) 
+	{
+		LogEnablement.isLogDebugEnabled(aggLogger,"Type..Contractor Account Repository");
+		if(identityTypeEnab)
+	     {
+	    	LogEnablement.isLogDebugEnabled(aggLogger,"Type..Contractor");
+	    	contractorRepo=true;
+	      }
+	}
+	if(servAccEnabled)
+	{
+		repoName="authoritativeServiceAccount";
+		if (attrs != null && attrs.containsKey(repoName) && attrs.get(repoName) != null && ((String) attrs.get(repoName)).equalsIgnoreCase("True")) 
+		{
+			LogEnablement.isLogDebugEnabled(aggLogger,"Type..Service Account Repository");
+			//IdentityIQ 7.2+
+			identity.setAttribute("serviceCube", "TRUE");
+			 if(identityTypeEnab)
+		     {
+		    	LogEnablement.isLogDebugEnabled(aggLogger,"Type..Service");
+		    	//IdentityIQ 7.3+
+		     	identity.setType("service");
+			  }
+		}
+	}
+	repoName="authoritativeEmployee";
+	boolean employeeRepo=false;
+	if (attrs != null && attrs.containsKey(repoName) && attrs.get(repoName) != null && ((String) attrs.get(repoName)).equalsIgnoreCase("True")) 
+	{
+		LogEnablement.isLogDebugEnabled(aggLogger,"Type..Employee Account Repository");
+		 if(identityTypeEnab)
+	     {
+	    	LogEnablement.isLogDebugEnabled(aggLogger,"Type..Employee");
+	    	//IdentityIQ 7.3+
+	    	employeeRepo=true;
+	  	  }
+	}
+	//Repository can be authoritative source for both Employees and Contractors
+	//In this case User Type must be set using Identity Mappings
+	if(!employeeRepo && contractorRepo)
+	{
+	 	identity.setType("contractor");
+	}
+	else if(employeeRepo && !contractorRepo)
+	{
+	 	identity.setType("employee");
+	}
+	else if(employeeRepo && contractorRepo)
+	{
+		LogEnablement.isLogDebugEnabled(aggLogger,"Please Set..User Type.. Using Identity Mappings");
+	}
+	AggregationRuleLibrary.runApCreationRule(context,application,identity,params);
+  
+  ]]></Source>
+</Rule>

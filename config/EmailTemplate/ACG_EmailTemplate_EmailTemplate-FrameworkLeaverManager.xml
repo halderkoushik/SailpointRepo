@@ -1,0 +1,111 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE EmailTemplate PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<EmailTemplate name="EmailTemplate-FrameworkLeaverManager">
+  <Body>
+   		 
+		#set($ctx = $spTools.class.forName("sailpoint.api.SailPointFactory").getMethod("getFactory", null).invoke(null,null).getCurrentContext())
+		#set($reqType = $workflow.requestType)
+   		#set($ruleObj = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Rule"), "Rule-Framework-Header-Footer-StyleSheet")) 
+		#set($ruleArgs = { 
+		    "keyEmailTemplate"  : "styleSheet"
+		}) 
+		#set($styleSheet = $ctx.runRule($ruleObj, $ruleArgs))
+		#if( $ruleObj )
+		$ctx.decache($ruleObj)
+		#end
+		#set($ruleObj = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Rule"), "Rule-Framework-Header-Footer-StyleSheet")) 
+		#set($ruleArgs = { 
+		    "keyEmailTemplate"  : "headerTemplate"
+		}) 
+		#set($headerTemplate = $ctx.runRule($ruleObj, $ruleArgs))
+		#if( $ruleObj )
+		$ctx.decache($ruleObj)
+		#end
+		#set($ruleObj = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Rule"), "Rule-Framework-Header-Footer-StyleSheet")) 
+		#set($ruleArgs = { 
+		    "keyEmailTemplate"  : "footerTemplate"
+		}) 
+		#set($footerTemplate = $ctx.runRule($ruleObj, $ruleArgs))
+		#if( $ruleObj )
+		$ctx.decache($ruleObj)
+		#end
+			<![CDATA[<html>		
+			<head>
+			<meta charset="UTF-8">	    
+			#if( $styleSheet )
+			$styleSheet
+			#end 
+			</head>
+	    	<body>
+	    	#if( $headerTemplate )
+			$headerTemplate
+			#end
+			<br/>       
+			Dear $recipientDisplayName,<br/>
+			<p>Termination of Identity '$refIdentityDisplayName' completed.</p>
+			#if ($plan && $apDisableStaticManagerEmailContent && $apDisableStaticManagerEmailContent =="False")
+			        <ul>
+				#foreach ($acctReq in $plan.accountRequests)
+					<li>Application: $!acctReq.applicationName</li>
+					<li>Account ID : $!acctReq.nativeIdentity</li>
+			        <ul>
+					#foreach ($attrReq in $acctReq.attributeRequests)
+						<li>Attribute Name : $!attrReq.name</li>
+						<li>Attribute Value: $!attrReq.value</li>
+			        #end           
+			        </ul>
+			      #end
+				    </ul>
+			#end
+			#if ($dynamicAppContent)
+				<table>
+					#if ($apDisableStaticManagerEmailContent && $apDisableStaticManagerEmailContent =="False" )
+						#foreach( $key in $dynamicAppContent.keySet() )
+						<tr><td>$key</td><td>$dynamicAppContent.get($key)</td></tr>
+						#end
+					#else
+						#foreach( $key in $dynamicAppContent.keySet() )
+						<tr><td>$dynamicAppContent.get($key)</td></tr>
+						#end
+					#end
+				</table>
+			#end	
+			#if ( $provisioningErrors )
+				The following errors occurred during provisioning:
+				<ul>
+				#foreach ($error in $provisioningErrors)
+				<li>$!error</li>
+				#end
+				</ul>
+			#end
+			#if( $footerTemplate )
+			$footerTemplate
+			#end
+			</body>
+		</html>]]>
+				
+    </Body>
+  <Description>
+      Email Template for notifying the manager when Leaver process has been completed
+    </Description>
+  <Signature>
+    <Inputs>
+      <Argument name="workflow" type="Workflow">
+        <Description>The Workflow object being executed.</Description>
+      </Argument>
+      <Argument name="approvalSet" type="ApprovalSet">
+        <Description>The ApprovalSet object contained in the workflow.</Description>
+      </Argument>
+      <Argument name="refIdentityDisplayName" type="string">
+        <Description>The name of the Identity that is registering.</Description>
+      </Argument>
+      <Argument name="recipientDisplayName" type="string">
+        <Description>The display name of the Identity that is registering.</Description>
+      </Argument>
+      <Argument name="provisioningErrors" type="List">
+        <Description>Any provisioning errors that may have occurred.</Description>
+      </Argument>
+    </Inputs>
+  </Signature>
+  <Subject>#if($provisioningErrors) Error:#end User '$refIdentityDisplayName' has been terminated </Subject>
+</EmailTemplate>

@@ -1,0 +1,177 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE EmailTemplate PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<EmailTemplate name="EmailTemplate-FrameworkReminder">
+  <Body>
+	
+		#set($ctx = $spTools.class.forName("sailpoint.api.SailPointFactory").getMethod("getFactory", null).invoke(null,null).getCurrentContext())
+		#set($requesteeIdentity = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Identity"),$identityName))
+		#set($ownerIdentity = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Identity"),$ownerName))
+		#set($reqType = $workflow.requestType)
+		#set($accessReqNumber = $workItem.identityRequestId)
+		#if($workItem.getAttributes() &amp;&amp; $workItem.getAttributes().get("applicationName"))
+			#set($applicationName = $workItem.getAttributes().get("applicationName"))
+		#else
+			#set($applicationName = "")
+		#end
+		#if($workItem.getAttributes() &amp;&amp; $workItem.getAttributes().get("operation"))
+			#set($operation = $workItem.getAttributes().get("operation"))
+		#else
+			#set($operation = "")
+		#end
+		#set($ruleObj = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Rule"), "Rule-Framework-Header-Footer-StyleSheet")) 
+		#set($ruleArgs = { 
+		    "keyEmailTemplate"  : "styleSheet"
+		}) 
+		#set($styleSheet = $ctx.runRule($ruleObj, $ruleArgs))
+		#if( $ruleObj )
+		$ctx.decache($ruleObj)
+		#end
+		#set($ruleObj = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Rule"), "Rule-Framework-Header-Footer-StyleSheet")) 
+		#set($ruleArgs = { 
+		    "keyEmailTemplate"  : "headerTemplate"
+		}) 
+		#set($headerTemplate = $ctx.runRule($ruleObj, $ruleArgs))
+		#if( $ruleObj )
+		$ctx.decache($ruleObj)
+		#end
+		#set($ruleObj = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Rule"), "Rule-Framework-Header-Footer-StyleSheet")) 
+		#set($ruleArgs = { 
+		    "keyEmailTemplate"  : "footerTemplate"
+		}) 
+		#set($footerTemplate = $ctx.runRule($ruleObj, $ruleArgs))
+		#if( $ruleObj )
+		$ctx.decache($ruleObj)
+		#end
+		#set($ruleObj = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Rule"), "Rule-Server-Root-Path")) 
+		#set($ruleArgs = {})
+		#set($rootPath = $ctx.runRule($ruleObj, $ruleArgs))
+		#if( $ruleObj )
+		$ctx.decache($ruleObj)
+		#end
+		<![CDATA[<html>
+		<head>
+		<meta charset="UTF-8">	    
+		#if( $styleSheet )
+		$styleSheet
+		#end  
+		</head>	      
+	    	<body>
+	    	#if( $headerTemplate )
+			$headerTemplate
+			#end
+			<br/>    
+				#if ($ownerIdentity.getDisplayName()) 
+					Dear $ownerIdentity.getDisplayName(),<br/>
+				#elseif($ownerIdentity.getFirstname())
+					Dear $ownerIdentity.getFirstname(),<br/>
+				#else
+					Dear $ownerIdentity.getName(),<br/>
+				#end<br/> 	
+				<p>This is a reminder that you have an open request that requires your attention.</p>
+				<p>Please review and provide your access decision.  <a href="$rootPath/workitem/workItem.jsf?id=$workItem.id">Click here</a></p>
+        Request Number:  $accessReqNumber<br/>
+        Request For Identity Name:  <strong>$identityName</strong><br/>
+        Request For Identity Display Name:  <strong>$identityDisplayName</strong><br/>
+        Request:<br/>
+				#if ( $workItem.approvalSet.items )
+					#foreach ($approvalItem in $workItem.approvalSet.items)				
+						#if ( $approvalItem.displayValue )
+							<strong>$!approvalItem.operation $approvalItem.displayValue</strong><br/>
+						#elseif ($approvalItem.value && $approvalItem.name && $approvalItem.application)
+							#set($ruleObj = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Rule"), "Rule-Framework-ManagedAttribute-GetDisplayValue")) 
+							#set($ruleArgs = { 
+							    "attrName"  : $approvalItem.name, 
+							    "attrValue" : $approvalItem.value,
+							    "attrApp"   : $approvalItem.application 
+							}) 
+							#set($attrDisplayValue = $ctx.runRule($ruleObj, $ruleArgs))
+							#if( $ruleObj )
+							$ctx.decache($ruleObj)
+							#end
+							<strong>$!approvalItem.operation $attrDisplayValue</strong><br/>
+						#elseif ($approvalItem.value.class.name == "java.util.List" || $approvalItem.value.class.name == "java.util.ArrayList")
+							<strong>$!approvalItem.operation $approvalItem.value.get(0)</strong><br/>
+						#elseif ($approvalItem.value)
+						<strong>$!approvalItem.operation  $approvalItem.value</strong><br/>
+						#elseif ($approvalItem.application)
+						<strong>$!approvalItem.operation  Account on $approvalItem.application</strong><br/>
+						#end
+					#end
+				#end
+			#if ($dynamicAppContentReminder)
+			<table>
+			#foreach( $key in $dynamicAppContentReminder.keySet() )
+			<tr><td>$key</td><td>$dynamicAppContentReminder.get($key)</td></tr>
+			#end
+			</table>
+			#end		
+    		#if( $footerTemplate )
+			$footerTemplate
+			#end
+			#if( $requesteeIdentity )
+			$ctx.decache($requesteeIdentity)
+			#end
+			#if( $ownerIdentity )
+			$ctx.decache($ownerIdentity)
+			#end
+			</body>
+		</html>]]>
+	
+	</Body>
+  <Description>
+		Email Template for reminding work item owners that their work
+		items are overdue.
+		NOTE: In addition to the declared arguments, all entries
+		from the work item attributes map are also available by name in the
+		template.
+	</Description>
+  <Signature>
+    <Inputs>
+      <Argument name="workItem" type="WorkItem">
+        <Description>The WorkItem object.</Description>
+      </Argument>
+      <Argument name="workItemName" type="string">
+        <Description>The name of the WorkItem.</Description>
+      </Argument>
+      <Argument name="certification" type="Certification">
+        <Description>The Certification object.</Description>
+      </Argument>
+      <Argument name="certificationName" type="string">
+        <Description>The name of the Certification.</Description>
+      </Argument>
+      <Argument name="ownerName" type="string">
+        <Description>The name of the Identity that owns the work item.</Description>
+      </Argument>
+      <Argument name="requester" type="Identity">
+        <Description>The identity object that represents the creator of the
+					work item.</Description>
+      </Argument>
+      <Argument name="ordinalNumReminders" type="string">
+        <Description>The number of this reminder, starting from 1. Passed as
+					a String.</Description>
+      </Argument>
+      <Argument name="remindersRemaining" type="string">
+        <Description>The number of reminders remaining after this one.
+					Passed as a String.</Description>
+      </Argument>
+      <Argument name="oldDueDate" type="date">
+        <Description>The former due date, passed as a java.util.Date.</Description>
+      </Argument>
+      <Argument name="newDueDate" type="date">
+        <Description>The new due date, passed as a java.util.Date.</Description>
+      </Argument>
+      <Argument name="nowDate" type="date">
+        <Description>The current date, passed as a java.util.Date.</Description>
+      </Argument>
+      <Argument name="created" type="date">
+        <Description>The date the work item was created, passed as a
+					java.util.Date.</Description>
+      </Argument>
+      <Argument name="expiration" type="date">
+        <Description>The optional date the work item completely expires,
+					passed as a java.util.Date .</Description>
+      </Argument>
+    </Inputs>
+  </Signature>
+  <Subject>REMINDER: Access Request Awaiting Review</Subject>
+</EmailTemplate>

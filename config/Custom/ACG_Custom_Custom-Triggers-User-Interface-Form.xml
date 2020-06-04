@@ -1,0 +1,17 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Custom PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Custom name="Custom-Triggers-User-Interface-Form">
+  <Attributes>
+    <Map>
+      <entry key="joinerProcess" value="JOINER FEATURE"/>
+      <entry key="loaProcess" value="LEAVER LOA FEATURE"/>
+      <entry key="ltdProcess" value="LEAVER LTD FEATURE"/>
+      <entry key="moverProcess" value="MOVER FEATURE"/>
+      <entry key="rehireProcess" value="JOINER REHIRE FEATURE"/>
+      <entry key="reverseleaverProcess" value="REVERSE LEAVER FEATURE"/>
+      <entry key="rtwloaProcess" value="JOINER LOA FEATURE"/>
+      <entry key="rtwltdProcess" value="JOINER LTD FEATURE"/>
+      <entry key="terminationProcess" value="LEAVER FEATURE"/>
+    </Map>
+  </Attributes>
+</Custom>

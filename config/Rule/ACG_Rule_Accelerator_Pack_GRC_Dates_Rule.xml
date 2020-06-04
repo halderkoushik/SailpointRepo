@@ -1,0 +1,118 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Accelerator Pack GRC Dates Rule">
+  <Description>This rule returns a Filter that restricts entitlements to those that are not privileged</Description>
+  <Signature returnType="sailpoint.object.Filter">
+    <Inputs>
+      <Argument name="log">
+        <Description>
+          The log object associated with the SailPointContext.
+        </Description>
+      </Argument>
+      <Argument name="context">
+        <Description>
+          A sailpoint.api.SailPointContext object that can be used to query the database if necessary.
+        </Description>
+      </Argument>
+      <Argument name="wfcontext">
+        <Description>
+          The current WorkflowContext.
+        </Description>
+      </Argument>
+      <Argument name="handler">
+        <Description>
+          The workflow handler associated with the current WorkflowContext.
+        </Description>
+      </Argument>
+      <Argument name="workflow">
+        <Description>
+          The current Workflow definition.
+        </Description>
+      </Argument>
+      <Argument name="step">
+        <Description>
+          The current Step.
+        </Description>
+      </Argument>
+      <Argument name="approval">
+        <Description>
+          The current Approval.
+        </Description>
+      </Argument>
+      <Argument name="item">
+        <Description>
+          The WorkItem being processed.
+        </Description>
+      </Argument>
+      <Argument name="project" type="sailpoint.object.ProvisioningProject"/>
+      <Argument name="requestType"/>
+      <Argument name="flow"/>
+      <Argument name="identityName"/>
+      <Argument name="spExtAttrs"/>
+      <Argument name="identityRequestId"/>
+      <Argument name="launcher"/>
+      <Argument name="startDate"/>
+      <Argument name="endDate"/>
+    </Inputs>
+    <Returns>
+      <Argument name="project"/>
+    </Returns>
+  </Signature>
+  <Source><![CDATA[
+          
+     import sailpoint.object.ProvisioningPlan;
+	import sailpoint.object.ProvisioningProject;
+	import sailpoint.object.ProvisioningPlan.AccountRequest;
+	import sailpoint.object.ProvisioningPlan.AttributeRequest;
+	import sailpoint.tools.Util;
+	import sailpoint.object.Attributes;
+	import sailpoint.connector.SAPConnector;
+	import org.apache.commons.logging.Log;
+	import org.apache.commons.logging.LogFactory;
+    import sailpoint.rapidapponboarding.logger.LogEnablement;
+    import java.util.ArrayList;
+    Log ruleLogger = LogFactory.getLog("rapidapponboarding.rules");
+	LogEnablement.isLogDebugEnabled(ruleLogger,"project "+project);
+	LogEnablement.isLogDebugEnabled(ruleLogger,"wfcontext "+wfcontext);
+	LogEnablement.isLogDebugEnabled(ruleLogger,"startDate "+startDate);
+	LogEnablement.isLogDebugEnabled(ruleLogger,"endDate "+endDate);
+	LogEnablement.isLogDebugEnabled(ruleLogger,"identityRequestId "+identityRequestId);
+	LogEnablement.isLogDebugEnabled(ruleLogger,"identityName "+identityName);
+	LogEnablement.isLogDebugEnabled(ruleLogger,"spExtAttrs "+spExtAttrs);
+	LogEnablement.isLogDebugEnabled(ruleLogger,"flow "+flow);
+	LogEnablement.isLogDebugEnabled(ruleLogger,"launcher "+launcher);
+	LogEnablement.isLogDebugEnabled(ruleLogger,"approval "+approval);
+	LogEnablement.isLogDebugEnabled(ruleLogger,"step "+step);
+	LogEnablement.isLogDebugEnabled(ruleLogger,"handler "+handler);
+	//Example of SAP GRC Roles
+	Attributes args = wfcontext.getArguments();
+       ProvisioningProject project = (ProvisioningProject) args.get("project");
+	for (ProvisioningPlan plan : Util.iterate(project.getPlans())) {
+	    for (AccountRequest accReq : Util.iterate(plan.getAccountRequests())) {
+		for (ProvisioningPlan.AttributeRequest attReq : Util.iterate(accReq.getAttributeRequests())) {
+		     String attrName = attReq.getName();
+		     if (SAPConnector.ATTR_ROLES.equalsIgnoreCase(attrName)) {	
+                       if (attReq.getArguments() == null) {
+                           Attributes args = new Attributes();
+                           if (!Util.isEmpty(endDate)) {
+                              args.put("endDate", endDate);
+                           }
+                           if (!Util.isEmpty(startDate)) {
+                             args.put("startDate", startDate);
+                           }
+                          attReq.setArguments(args);
+                        } else {
+                           if (!Util.isEmpty(endDate)) {
+                             attReq.getArguments().put("endDate", endDate);
+                           } 
+                           if (!Util.isEmpty(startDate)) {
+                             attReq.getArguments().put("startDate", startDate);
+                           }
+                        }  
+                     }
+                  }
+               }
+            }
+  
+    ]]></Source>
+</Rule>

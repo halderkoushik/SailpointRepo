@@ -1,0 +1,36 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule-Validate-DateFormat">
+  <Source><![CDATA[
+	
+	import java.text.SimpleDateFormat;
+	import java.text.ParseException;
+	if(value!=null)
+	{
+		try 
+		{
+		    Calendar cal = Calendar.getInstance();
+			SimpleDateFormat sdf = new SimpleDateFormat(value);
+			Date today = Calendar.getInstance().getTime(); 
+			String dateString = sdf.format( today );
+			Date covertedDate = sdf.parse(dateString);
+			Date newDate = new Date();
+			long timeDiffInMs = covertedDate.getTime() - newDate.getTime();	        
+			int days = (int) (timeDiffInMs / (1000 * 60 * 60 * 24));	
+	       			if(days != 0)
+			{
+				return "Invalid Date Format";
+			}
+		} 
+		catch (ParseException e) 
+		{
+	       				 return "Invalid Date Format";
+	   	}
+		catch (Exception ex) 
+		{
+		   return "Invalid Date Format";
+		}
+	}
+	
+	]]></Source>
+</Rule>

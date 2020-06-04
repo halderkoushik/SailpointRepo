@@ -1,0 +1,72 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule-AccountCreation-Dependency-Framework" type="AfterProvisioning">
+  <Description>An IdentityIQ server-side rule that can be set as an After Provisioning Rule on
+	an Application.
+	</Description>
+  <ReferencedRules>
+    <Reference class="sailpoint.object.Rule" name="Rule-AccountCreationDependency-RuleLibrary"/>
+  </ReferencedRules>
+  <Signature>
+    <Inputs>
+      <Argument name="log">
+        <Description>
+					The log object associated with the SailPointContext.
+				</Description>
+      </Argument>
+      <Argument name="context">
+        <Description>
+					A sailpoint.api.SailPointContext object that can be used to query
+					the database if necessary.
+				</Description>
+      </Argument>
+      <Argument name="plan">
+        <Description>
+					The ProvisioningPlan object on its way to the Connector.
+				</Description>
+      </Argument>
+      <Argument name="application">
+        <Description>
+					The application object that references this before/after script.
+				</Description>
+      </Argument>
+      <Argument name="result">
+        <Description>
+	          		The ProvisioningResult object returned by the connectors provision method. This can be null and in many cases the connector will  not return a result and instead will annotate the plan's ProvisioningResult either at the plan or account level.        
+	        	</Description>
+      </Argument>
+    </Inputs>
+  </Signature>
+  <Source><![CDATA[
+		 
+		    import sailpoint.rapidapponboarding.rule.AuditRuleLibrary;
+		    import sailpoint.rapidapponboarding.rule.AggregationRuleLibrary;
+		    HashMap params = new HashMap();
+			params.put("context", context);
+			params.put("plan", plan);
+			params.put("application", application);
+			if(result !=void && result!=null)
+			{
+				params.put("result", result);
+			}
+			try
+			{
+				addAccountCreateDependencyRequests(plan, application.getName());
+				if(result !=void && result!=null )
+				{
+					AuditRuleLibrary.logRoadAuditEvents( context,  plan, result,  application,null,null,null,null,true,null);
+					AggregationRuleLibrary.runAfterProvisioningRule(context,plan,application,result,params);
+				}
+				else
+				{
+					AuditRuleLibrary.logRoadAuditEvents( context,  plan, null,  application,null,null,null,null,true,null);
+					AggregationRuleLibrary.runAfterProvisioningRule(context,plan,application,null,params);
+				}
+			}
+			catch(Exception ex)
+			{
+			  	throw new GeneralException("ERROR:An exception was thrown while attempting to process after provisioninh rule", ex);
+			}
+			
+	]]></Source>
+</Rule>

@@ -1,0 +1,385 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule-Rehire-RuleLibrary">
+  <Description>All the Joiner Logic for Eligibility and Plan Building.</Description>
+  <Signature returnType="Map"/>
+  <Source><![CDATA[
+    import java.util.ArrayList;
+    import java.util.HashMap;
+    import java.util.List;
+    import java.util.Map;
+    import org.apache.commons.logging.Log;
+    import org.apache.commons.logging.LogFactory;
+    import sailpoint.api.IdentityService;
+    import sailpoint.api.SailPointContext;
+    import sailpoint.object.Application;
+    import sailpoint.object.Attributes;
+    import sailpoint.object.Custom;
+    import sailpoint.object.Identity;
+    import sailpoint.object.Link;
+    import sailpoint.object.ObjectConfig;
+    import sailpoint.object.ProvisioningPlan;
+    import sailpoint.object.ProvisioningPlan.AccountRequest;
+    import sailpoint.object.ProvisioningPlan.AttributeRequest;
+    import sailpoint.object.ProvisioningProject;
+    import sailpoint.object.Workflow;
+    import sailpoint.object.Bundle;
+    import sailpoint.object.Filter;
+    import sailpoint.object.IdentitySelector;
+    import sailpoint.object.QueryOptions;
+    import sailpoint.object.GroupDefinition;
+    import sailpoint.tools.GeneralException;
+    import sailpoint.tools.Util;
+    import sailpoint.rapidapponboarding.rule.WrapperRuleLibrary;
+    import sailpoint.rapidapponboarding.rule.AttributeSyncRuleLibrary;
+    import sailpoint.rapidapponboarding.rule.JoinerRuleLibrary;
+    import sailpoint.rapidapponboarding.rule.WorkflowUtil;
+    import sailpoint.rapidapponboarding.rule.ROADUtil;
+    import java.text.SimpleDateFormat;
+    import sailpoint.rapidapponboarding.logger.LogEnablement;
+    private Log rehireLogger = LogFactory.getLog("rapidapponboarding.rules");
+   /**
+     * Build Joiner Rehire Provisioning Plan
+     * @param context
+     * @param identityName
+     * @param workflow
+     * @return
+     */
+    public ProvisioningPlan buildRehirePlan(SailPointContext context, String identityName, Workflow workflow) throws Exception {
+        LogEnablement.isLogDebugEnabled(rehireLogger,"Enter buildRehirePlan");
+        Identity identity = context.getObjectByName(Identity.class, identityName);
+        IdentityService idService = new IdentityService(context);
+        int countLinks = 0;
+        countLinks = idService.countLinks(identity);
+        ProvisioningPlan plan = null;
+        LogEnablement.isLogDebugEnabled(rehireLogger, "...Start building ProvisioningPlan");
+        List applicationsForJoiner = new ArrayList();
+        String extendedRule = "rehireExtendedRule";
+        //joinerEnabled Flag applications
+        applicationsForJoiner = JoinerRuleLibrary.getApplicationsForJoiner(context, identity);
+        LogEnablement.isLogDebugEnabled(rehireLogger, "...applicationsForJoiner pop match and app enabled..."+applicationsForJoiner);
+        List joinerEnabledApps = JoinerRuleLibrary.getAllJoinerApplicationNames(context);
+        List links;
+        if (countLinks > 0 && identity != null && applicationsForJoiner != null)
+        {
+            links = idService.getLinks(identity,0,0);
+            //Find existing links' applications that are part of the joiner group and add them to applicationsForJoiner
+            //if they aren't already in the list
+            for (Link link : links)
+            {
+                String linkAppName = link.getApplicationName();
+                LogEnablement.isLogDebugEnabled(rehireLogger, "...linkAppName..."+linkAppName);
+                if (!applicationsForJoiner.contains(linkAppName))
+                {
+                    //Add link applicatons to joinerEnabled flag applications,
+                    //someone may come back in different position (contractor to Employee or Employee To Contractor)
+                    //or population defined may not be eligible after mover
+                    LogEnablement.isLogDebugEnabled(rehireLogger,"...linkAppName...is not calculated as part of population matches");
+                    if(linkAppName != null && joinerEnabledApps != null && joinerEnabledApps.contains(linkAppName))
+                    {
+                        LogEnablement.isLogDebugEnabled(rehireLogger, "...Add linkAppName..."+linkAppName);
+                        applicationsForJoiner.add(link.getApplicationName());
+                    }
+                }
+            }
+            
+            if (applicationsForJoiner != null && !(applicationsForJoiner.isEmpty())) 
+            {
+                plan = new ProvisioningPlan();
+                if (identity != null) 
+                {
+                    plan.setIdentity(identity);
+                    for (String singleApp : applicationsForJoiner) 
+                    {
+                        String nativeId = "";
+                        List joinerRolesApplication = new ArrayList();
+                        List joinerRolesReMApplication = new ArrayList();
+                        List arRem = new ArrayList();
+                        List ar = new ArrayList();
+                        //Lets check if we have Joiner Roles first
+                        joinerRolesApplication = JoinerRuleLibrary.getRolesForJoinerApplication(context, identity, singleApp);
+                        joinerRolesReMApplication = JoinerRuleLibrary.getRemoveRolesForJoinerApplication(context, identity, singleApp);
+                        if(joinerRolesApplication != null && joinerRolesApplication.size() > 0)
+                        {
+                           for(String roleName : joinerRolesApplication )
+                           {
+                                ar = JoinerRuleLibrary.addToProvisioningPlanIIQ(identityName, roleName);
+                                if (!ar.isEmpty() && plan != null) 
+                                {
+                                    for (AccountRequest acctReq : ar) 
+                                    {
+                                        //Assign Joiner Roles Here
+                                        plan.add(acctReq);
+                                    }
+                                }
+                            }
+                            //Let's just enable/unlock/extended rule account, we dont' want to create account here
+                            //This is because roles will evaluate create policy if there is no account
+                            ar = addToProvisioningPlan(singleApp, identity, extendedRule, workflow, true);
+                            if (!ar.isEmpty() && plan != null) 
+                            {
+                                for (AccountRequest acctReq : ar) 
+                                {
+                                    plan.add(acctReq);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            //There are no joiner roles, let's just build account
+                            ar = addToProvisioningPlan(singleApp, identity, extendedRule, workflow, false);
+                            if (!ar.isEmpty() && plan != null) 
+                            {
+                                for (AccountRequest acctReq : ar) 
+                                {
+                                    plan.add(acctReq);
+                                }
+                            }
+                        }
+                        
+                        //Let's see if we have to remove any joiner roles
+                        if(joinerRolesReMApplication != null && joinerRolesReMApplication.size() >0 )
+                        {
+                           for(String roleName : joinerRolesReMApplication )
+                           {
+                                arRem = JoinerRuleLibrary.removeToProvisioningPlanIIQ(identityName, roleName);
+                                if (!arRem.isEmpty() && plan != null) 
+                                {
+                                    for (AccountRequest acctReqRem : arRem) 
+                                    {
+                                        plan.add(acctReqRem);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        if(identity!=null)
+        {
+            context.decache(identity);
+        }
+        
+        if (null != plan && plan.getAllRequests() == null) {
+            plan = null;
+        }
+        
+        LogEnablement.isLogDebugEnabled(rehireLogger, "Exit buildRehirePlan");
+        return plan;
+    }
+     /**
+     * Build Provisioning Plan Per Application Link
+     * @param appName
+     * @param identity
+     * @param extendedRule
+     * @param workflow
+     * @param skipCreate
+     * @return
+     */
+    public List addToProvisioningPlan(String appName, Identity identity, String extendedRule,Workflow workflow, boolean skipCreate) throws Exception{
+        LogEnablement.isLogDebugEnabled(rehireLogger,"Enter addToProvisioningPlan");
+        List allRequests = new ArrayList();
+        IdentityService idService = new IdentityService(context);
+        String nativeId = "";
+        Application app = context.getObjectByName(Application.class, appName);
+        Boolean onlyPrimaryAccount=(Boolean) app.getAttributeValue("rehirePrimaryaccount");
+        AccountRequest acctReq = null;
+        if (idService.countLinks(identity, app) == 0 && !skipCreate) 
+        {
+            LogEnablement.isLogDebugEnabled(rehireLogger,"...Link Not Found = REHIRE CREATE");
+            nativeId = ROADUtil.getNativeIdentity(context, appName, identity);
+            if (nativeId != null && !nativeId.equals(""))
+             {
+                acctReq = new AccountRequest(AccountRequest.Operation.Create, appName, null, nativeId);
+                allRequests.add(acctReq);
+            }
+        }
+        else 
+        {
+            //Need to check if rehire is enabled here
+                LogEnablement.isLogDebugEnabled(rehireLogger,"...Link Found = FOLLOW REHIRE PROCESS");
+                List list = idService.getLinks(identity, app);
+                if (list != null && list.size() > 0) 
+                {
+                    for (Link link:list)
+                    {
+                        if(link!=null)
+                        {
+                        nativeId = link.getNativeIdentity();
+                        Object extObj = app.getAttributeValue("rehireProcess");
+                        String extSetting = (String) extObj;
+                        String reqType = "";
+                        reqType = getRequestTypeNameJoinerRehire(context, workflow);
+                        if (extSetting == null) 
+                        {
+                            ObjectConfig config = Application.getObjectConfig();
+                            if (config != null) 
+                            {
+                                extSetting = (String) config.getObjectAttribute("rehireProcess").getDefaultValue();
+                                extendedRule = "rehireExtendedRule";
+                            }
+                        }                           
+                        if (extSetting != null) 
+                        {
+                            LogEnablement.isLogDebugEnabled(rehireLogger,"...extSetting=" + extSetting);
+                            //extSetting, extendedRule, appName, nativeId, identity, iiqDisabled, iiqLocked, reqType
+                            String iiqDisabled = "";
+                            String iiqLocked = "";
+                            String psa="";
+                            if (link != null) 
+                            {
+                                psa=((String)link.getAttribute("psAccount"));
+                                iiqDisabled=ROADUtil.isLinkDisabled(link);
+                                iiqLocked=ROADUtil.isLinkLocked(link);
+                            }
+                            List result=null;
+                            if(onlyPrimaryAccount!=null && onlyPrimaryAccount.booleanValue() && psa !=null && psa.equalsIgnoreCase("TRUE"))
+                            {               
+                                LogEnablement.isLogDebugEnabled(rehireLogger,"...Skipping Privileged Account.." + nativeId);
+                            }
+                            else
+                            {
+                                result = getAccountRequest(psa,extSetting, extendedRule, appName, nativeId, identity, iiqDisabled, iiqLocked, reqType,workflow,null);
+                            }
+                            if(result!=null)
+                            {
+                                 allRequests.addAll(result);
+                             }
+                          }//Ext Setting Not null
+                      }//link not null
+                 }// Iterate through all Links
+               }
+        }
+        if(app!=null)
+        {
+        context.decache(app);
+        }                               
+        LogEnablement.isLogDebugEnabled(rehireLogger,"Exit addToProvisioningPlan");
+        return allRequests;
+    }
+    /**
+     * Execute Before Plan Rehire Rule
+     * @param identityName
+     * @param requestType
+     */
+    public void beforePlanRule(String identityName, String requestType)
+    {
+            LogEnablement.isLogDebugEnabled(rehireLogger,"Start  beforePlanRule" );
+             Map map = new HashMap();
+            //Common Configuration
+            map = ROADUtil.getCustomGlobalMap(context);
+            if(map!=null && map.containsKey("rehireBeforePlanRule"))
+            {
+                String ruleName=map.get("rehireBeforePlanRule");
+                if(ruleName!=null && ruleName.length()>0)
+                {
+                ROADUtil.invokeExtendedRuleNoObjectReferences(context,null,ruleName, null,  requestType, null, null, null, identityName,null, false,null);
+                }
+             }
+         LogEnablement.isLogDebugEnabled(rehireLogger,"End  beforePlanRule" );
+    }
+    /**
+     * Get Request Type
+     * @param context
+     * @param workflow
+     * @return
+     */
+    public String getRequestTypeNameJoinerRehire(SailPointContext context, Workflow workflow) {
+        String requestType = "JOINER REHIRE FEATURE";
+        return requestType;
+    }
+    /**
+     * Execute Post Joiner Rule
+     * @param identityName
+     * @param project
+     * @param requestType
+     */
+    public void postRehireRule(String identityName, String requestType, ProvisioningProject project)
+    {
+        LogEnablement.isLogDebugEnabled(rehireLogger,"Start  postRehireRule" );
+        LogEnablement.isLogDebugEnabled(rehireLogger,"..identityName..."+identityName );
+        LogEnablement.isLogDebugEnabled(rehireLogger,"..requestType..."+requestType );
+        LogEnablement.isLogDebugEnabled(rehireLogger,"..project..."+project );
+        Map map = new HashMap();
+        //Common Configuration
+        map = ROADUtil.getCustomGlobalMap(context);
+        if(map!=null && map.containsKey("postRehireRule"))
+        {
+            String ruleName=map.get("postRehireRule");
+            if(ruleName!=null && ruleName.length()>0)
+            {
+            ROADUtil.invokePostExtendedRuleNoObjectReferences(context,null,ruleName, null,  requestType, null, null, null, identityName,null, project);
+            }
+         }
+        LogEnablement.isLogDebugEnabled(rehireLogger,"End  postRehireRule" );
+    }
+    /**
+     * After Rehire Process, Attribute Synchronization is launched
+     * @param context
+     * @param identityName
+     * @param workflow
+     * @param flow
+     * @param requestType
+     * @return
+     * @throws Exception
+     */
+     public void postAttributeSync(SailPointContext context, String identityName, Workflow workflow, String flow, String requestType) throws Exception 
+       {
+            LogEnablement.isLogDebugEnabled(rehireLogger,"Enter postAttributeSync.."+identityName);
+            List listOfHashMap= new ArrayList();
+            Identity identity = context.getObjectByName(Identity.class, identityName);
+            IdentityService idService = new IdentityService(context);
+            int countLinks=0;
+            Boolean apAfterRehireAttrSync= Boolean.FALSE;
+            countLinks=idService.countLinks(identity);
+            if (identity!=null && countLinks>0) 
+            {
+                List links = idService.getLinks(identity,0,0);
+                for (Link link : links) 
+                {
+                   if (link!=null && link.getApplication() != null)
+                     {
+                        Application app = link.getApplication();
+                        if(app!=null)
+                        {
+                            apAfterRehireAttrSync=(Boolean) app.getAttributeValue("apAfterRehireAttrSync");
+                            String nativeId=link.getNativeIdentity();
+                            if(apAfterRehireAttrSync!=null && apAfterRehireAttrSync.booleanValue() && nativeId!=null)
+                            {
+                                    HashMap appMap = new HashMap();
+                                    appMap.put("appName", app.getName());
+                                    appMap.put("nativeId", nativeId);
+                                    appMap.put("apAfterRehireAttrSync", apAfterRehireAttrSync);
+                                    listOfHashMap.add(appMap);
+                            }
+                         }
+                     }
+                }
+             context.decache(identity);
+             }
+            for (HashMap map : listOfHashMap)
+            {
+                if(map.get("apAfterRehireAttrSync")!=null && map.get("appName")!=null)
+                {
+                     ProvisioningPlan attrSyncPlan = AttributeSyncRuleLibrary.buildAttributeSynPlan(context, identityName, (String)map.get("appName"), workflow);
+                     boolean executeattrSyncPlan=false;
+                     List acctReqs=null;
+                     if(null != attrSyncPlan) 
+                     {
+                            acctReqs = attrSyncPlan.getAccountRequests();
+                            if(null != acctReqs && !acctReqs.isEmpty())
+                            {
+                                executeattrSyncPlan=true;
+                                //Launch Plan
+                                LogEnablement.isLogDebugEnabled(rehireLogger,"Launch Rehire Attribute Synchronization Process ");
+                                WorkflowUtil.launchRequestManagerWorkflow(context,identityName, attrSyncPlan, "false", null, 5, null, null, requestType, flow,"Post Rehire Attribute Synchronization");
+                            }
+                      }
+                  }
+               }
+           LogEnablement.isLogDebugEnabled(rehireLogger,"Exit postAttributeSync "+identityName);
+        }
+]]></Source>
+</Rule>

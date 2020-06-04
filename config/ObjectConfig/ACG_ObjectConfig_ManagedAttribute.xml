@@ -1,3 +1,34 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <!DOCTYPE ObjectConfig PUBLIC "sailpoint.dtd" "sailpoint.dtd">
-<ObjectConfig name="ManagedAttribute"/>
+<ObjectConfig name="ManagedAttribute">
+  <ObjectAttribute categoryName="Joiner" defaultValue="" displayName="Birthright Entitlement" editMode="Permanent" name="isBirthright" namedColumn="true">
+    <Description>Exclude Birthright Entitlements</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Joiner" defaultValue="" displayName="Birthright Populations" editMode="Permanent" name="apbirthrightPopulations">
+    <Description>Comma Separated Birthright Populations - Will be used for Birthright Role Automation</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Aggregation" defaultValue="" displayName="Manual Override" editMode="Permanent" name="manualOverride" namedColumn="true">
+    <Description>Manual Override Entitlemnet Birthright, Privileged, and Logical Application Settings</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Approval" displayName="1st Level Business Approvers" editMode="Permanent" name="entBusApprovers" namedColumn="true">
+    <Description>Enter a comma separated  Cube Ids or WorkGroups</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Approval" defaultValue="" displayName="Omit or Override 1st Level Approvers" editMode="Permanent" name="entBusApprovalRule">
+    <Description> This rule can be used to override 1st Level Business Approvers</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Approval" displayName="2nd Level Business Approvers" editMode="Permanent" name="additionalEntBusApprovers" namedColumn="true">
+    <Description>Enter a comma separated  Cube Ids or WorkGroups</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Approval" defaultValue="" displayName="Omit or Override 2nd Level Approvers" editMode="Permanent" name="additionalEntBusApproversRule">
+    <Description> This rule can be used to override 2nd Level Business Approvers</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Logical Applications" displayName="Logical Business Application Name" editMode="Permanent" name="entAppName" namedColumn="true">
+    <Description>Either Single or Comma separated Logical Business Aplications(Shared Databases, Shared Groups, etc)</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Privileged Entitlement" defaultValue="" displayName="Privileged Entitlement" editMode="Permanent" name="entPrivileged" namedColumn="true">
+    <Description>Privileged Entitlement</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Privileged Entitlement" defaultValue="" displayName="Privileged Entitlement Account Types" editMode="Permanent" name="apaccountType">
+    <Description>Comma Separated Privileged Entitlement Types</Description>
+  </ObjectAttribute>
+</ObjectConfig>

@@ -1,0 +1,22 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE IdentityTrigger PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<IdentityTrigger handler="sailpoint.api.WorkflowTriggerHandler" name="LEAVER FEATURE" type="Rule">
+  <Description>Leaver Identity have been set to INACTIVE in IdentityIQ.</Description>
+  <HandlerParameters>
+    <Attributes>
+      <Map>
+        <entry key="workflow" value="Workflow-Lifecycle-Leaver-RequestObject-Wrapper"/>
+      </Map>
+    </Attributes>
+  </HandlerParameters>
+  <TriggerRule>
+    <Reference class="sailpoint.object.Rule" name="Rule-IdentityTrigger-Leaver"/>
+  </TriggerRule>
+  <Selector>
+    <IdentitySelector>
+      <PopulationRef>
+        <Reference class="sailpoint.object.GroupDefinition" name="Accelerator Pack Correlated Identities"/>
+      </PopulationRef>
+    </IdentitySelector>
+  </Selector>
+</IdentityTrigger>

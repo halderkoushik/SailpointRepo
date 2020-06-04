@@ -1,0 +1,117 @@
+<!-- Copyright © 2018 SailPoint Technologies, Inc. All Rights Reserved.
+All logos, text, content, and works of authorship, including but not limited to underlying code, programming or scripting language, designs, and/or graphics,
+that are used and/or depicted herein are protected under United States and international copyright and trademark laws and treaties,
+and may not be used or reproduced without the prior express written permission of SailPoint Technologies, Inc. -->
+<!--
+Extended attribute mappings for Application.
+See comments in IdentityExtended.hbm.xml for more on how to manage
+extended attribute mappings.
+-->
+<!--OOTB START--> 
+<!--
+Extended attribute mappings for Application.
+See comments in IdentityExtended.hbm.xml for more on how to manage
+extended attribute mappings.
+-->
+<property name="extended1" type="string" length="450" index="spt_app_extended1_ci"/>
+<property name="extended2" type="string" length="450"/>
+<property name="extended3" type="string" length="450"/>
+<property name="extended4" type="string" length="450"/>
+<!--
+<property name="extended5" type="string" length="450"/>
+<property name="extended6" type="string" length="450"/>
+<property name="extended7" type="string" length="450"/>
+<property name="extended8" type="string" length="450"/>
+<property name="extended9" type="string" length="450"/>
+<property name="extended10" type="string" length="450"/>
+<property name="extended11" type="string" length="450"/>
+<property name="extended12" type="string" length="450"/>
+<property name="extended13" type="string" length="450"/>
+<property name="extended14" type="string" length="450"/>
+<property name="extended15" type="string" length="450"/>
+<property name="extended16" type="string" length="450"/>
+<property name="extended17" type="string" length="450"/>
+<property name="extended18" type="string" length="450"/>
+<property name="extended19" type="string" length="450"/>
+<property name="extended20" type="string" length="450"/>
+-->
+<!--OOTB END--> 
+<!--AGGREGATION (Used for Data Classification), CERTIFICATION (Includes all access), ACCES REQUEST (Business Application approval scheme wins), LEAVER (Business Application leaver scheme wins) , REPORTING START--> 
+<property name="busApp" type="string" length="450" 
+          access="sailpoint.persistence.ExtendedPropertyAccessor"
+          index="spt_app_busApp_ci"/>
+<!--AGGREGATION (Used for Data Classification), CERTIFICATION (Includes all access), ACCES REQUEST (Business Application approval scheme wins), LEAVER (Business Application leaver scheme wins), REPORTING END--> 
+<!--LEAVER, REPORTING START--> 
+<property name="terminationProcess" type="string" length="450"
+          access="sailpoint.persistence.ExtendedPropertyAccessor"
+          index="spt_app_terminationProcess_ci"/>
+<!--LEAVER, REPORTING END--> 
+<!--MOVER, REPORTING START--> 
+<property name="moverProcess" type="string" length="450"
+          access="sailpoint.persistence.ExtendedPropertyAccessor"
+          index="spt_app_moverOpt_ci"/>
+<!--MOVER, REPORTING END--> 
+<!--ACCESS REQUEST, LEAVER, REPORTING START--> 
+<property name="appBusApprovers" type="string" length="450"
+          access="sailpoint.persistence.ExtendedPropertyAccessor"
+          index="spt_app_busApprs_ci"/>
+<property name="additionalAppBusApprovers" type="string" length="450"
+          access="sailpoint.persistence.ExtendedPropertyAccessor"
+          index="spt_app_addnlBusApprs_ci"/>
+<!--ACCESS REQUEST, LEAVER, REPORTING END--> 
+<!--JOINER, REPORTING START--> 
+<property name="joinerEnabled" type="string" length="450"
+          access="sailpoint.persistence.ExtendedPropertyAccessor"
+          index="spt_app_joinerEnabled_ci"/>
+<property name="rehireProcess" type="string" length="450"
+          access="sailpoint.persistence.ExtendedPropertyAccessor"
+          index="spt_app_rehireOpt_ci"/>
+<property name="reverseleaverProcess" type="string" length="450"
+          access="sailpoint.persistence.ExtendedPropertyAccessor"
+          index="spt_app_revrsleaverOpt_ci"/>
+<!--JOINER, REPORTING END--> 
+<!-- ACCESS REQUEST, POLICY VIOLATION, REPORTING START--> 
+<!-- UNCOMMENT THIS FOR ACCESS REQUEST, POLICY VIOLATION FEATURE -->
+
+<property name="softPolicyviolations" type="string" length="450"
+          access="sailpoint.persistence.ExtendedPropertyAccessor"
+          index="spt_app_softPV_ci"/>
+<property name="hardPolicyviolations" type="string" length="450"
+          access="sailpoint.persistence.ExtendedPropertyAccessor"
+          index="spt_app_hardPV_ci"/>
+<!-- ACCESS REQUEST, POLICY VIOLATION, REPORTING END--> 
+<!-- LEAVE OF ABSENSE START, UNCOMMENT THIS FOR LOA FEATURE -->
+<!--<property name="loaProcess" type="string" length="450"
+          access="sailpoint.persistence.ExtendedPropertyAccessor"
+          index="spt_app_loaProcess_ci"/>-->
+<!-- LEAVE OF ABSENSE END -->
+<!-- REVERSE LEAVE OF ABSENSE START, UNCOMMENT THIS FOR REVERSELOA FEATURE -->
+<!--<property name="rtwloaProcess" type="string" length="450"
+          access="sailpoint.persistence.ExtendedPropertyAccessor"
+          index="spt_app_rtwLOAOpt_ci"/>-->
+<!-- REVERSE LEAVE OF ABSENSE END -->
+<!-- LONG TERM DISABILITY START, UNCOMMENT THIS FOR LTD FEATURE -->
+<!--<property name="ltdProcess" type="string" length="450"
+          access="sailpoint.persistence.ExtendedPropertyAccessor"
+          index="spt_app_ltdProcess_ci"/>-->
+<!-- LONG TERM DISABILITY END -->
+<!-- REVERSE LONG TERM DISABILITY START, UNCOMMENT THIS FOR REVERSELTD FEATURE -->
+<!--<property name="rtwltdProcess" type="string" length="450"
+          access="sailpoint.persistence.ExtendedPropertyAccessor"
+          index="spt_app_rtwLTDOpt_ci"/>-->
+<!-- REVERSE LONG TERM DISABILITY END -->
+<!-- NATIVECHANGE, REPORTING START, UNCOMMENT THIS FOR NATIVE CHANGE FEATURE--> 
+<!--<property name="nativeChangeProcess" type="string" length="450"
+          access="sailpoint.persistence.ExtendedPropertyAccessor"
+          index="spt_app_nativeChangeOpt_ci"/>-->
+<!-- NATIVECHANGE, REPORTING END--> 
+<!-- PRIVILEGED ACCOUNT PASSWORD EXPIRATION START--> 
+<!-- UNCOMMENT THIS FOR PRIVILEGED ACCOUNT PASSWORD EXPIRATION FEATURE-->
+<!--<property name="enablepswexpNotification" type="string" length="450"
+          access="sailpoint.persistence.ExtendedPropertyAccessor"
+          index="spt_app_enableexpNotif_ci"/>
+<property name="afterPassExpProcess" type="string" length="450"
+          access="sailpoint.persistence.ExtendedPropertyAccessor"
+          index="spt_app_afterpwdexpOpt_ci"/>-->
+<!-- PRIVILEGED ACCOUNT PASSWORD EXPIRATION END--> 
+

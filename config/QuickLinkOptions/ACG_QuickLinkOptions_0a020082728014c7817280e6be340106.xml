@@ -1,0 +1,51 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE QuickLinkOptions PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<QuickLinkOptions allowOther="true">
+  <DynamicScopeRef>
+    <Reference class="sailpoint.object.DynamicScope" name="FireFighter"/>
+  </DynamicScopeRef>
+  <Attributes>
+    <Map>
+      <entry key="allowRequestEntitlements">
+        <value>
+          <Boolean>true</Boolean>
+        </value>
+      </entry>
+      <entry key="allowRequestEntitlementsAdditionalAccountRequests">
+        <value>
+          <Boolean/>
+        </value>
+      </entry>
+      <entry key="allowRequestEntitlementsRemove">
+        <value>
+          <Boolean>true</Boolean>
+        </value>
+      </entry>
+      <entry key="allowRequestEntitlementsShowPopulation">
+        <value>
+          <Boolean>true</Boolean>
+        </value>
+      </entry>
+      <entry key="allowRequestRoles">
+        <value>
+          <Boolean>true</Boolean>
+        </value>
+      </entry>
+      <entry key="allowRequestRolesAdditionalAccountRequests">
+        <value>
+          <Boolean/>
+        </value>
+      </entry>
+      <entry key="allowRequestRolesRemove">
+        <value>
+          <Boolean>true</Boolean>
+        </value>
+      </entry>
+      <entry key="allowRequestRolesShowPopulation">
+        <value>
+          <Boolean>true</Boolean>
+        </value>
+      </entry>
+    </Map>
+  </Attributes>
+</QuickLinkOptions>

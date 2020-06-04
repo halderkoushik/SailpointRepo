@@ -1,0 +1,1423 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule-Leaver-RuleLibrary">
+  <Source><![CDATA[
+	
+	import java.util.List;
+	import java.util.Map;
+	import java.util.Set;
+	import org.apache.commons.logging.Log;
+	import org.apache.commons.logging.LogFactory;
+	import sailpoint.object.AuthenticationAnswer;
+	import sailpoint.object.AuthenticationQuestion;
+	import sailpoint.api.IdentityService;
+	import sailpoint.api.ObjectUtil;
+	import sailpoint.api.SailPointContext;
+	import sailpoint.object.Application;
+	import sailpoint.object.Custom;
+	import sailpoint.object.ProvisioningProject;
+	import sailpoint.object.Identity;
+	import sailpoint.object.Link;
+	import sailpoint.object.ProvisioningPlan;
+	import sailpoint.object.ProvisioningPlan.AccountRequest;
+	import sailpoint.object.ProvisioningPlan.AttributeRequest;
+	import sailpoint.object.Workflow;
+	import sailpoint.tools.GeneralException;
+	import sailpoint.tools.Util;
+	import sailpoint.object.ClassLists;
+	import sailpoint.object.SailPointObject;
+	import java.lang.reflect.Method;
+	import sailpoint.object.ManagedAttribute;
+	import sailpoint.api.PersistenceManager;
+	import sailpoint.object.Bundle;
+	import sailpoint.object.QueryOptions;
+	import sailpoint.object.Filter;
+	import sailpoint.object.Rule;
+	import sailpoint.object.ObjectConfig;
+	import sailpoint.object.Attributes;
+	import sailpoint.object.WorkItem;
+	import sailpoint.object.ApprovalSet;
+	import sailpoint.object.ApprovalItem;
+	import sailpoint.api.Workflower;
+	import sailpoint.rapidapponboarding.rule.ROADUtil;
+	import sailpoint.rapidapponboarding.rule.ObjectConfigAttributesRuleLibrary;
+	import sailpoint.rapidapponboarding.rule.LeaverRuleLibrary;
+	import sailpoint.rapidapponboarding.logger.LogEnablement;
+	private Log logger = LogFactory.getLog("rapidapponboarding.rules");
+	HashMap enterpriseRoles = new HashMap();
+		/**
+	 * Remove and Reassign IdentityIQ Artifacts
+	 * @param context
+	 * @param globalMap
+	 * @param identityName
+	 * @param plan
+	 * @param workflow
+	 * @return
+	 * @throws Exception
+	 */
+	public Map removeOwnerships(SailPointContext context, Map globalMap, String identityName, ProvisioningPlan plan, Workflow workflow) throws Exception {
+        LogEnablement.isLogDebugEnabled(logger,"Enter removeOwnerships");
+        //IdentityIQ Artifacts
+        String reassignOwnershipToManager=null;
+        String reassignmentRule=null;
+        String removeIIQArtifactsOwnership=null;
+        List sailpointArtifacts=null;
+        String sailPointonSailPointEnabled=ROADUtil.isConnectorEnabled(context,"sailpoint.rapidonboarding.connector.LoopbackConnector");
+		boolean sPOnsPEnabled=false;
+		if(sailPointonSailPointEnabled!=null && sailPointonSailPointEnabled.length()>0)
+		{
+			sPOnsPEnabled=true;
+		}
+		 LogEnablement.isLogDebugEnabled(logger,"sPOnsPEnabled.."+sPOnsPEnabled);
+        if(globalMap!=null)
+        {
+             //IdentityIQ Artifacts
+	         if(globalMap.containsKey("reassignOwnershipToManager"))
+	         {
+	          reassignOwnershipToManager=(String) globalMap.get("reassignOwnershipToManager");
+	         }
+	         if(globalMap.containsKey("reassignmentRule"))
+	         {
+	          reassignmentRule=(String) globalMap.get("reassignmentRule");
+	         }
+	         if(globalMap.containsKey("removeIIQArtifactsOwnership"))
+	         {
+	          removeIIQArtifactsOwnership=(String) globalMap.get("removeIIQArtifactsOwnership");
+	         }
+	         if(globalMap.containsKey("sailpointArtifacts"))
+	         {
+	          sailpointArtifacts=(List) globalMap.get("sailpointArtifacts");
+	         }
+	    }
+        //Template Map
+        Map retVal = new HashMap();
+        //Collect objects that can be finally decached
+        List<SailPointObject> decacheObjects = new ArrayList();
+        int count = 0;
+        int commitLimit = 100;
+		ArrayList uniqueClasses = new ArrayList();
+		List ownerClasses = new ArrayList();
+		List classesToCheck = new ArrayList();
+		//IdentityIQ Artifacts from Custom Artifact
+		classesToCheck=sailpointArtifacts;
+		// IdentityIQ Artifacts Removal and Reassignmnet - Start
+		 LogEnablement.isLogDebugEnabled(logger,"classesToCheck.."+classesToCheck);
+		if ( classesToCheck!=null && classesToCheck.size()>0 && removeIIQArtifactsOwnership!=null && removeIIQArtifactsOwnership.equalsIgnoreCase("TRUE"))
+		 {
+		   //Use Reflection to get Owner Classes
+			ownerClasses=ROADUtil.getSailPointObjectClazz(classesToCheck);
+		    Identity identity = context.getObjectByName(Identity.class, identityName);
+	        Identity manager=null;
+	        Identity identityNoManager = context.getObjectByName(Identity.class, "No Manager Found");
+	        Identity identityNoOwner = context.getObjectByName(Identity.class, "No Reassignment");
+	        //Common for Service Account, Business Approvers, and IdentityIQ Artifacts Reassign to Manager
+	        if (identity.getManager() != null) 
+	        {
+	        	manager = identity.getManager();
+	        	LogEnablement.isLogDebugEnabled(logger,"Found Manager On Identity");
+	        }
+	        //Common for Service Account, Business Approvers, and IdentityIQ Artifacts Reassign to ManagerReassign to No Manager
+	        if(manager==null)
+	        {
+	         manager=identityNoManager;
+	         LogEnablement.isLogDebugEnabled(logger,"Found No Manager On Identity Forward to No Manager Group");
+	        }
+	        //IdentityIQ Artifacts, In case there is no reassignment to manager, reassign to No Reassignmnet Workgroup
+	        if(reassignOwnershipToManager!=null && reassignOwnershipToManager.equalsIgnoreCase("FALSE"))
+	        {
+	          manager=identityNoOwner;
+	         LogEnablement.isLogDebugEnabled(logger,"Reassign to No Reassignment");
+	        }
+	        //IdentityIQ Artifacts, If there is a reassignmnet rule defined, just use the identity name from the rule.
+	        if(reassignmentRule!=null)
+	        {
+	             LogEnablement.isLogDebugEnabled(logger,"Assignment Rule Found");
+		        String reassignedOwner=null;
+		        reassignedOwner=invokeReassignmentRule(identityName,plan,reassignmentRule);
+		        if(reassignedOwner!=null)
+		        {
+			        Identity reassignedOwnerIdentity = context.getObjectByName(Identity.class, reassignedOwner);
+			        if(reassignedOwnerIdentity!=null)
+			        {
+			        LogEnablement.isLogDebugEnabled(logger,"Found Reassigned Owner Identity from Rule");
+			        manager=reassignedOwnerIdentity;
+			        }
+			        else
+			        { 
+			        LogEnablement.isLogDebugEnabled(logger,"Not Found Reassigned Owner Identity from Rule  Forward to No Reassignment Group");
+			        manager=identityNoOwner;
+			        }
+		        }
+		        else
+		        {
+		        manager=identityNoOwner;
+		        }
+	        }
+	        //This is for notification, we want send notification to right owner
+	        if(manager!=null)
+	        {
+				workflow.put("identityManager",manager.getName());
+			}
+			if (!(ownerClasses.isEmpty())) 
+			{
+				Util.removeDuplicates(ownerClasses);
+			}
+			try
+			{
+			for(Class clazz : ownerClasses) 
+	  		{
+				QueryOptions qoTwo = new QueryOptions();
+				qoTwo.addFilter(Filter.eq("owner", identity));
+				if (clazz.getSimpleName() != null) 
+				{
+					if (clazz.getSimpleName().equalsIgnoreCase("Identity"))
+					{
+						qoTwo.addFilter(Filter.eq("workgroup", true));
+					}
+					List ownedItemIds = new ArrayList();
+					Iterator objectIdsIterator=context.search(clazz,qoTwo,"id");
+					if(objectIdsIterator!=null)
+					{
+						  while (objectIdsIterator.hasNext()) 
+						  {           
+						              Object[] objectIdArr=(Object[]) objectIdsIterator.next();
+						              if(objectIdArr!=null && objectIdArr.length==1)
+					  				  {
+										  String objectId =(String) objectIdArr[0];
+										  if(objectId!=null)
+										  {
+										  ownedItemIds.add(objectId);
+										  }
+									  }
+					      }
+					}
+					Util.flushIterator(objectIdsIterator);
+					List ownedItemObjects= new ArrayList();
+					for(String ownedItemId:ownedItemIds)
+					{
+					     String lockMode = PersistenceManager.LOCK_TYPE_TRANSACTION;
+					      LogEnablement.isLogDebugEnabled(logger,"Lock Clazz Items..");
+            	         Object ownedItemObject = ObjectUtil.lockObject(context, clazz,ownedItemId, null, lockMode);
+					     if(ownedItemObject!=null)
+					     {
+					       ownedItemObjects.add(ownedItemObject);
+					     }
+					}
+					LogEnablement.isLogDebugEnabled(logger,"..ownedItemObjects.."+ownedItemObjects);
+					for(Object spo : ownedItemObjects)
+					{ 
+						if (spo != null) 
+						{
+						   if(manager!=null)
+						   {
+						    ((SailPointObject)spo).setOwner(manager);
+						    context.saveObject((SailPointObject)spo);
+						    }
+							decacheObjects.add((SailPointObject) spo);
+							String classNameMap = "";
+							if (clazz.getSimpleName() != null)
+							 {
+					  			if (clazz.getSimpleName().equalsIgnoreCase("Identity")) 
+					  			{
+									classNameMap = "Workgroup Owner";
+								}
+								else 
+								{
+									classNameMap = clazz.getSimpleName() + " Owner";
+								}
+								LogEnablement.isLogDebugEnabled(logger,"...retVal=" + retVal);
+								if (retVal.containsKey(classNameMap)) 
+								{
+									if (retVal.get(classNameMap) instanceof List) 
+									{
+										List list = (List) retVal.get(classNameMap);
+										if (clazz.getSimpleName().equalsIgnoreCase("ManagedAttribute"))
+										{
+										    if((((ManagedAttribute)spo).getDisplayName())!=null)
+										    list.add(((ManagedAttribute) spo).getDisplayName());
+										    else
+										    list.add(((ManagedAttribute) spo).getValue());
+										} 
+										else if(((SailPointObject)spo).getName()!=null)
+										{
+											list.add(((SailPointObject)spo).getName());
+										}
+										retVal.put(classNameMap, list);
+									}
+									else 
+									{
+										List list = new ArrayList();
+										list.add(retVal.get(classNameMap));
+										if (clazz.getSimpleName().equalsIgnoreCase("ManagedAttribute"))
+										{
+										    if((((ManagedAttribute)spo).getDisplayName())!=null)
+										    list.add(((ManagedAttribute) spo).getDisplayName());
+										    else
+										    list.add(((ManagedAttribute) spo).getValue());
+										} 
+										else if(((SailPointObject)spo).getName()!=null)
+										{
+											list.add(((SailPointObject)spo).getName());
+										}
+										retVal.put(classNameMap, list);
+									}
+								}
+								else 
+								{
+									List list = new ArrayList();
+									if (clazz.getSimpleName().equalsIgnoreCase("ManagedAttribute"))
+									{
+									        if((((ManagedAttribute)spo).getDisplayName())!=null)
+										    list.add(((ManagedAttribute) spo).getDisplayName());
+										    else
+										    list.add(((ManagedAttribute) spo).getValue());
+									} 
+									else if(((SailPointObject)spo).getName()!=null)
+									{
+										list.add(((SailPointObject)spo).getName());
+									}
+					  				retVal.put(classNameMap, list);
+					  			}
+					  			count++;
+								if ((count % commitLimit) == 0) {
+						        	context.commitTransaction();
+						        }
+					        }
+					    }
+					}
+			    }
+	  		}
+	  		}
+	  		finally
+	  		{
+	  		//Final Commit
+	  		context.commitTransaction();
+	  		}
+	  		//Decache All Objects that are collected for IdentityIQ Artifacts
+	        if (decacheObjects != null && !decacheObjects.isEmpty()) 
+			{
+				for (SailPointObject spo : decacheObjects) 
+				{
+					context.decache(spo);
+				}
+			}
+		  	if(manager!=null)
+	        {
+	        context.decache(manager);
+	        }
+	        if(identity!=null)
+	        {
+	        context.decache(identity);
+	        }
+	        if(identityNoManager!=null)
+	        {
+	          context.decache(identityNoManager);
+	        }
+	        if(identityNoOwner!=null)
+	        {
+	          context.decache(identityNoOwner);
+	        }
+	  	}
+  		// IdentityIQ Artifacts Removal and Reassignmnet - End
+  		LogEnablement.isLogDebugEnabled(logger,"Exit removeOwnerships = " + retVal);
+		return retVal;
+    }
+   /**
+	 * Set Name of SailPointObject for Reassignnment Email
+	 * @param list
+	 * @param obj
+	 */
+	 public void useDisplayName(List list, Object obj)
+	    {
+	    	if(obj!=null && obj instanceof ManagedAttribute)
+			{
+				if ( ((ManagedAttribute) obj).getDisplayName() != null) 
+				{
+					list.add(((ManagedAttribute) obj).getDisplayName());
+				}
+				else if( ((ManagedAttribute) obj).getDisplayName() == null)
+				{
+					list.add(((ManagedAttribute) obj).getDisplayableName());
+				}
+				else if( ((ManagedAttribute) obj).getDisplayableName() == null)
+				{
+					list.add(((ManagedAttribute) obj).getValue());
+				}
+			}
+			else if(obj!=null && obj instanceof Bundle)
+			{
+				if ( ((Bundle) obj).getDisplayName() != null) 
+				{
+					list.add(((Bundle) obj).getDisplayName());
+				}
+				else if( ((Bundle) obj).getDisplayName() == null)
+				{
+					list.add(((Bundle) obj).getDisplayableName());
+				}
+				else if( ((Bundle) obj).getDisplayableName() == null)
+				{
+					list.add(((Bundle) obj).getName());
+				}
+			}
+			else if(obj!=null && obj instanceof Application)
+			{
+				if ( ((Application) obj).getName() != null) 
+				{
+					list.add(((Application) obj).getName());
+				}
+			}
+	    }
+	/**
+     * Remove Business Approvers
+     * @param retVal
+     * @param attributeName
+     * @param identityName
+     * @param mapKeyName
+     * @param useDisplayName
+     * @param manager
+     * @param decacheObjects
+	 * @throws GeneralException 
+     */
+    public void removeFrameWorkApprovers(Map retVal, String attributeName, String identityName, String mapKeyName, boolean useDisplayName, Identity manager, List decacheObjects) throws GeneralException {
+    	LogEnablement.isLogDebugEnabled(logger,"...removeFrameWorkApprovers = " + attributeName);
+        int count = 0;
+        int commitLimit = 100;
+        QueryOptions qo = new QueryOptions();
+        String lockMode = PersistenceManager.LOCK_TYPE_TRANSACTION;
+        //There could be comma separated cube id's
+        Filter filter1 = Filter.like(attributeName, identityName);
+        qo.addFilter(filter1);
+        List list = null;
+		// Iterate through list of wither Role, Application or Entitlement       
+        if (attributeName.equalsIgnoreCase("roleBusApprovers") || attributeName.equalsIgnoreCase("additionalRoleBusApprovers")) 
+        {
+	        List ownedItemIds = new ArrayList();
+		    Iterator objectIdsIterator=context.search(Bundle.class,qo,"id");
+		    if(objectIdsIterator!=null)
+			{
+				  while (objectIdsIterator.hasNext()) 
+				  {           
+				              Object[] objectIdArr=(Object[]) objectIdsIterator.next();
+				              if(objectIdArr!=null && objectIdArr.length==1)
+	             				  {
+								  String objectId =(String) objectIdArr[0];
+								  if(objectId!=null)
+								  {
+								  ownedItemIds.add(objectId);
+								  }
+							  }
+			      }
+		    }
+		    Util.flushIterator(objectIdsIterator);
+		    List ownedItems= new ArrayList();
+		    for(String ownedItemId:ownedItemIds)
+		    {
+		    	 LogEnablement.isLogDebugEnabled(logger,"Lock Bundle ");
+			     Object ownedItem = ObjectUtil.lockObject(context, Bundle.class,ownedItemId, null, lockMode);
+			     if(ownedItem!=null)
+			     {
+			     ownedItems.add(ownedItem);
+			     }
+		    }
+          list = ownedItems;
+        }
+        else if (attributeName.equalsIgnoreCase("appBusApprovers") || attributeName.equalsIgnoreCase("additionalAppBusApprovers")) 
+        {
+        	List ownedItemIds = new ArrayList();
+		    Iterator objectIdsIterator=context.search(Application.class,qo,"id");
+		    if(objectIdsIterator!=null)
+			{
+				  while (objectIdsIterator.hasNext()) 
+				  {           
+				              Object[] objectIdArr=(Object[]) objectIdsIterator.next();
+				              if(objectIdArr!=null && objectIdArr.length==1)
+	             				  {
+								  String objectId =(String) objectIdArr[0];
+								  if(objectId!=null)
+								  {
+								  ownedItemIds.add(objectId);
+								  }
+							  }
+			      }
+		    }
+		    Util.flushIterator(objectIdsIterator);
+		    List ownedItems= new ArrayList();
+		    for(String ownedItemId:ownedItemIds)
+		    {
+		     	 LogEnablement.isLogDebugEnabled(logger,"Lock Application ");
+			     Object ownedItem = ObjectUtil.lockObject(context, Application.class,ownedItemId, null, lockMode);
+			     if(ownedItem!=null)
+			     {
+			     ownedItems.add(ownedItem);
+			     }
+		    }
+	      list = ownedItems;
+        }
+        else if (attributeName.equalsIgnoreCase("entBusApprovers") || attributeName.equalsIgnoreCase("additionalEntBusApprovers")) 
+        {
+        	List ownedItemIds = new ArrayList();
+		    Iterator objectIdsIterator=context.search(ManagedAttribute.class,qo,"id");
+		    if(objectIdsIterator!=null)
+			{
+				  while (objectIdsIterator.hasNext()) 
+				  {           
+				              Object[] objectIdArr=(Object[]) objectIdsIterator.next();
+				              if(objectIdArr!=null && objectIdArr.length==1)
+	             				  {
+								  String objectId =(String) objectIdArr[0];
+								  if(objectId!=null)
+								  {
+								  ownedItemIds.add(objectId);
+								  }
+							  }
+			      }
+		    }
+		    Util.flushIterator(objectIdsIterator);
+		    List ownedItems= new ArrayList();
+		    for(String ownedItemId:ownedItemIds)
+		    {
+		     	LogEnablement.isLogDebugEnabled(logger,"Lock Application ");
+			     Object ownedItem = ObjectUtil.lockObject(context, ManagedAttribute.class,ownedItemId, null, lockMode);
+			     if(ownedItem!=null)
+			     {
+			     ownedItems.add(ownedItem);
+			     }
+		    }
+          list = ownedItems;
+        }
+        List newOwners = null;
+        if (list != null) 
+        {
+            for (Object obj : list) 
+            {
+                Object newVal = null;
+              	// For application getAtttributeValue works and for others use getAttribute
+              	if (obj!=null && obj instanceof Application && attributeName.equalsIgnoreCase("appBusApprovers") || attributeName.equalsIgnoreCase("additionalAppBusApprovers"))
+              	 {
+                	newVal = ((Application) obj).getAttributeValue(attributeName);
+                }
+                else if (obj!=null && obj instanceof ManagedAttribute)
+                {
+                	newVal = ((ManagedAttribute) obj).getAttribute(attributeName);
+                }
+                else if (obj!=null && obj instanceof Bundle)
+                {
+                	newVal = ((Bundle) obj).getAttribute(attributeName);
+                }
+                // Use a list to remove Business Approver
+                newOwners = Util.csvToList(newVal.toString());
+                for (Iterator iter = newOwners.listIterator(); iter.hasNext();) 
+                {
+                    String a = (String) iter.next();
+                    if (a.equals(identityName)) 
+                    {
+                        iter.remove();
+                    }
+                }
+                if (newOwners != null) 
+                {
+                	// Insert Manager as the new Business Approver
+                    newOwners.add(manager.getName());
+                    if (obj!=null && obj instanceof Bundle)
+                    {
+                    	((Bundle) obj).setAttribute(attributeName, Util.listToCsv(newOwners));
+                    }
+                    else if (obj!=null && obj instanceof ManagedAttribute)
+                    {
+                    	((ManagedAttribute) obj).setAttribute(attributeName, Util.listToCsv(newOwners));
+                    }
+                    else if (obj!=null && obj instanceof Application)
+                    {
+                    	((Application) obj).setAttribute(attributeName, Util.listToCsv(newOwners));
+                    }
+                    context.saveObject((SailPointObject) obj);
+                    decacheObjects.add(obj);
+                    // Create a list of Entitlements, Roles and Applications and add to Map
+                    if (retVal.containsKey(mapKeyName)) 
+                    {
+						if (retVal.get(mapKeyName) instanceof List) 
+						{
+							List existingList = (List) retVal.get(mapKeyName);
+							if (useDisplayName) 
+							{
+								useDisplayName(existingList,obj);
+							}
+							else
+							{
+							 existingList.add(((SailPointObject) obj).getName());
+							}
+							retVal.put(mapKeyName, existingList);
+						}
+						else 
+						{
+							List newlist = new ArrayList();
+							if(retVal.get(mapKeyName)!=null)
+							{
+								newlist.add(retVal.get(mapKeyName));
+							}
+							if (useDisplayName) 
+							{
+								useDisplayName(newlist,obj);
+							}
+							else 
+							{
+								newlist.add(((SailPointObject) obj).getName());
+							}
+							retVal.put(mapKeyName, newlist);
+						}
+					}
+					else 
+					{
+						List newlist = new ArrayList();
+						if (useDisplayName) 
+						{
+							useDisplayName(newlist,obj);
+						}
+						else 
+						{
+							newlist.add(((SailPointObject) obj).getName());
+						}
+						retVal.put(mapKeyName, newlist);
+          			}
+                    count++;
+                    if ((count % commitLimit) == 0) 
+                    {
+                        context.commitTransaction();
+                    }
+                }
+            }
+        }
+    }
+    /**
+     * Service Account Owner Reassignment Rule Execution
+     * @param identityName
+     * @param allAcctRequests
+     * @return
+     * @throws GeneralException
+     */
+     public List invokeServiceOwnershipRule(String identityName, List allAcctRequests) throws GeneralException {
+        LogEnablement.isLogDebugEnabled(logger,"Enter invokeServiceOwnershipRule");
+		List retVal = new ArrayList();
+		Rule rule = context.getObjectByName(Rule.class, "Rule-FrameworkTerminateServiceAccountOwner");
+		Object obj;
+        if (rule == null) {
+        	throw new GeneralException("Rule is not imported ");
+        } else {
+        	HashMap params = new HashMap();
+            params.put("context", context);
+            params.put("identityName", identityName);
+            params.put("allAcctRequests", allAcctRequests);
+			try {
+            	LogEnablement.isLogDebugEnabled(logger,"...Run the rule");
+                obj = context.runRule(rule, params);                
+                if (obj != null) {				            
+               		retVal = (List)obj;	
+           		}
+            } catch (Exception re) {
+            	throw new GeneralException("Error executing Rule ");
+            }
+		}
+		if(rule!=null)
+		{
+		context.decache(rule);
+		}
+		return retVal;
+    }
+    /**
+     * Invoke Reassignment Rule for Artifact, Business Approvers, and Service Owners
+     * @param identityName
+     * @param plan
+     * @param ruleName
+     * @return
+     * @throws GeneralException
+     */
+    public String invokeReassignmentRule(String identityName, ProvisioningPlan plan, String ruleName) throws GeneralException
+     {
+        LogEnablement.isLogDebugEnabled(logger,"Enter invokeReassignmentRule");
+		Rule rule = context.getObjectByName(Rule.class, ruleName);
+		String str;
+        if (rule == null) 
+        {
+        	throw new GeneralException("Rule is not imported or Rule doesn't exist");
+        } 
+        else 
+        {
+        	HashMap params = new HashMap();
+            params.put("context", context);
+            params.put("identityName", identityName);
+            params.put("plan", plan);
+           	try 
+           	{
+            	LogEnablement.isLogDebugEnabled(logger,"...Run the rule");
+                str = context.runRule(rule, params);                
+            } 
+            catch (Exception re) 
+            {
+            	throw new GeneralException("Error executing Rule "+re.getMessage());
+            }
+		}
+		if(rule!=null)
+		{
+		context.decache(rule);
+		}
+		LogEnablement.isLogDebugEnabled(logger,"Exit invokeReassignmentRule "+str);
+		return str;
+    }
+    /**
+     * Remove and Reassign Business Approvers
+     * @param context
+     * @param globalMap
+     * @param identityName
+     * @param plan
+     * @param workflow
+     * @return
+     */
+     public Map removeBusinessApproversOwners(SailPointContext context, Map globalMap, String identityName, ProvisioningPlan plan, Workflow workflow)
+     {
+     	LogEnablement.isLogDebugEnabled(logger,"...removeBusinessApproversOwners Start..");
+     	String businessApproversEnabled=ObjectConfigAttributesRuleLibrary.extendedAttrBusApproverEnabled(context);
+		boolean busApprEnabled=false;
+		Map retVal = new HashMap();
+        List decacheObjects = new ArrayList();
+        int count = 0;
+        int commitLimit = 100;
+		if(businessApproversEnabled!=null && businessApproversEnabled.length()>0 && businessApproversEnabled.equalsIgnoreCase("TRUE"))
+		{
+			busApprEnabled=true;
+		}
+        //Business Approvers
+        List sailpointBusinessApproversArtifacts=null;
+        String businessApproversremoveOwnership=null;
+        String businessApproversreassignmentRule=null;
+        String businessApproversToManager=null;
+        if(globalMap!=null)
+        {
+            //Business Approvers
+	         if(globalMap.containsKey("sailpointBusinessApproversArtifacts"))
+	         {
+	          sailpointBusinessApproversArtifacts=globalMap.get("sailpointBusinessApproversArtifacts");
+	         }
+	         if(globalMap.containsKey("businessApproversremoveOwnership"))
+	         {
+	          businessApproversremoveOwnership=globalMap.get("businessApproversremoveOwnership");
+	         }
+	         if(globalMap.containsKey("businessApproversreassignmentRule"))
+	         {
+	          businessApproversreassignmentRule=globalMap.get("businessApproversreassignmentRule");
+	         }
+	         if(globalMap.containsKey("businessApproversToManager"))
+	         {
+	          businessApproversToManager=globalMap.get("businessApproversToManager");
+	         }
+	    }
+        //Remove Business Approvers Removal and Reassignment - Start
+  		if(busApprEnabled && businessApproversremoveOwnership!=null && businessApproversremoveOwnership.equalsIgnoreCase("TRUE") && identityName!=null)
+  		{
+	  		Identity identity = context.getObjectByName(Identity.class, identityName);
+	        Identity manager;
+	        Identity identityNoManager = context.getObjectByName(Identity.class, "No Manager Found");
+	        Identity identityNoOwner = context.getObjectByName(Identity.class, "No Reassignment");
+	        //Business Approver Ownership Reassign to Manager
+	        if (identity.getManager() != null) 
+	        {
+	        	manager = identity.getManager();
+	        	LogEnablement.isLogDebugEnabled(logger,"Found Manager On Identity");
+	        }
+	        //Business Approvers Ownership Reassign to No Manager Found, No Manager Exists
+	        if(manager==null)
+	        {
+	         manager=identityNoManager;
+	         LogEnablement.isLogDebugEnabled(logger,"Found No Manager On Identity Forward to No Manager Group");
+	        }
+	        //Business Approvers Ownership, In case there is no reassignment to manager, reassign to No Reassignmnet Workgroup
+	        if(businessApproversToManager!=null && businessApproversToManager.equalsIgnoreCase("FALSE"))
+	        {
+	          manager=identityNoOwner;
+	         LogEnablement.isLogDebugEnabled(logger,"Reassign to No Reassignment");
+	        }
+	        //Business Approvers Ownership, If there is a reassignmnet rule defined, just use the identity name from the rule.
+	        if(businessApproversreassignmentRule!=null)
+	        {
+	             LogEnablement.isLogDebugEnabled(logger,"Assignment Rule Found");
+		        String reassignedOwner=invokeReassignmentRule(identityName,plan,businessApproversreassignmentRule);
+		        if(reassignedOwner!=null)
+		        {
+			        Identity reassignedOwnerIdentity = context.getObjectByName(Identity.class, reassignedOwner);
+			        if(reassignedOwnerIdentity!=null)
+			        {
+			        LogEnablement.isLogDebugEnabled(logger,"Found Reassigned Owner Identity from Rule");
+			        manager=reassignedOwnerIdentity;
+			        }
+			        else
+			        { 
+			        LogEnablement.isLogDebugEnabled(logger,"Not Found Reassigned Owner Identity from Rule  Forward to No Reassignment Group");
+			        manager=identityNoOwner;
+			        }
+		        }
+		        else
+		        {
+		        manager=identityNoOwner;
+		        }
+	        }
+	        //This is for notification, we want send notification to right owner
+	        if(manager!=null)
+	        {
+				workflow.put("identityManager",manager.getName());
+			}
+			try
+			{
+			if(sailpointBusinessApproversArtifacts!=null && sailpointBusinessApproversArtifacts.contains("roleBusApprovers"))
+			{
+	  			removeFrameWorkApprovers(retVal, "roleBusApprovers", identityName, "Business Approver Role", true, manager, decacheObjects);
+	  		}
+	  		if(sailpointBusinessApproversArtifacts!=null && sailpointBusinessApproversArtifacts.contains("additionalRoleBusApprovers"))
+			{
+	  			removeFrameWorkApprovers(retVal, "additionalRoleBusApprovers", identityName, "Business Approver Role Additional", true, manager, decacheObjects);
+	  		}
+	  		if(sailpointBusinessApproversArtifacts!=null && sailpointBusinessApproversArtifacts.contains("appBusApprovers"))
+			{
+	  			removeFrameWorkApprovers(retVal, "appBusApprovers", identityName, "Business Approver Application", true, manager, decacheObjects);
+	  		}
+	  		if(sailpointBusinessApproversArtifacts!=null && sailpointBusinessApproversArtifacts.contains("additionalAppBusApprovers"))
+			{
+	  			removeFrameWorkApprovers(retVal, "additionalAppBusApprovers", identityName, "Business Approver Application Additional", true, manager, decacheObjects);
+	  		}
+	  		if(sailpointBusinessApproversArtifacts!=null && sailpointBusinessApproversArtifacts.contains("entBusApprovers"))
+			{
+	  			removeFrameWorkApprovers(retVal, "entBusApprovers", identityName, "Business Approver Entitlement", true, manager, decacheObjects);
+	  		}
+	  		if(sailpointBusinessApproversArtifacts!=null && sailpointBusinessApproversArtifacts.contains("additionalEntBusApprovers"))
+			{
+	  			removeFrameWorkApprovers(retVal, "additionalEntBusApprovers", identityName, "Business Approver Entitlement Additional", true, manager, decacheObjects);
+	  		}
+	  		}
+	  		finally
+	  		{
+	  		//Final Commit
+  			context.commitTransaction();
+  			}
+	        if (decacheObjects != null && !decacheObjects.isEmpty()) 
+			{
+				for (SailPointObject spo : decacheObjects) 
+				{
+					context.decache(spo);
+				}
+			}
+  			if(manager!=null)
+	        {
+	        context.decache(manager);
+	        }
+	        if(identity!=null)
+	        {
+	        context.decache(identity);
+	        }
+	        if(identityNoManager!=null)
+	        {
+	          context.decache(identityNoManager);
+	        }
+	        if(identityNoOwner!=null)
+	        {
+	          context.decache(identityNoOwner);
+	        }
+  		}
+  		//Remove Business Approvers Removal and Reassignment - End
+         LogEnablement.isLogDebugEnabled(logger,"...removeBusinessApproversOwners End.."+retVal);
+	     return retVal;
+     }
+ /**
+  * Remove and Reassign Service Account Ownership
+  * @param context
+  * @param globalMap
+  * @param identityName
+  * @param plan
+  * @param workflow
+  * @return
+  */
+    public Map removeServiceAccountOwners(SailPointContext context, Map globalMap, String identityName, ProvisioningPlan plan, Workflow workflow) 
+    {
+    	LogEnablement.isLogDebugEnabled(logger,"...removeServiceAccountOwners Start..");
+    	String identityTypeEnabled = ObjectConfigAttributesRuleLibrary.extendedAttrIdentityTypeEnabled(context);
+		boolean identityTypeEnab=false;
+		if(identityTypeEnabled!=null && identityTypeEnabled.length()>0 && identityTypeEnabled.equalsIgnoreCase("TRUE"))
+		{
+			identityTypeEnab=true;
+		}
+    	String serviceAccountEnabled = ObjectConfigAttributesRuleLibrary.extendedAttrServiceAccountEnabled(context);
+    	HashMap templateMap = new HashMap();
+		boolean servAccEnabled=false;
+		if(serviceAccountEnabled!=null && serviceAccountEnabled.length()>0 && serviceAccountEnabled.equalsIgnoreCase("TRUE"))
+		{
+			servAccEnabled=true;
+		}
+		 //Service Owners
+        String serviceAccountremoveOwnership=null;
+        String serviceAccountreassignmentRule=null;
+        String serviceAccountreassignOwnershipToManager=null;
+        String serviceAccountOwnerAttrs=null;
+		if(globalMap!=null)
+        {
+	         //Service Account Owners
+	         if(globalMap.containsKey("serviceAccountremoveOwnership"))
+	         {
+	          serviceAccountremoveOwnership=globalMap.get("serviceAccountremoveOwnership");
+	         }
+	         if(globalMap.containsKey("serviceAccountreassignmentRule"))
+	         {
+	          serviceAccountreassignmentRule=globalMap.get("serviceAccountreassignmentRule");
+	         }
+	         if(globalMap.containsKey("serviceAccountreassignOwnershipToManager"))
+	         {
+	          serviceAccountreassignOwnershipToManager=globalMap.get("serviceAccountreassignOwnershipToManager");
+	         }
+	         if(globalMap.containsKey("serviceAccountOwnerAttrs"))
+	         {
+	          serviceAccountOwnerAttrs=globalMap.get("serviceAccountOwnerAttrs");
+	         }
+        }
+         //Start of Service Account Ownership Reassignment
+	    if(servAccEnabled && serviceAccountremoveOwnership!=null && serviceAccountremoveOwnership.equalsIgnoreCase("TRUE") && identityName!=null)
+		{
+		    Identity identity = context.getObjectByName(Identity.class, identityName);
+	        Identity manager;
+	        Identity identityNoManager = context.getObjectByName(Identity.class, "No Manager Found");
+	        Identity identityNoOwner = context.getObjectByName(Identity.class, "No Reassignment");
+	        //Service Account Ownership Reassign to Manager
+	        if (identity.getManager() != null) 
+	        {
+	        	manager = identity.getManager();
+	        	LogEnablement.isLogDebugEnabled(logger,"Found Manager On Identity");
+	        }
+	        //Service Account Ownership Reassign to No Manager Found, No Manager Exists
+	        if(manager==null)
+	        {
+	         manager=identityNoManager;
+	         LogEnablement.isLogDebugEnabled(logger,"Found No Manager On Identity Forward to No Manager Group");
+	        }
+	        //Service Account Ownership, In case there is no reassignment to manager, reassign to No Reassignmnet Workgroup
+	        if(serviceAccountreassignOwnershipToManager!=null && serviceAccountreassignOwnershipToManager.equalsIgnoreCase("FALSE"))
+	        {
+	          manager=identityNoOwner;
+	         LogEnablement.isLogDebugEnabled(logger,"Reassign to No Reassignment");
+	        }
+	        //Service Account Ownership, If there is a reassignmnet rule defined, just use the identity name from the rule.
+	        if(serviceAccountreassignmentRule!=null)
+	        {
+	             LogEnablement.isLogDebugEnabled(logger,"Assignment Rule Found");
+		        String reassignedOwner=invokeReassignmentRule(identityName,plan,serviceAccountreassignmentRule);
+		        if(reassignedOwner!=null)
+		        {
+			        Identity reassignedOwnerIdentity = context.getObjectByName(Identity.class, reassignedOwner);
+			        if(reassignedOwnerIdentity!=null)
+			        {
+			        LogEnablement.isLogDebugEnabled(logger,"Found Reassigned Owner Identity from Rule");
+			        manager=reassignedOwnerIdentity;
+			        }
+			        else
+			        { 
+			        LogEnablement.isLogDebugEnabled(logger,"Not Found Reassigned Owner Identity from Rule  Forward to No Reassignment Group");
+			        manager=identityNoOwner;
+			        }
+		        }
+		        else
+		        {
+		        manager=identityNoOwner;
+		        }
+	        }
+			 //This is for notification, we want send notification to right owner
+	        if(manager!=null)
+	        {
+				workflow.put("identityManager",manager.getName());
+			}
+	        QueryOptions qo = new QueryOptions();
+	        if(serviceAccountOwnerAttrs!=null)
+	        {
+		        List listSerAttrs=Util.stringToList(serviceAccountOwnerAttrs); 
+		        LogEnablement.isLogDebugEnabled(logger,"listSerAttrs..."+listSerAttrs);   
+		        if(listSerAttrs!=null && listSerAttrs.size()>0)
+		        {
+			        for(String extendedAttr:listSerAttrs)
+			        {
+			              Filter filter = null;
+				          if(extendedAttr!=null && extendedAttr.equalsIgnoreCase("administrator") && identityTypeEnab)
+				          {
+				          	filter = Filter.eq("administrator.name", identityName);
+				          }
+				          else if(extendedAttr!=null && !extendedAttr.equalsIgnoreCase("administrator"))
+				          {
+				          	filter = Filter.eq(extendedAttr, identityName);
+				          }
+					    qo.addFilter(filter);
+					    //Get list of Cube Names for each attr
+				         List listOfCubeNames = null;
+				         if(filter!=null)
+				         {
+				         listOfCubeNames=getServiceOwnerCubeNames(filter);
+				         }
+				        LogEnablement.isLogDebugEnabled(logger,"listOfCubeNames = " + listOfCubeNames);
+				        if (listOfCubeNames != null && listOfCubeNames.size()>0) 
+				        {
+				             templateMap.put("Service Account Ownership Reassignment", listOfCubeNames);
+				            for (String cubeName : listOfCubeNames) 
+				            {
+				                  List allAcctRequests = getServiceAccountOwnershipToManagerAccountRequests(cubeName,extendedAttr,manager.getName());
+				                  LogEnablement.isLogDebugEnabled(logger,"allAcctRequests = " + allAcctRequests);
+				                  invokeServiceOwnershipRule(cubeName,allAcctRequests);
+				            } //for loop for each cube name
+				        }// List of cube names not null
+				     } // Iterate through each service account attr
+			     }
+		  }
+			if(manager!=null)
+	        {
+	        context.decache(manager);
+	        }
+	        if(identity!=null)
+	        {
+	        context.decache(identity);
+	        }
+	        if(identityNoManager!=null)
+	        {
+	          context.decache(identityNoManager);
+	        }
+	        if(identityNoOwner!=null)
+	        {
+	          context.decache(identityNoOwner);
+	        }
+	     }
+	     //End of Service Account Ownership Reassignment
+	    return templateMap;
+    }
+    /** 
+	* A convenience function that tells IdentityIQ to ignore workgroup indexes 
+	* in queries issued against the backing relational database.  This can be 
+	* a performance boost for installations on relational engines with poor 
+	* index performance for bit-wise/boolean data columns like used on 
+	* "spt_identity.workgroup" 
+	*/  
+	public QueryOptions setIgnoreWorkgroupIndexes(QueryOptions qo) {  
+		ArrayList trueAndFalse = new ArrayList();  
+		trueAndFalse.add(new java.lang.Boolean(true));  
+		trueAndFalse.add(new java.lang.Boolean(false));  
+		qo.addFilter(Filter.in("workgroup", trueAndFalse));  
+		return qo;  
+	} 
+	/**
+	 * Get List of Cube Names that owns Service Accounts
+	 * @param filter
+	 * @return
+	 */
+    public List getServiceOwnerCubeNames (Filter filter)
+    {
+    	List cubeNames= new ArrayList();
+    	QueryOptions qo = new QueryOptions();  
+		setIgnoreWorkgroupIndexes(qo); // Performance optimization.
+		qo.addFilter(filter);
+		// Use a projection query first to return minimal data.  
+		ArrayList returnCols = new ArrayList();  
+		returnCols.add("name");  
+  		String identityName = null;  
+		int matchCount = 0;  
+  		// Execute the query against the IdentityIQ database.  
+		Iterator it = context.search(Identity.class, qo, returnCols);
+		if(it!=null)
+		{  
+			while (it.hasNext()) 
+			{  
+				Object[] retObjs = (Object[]) it.next();  
+				if(retObjs!=null && retObjs.length==1)
+				{
+					identityName   = (String) retObjs[0];  
+					if(identityName!=null)
+					{
+					cubeNames.add(identityName);
+					matchCount++;    
+					}
+				}
+			}  
+			Util.flushIterator(it);
+		}
+  	    return cubeNames;  
+    }
+    /**
+     * Generate Account Request to reassign Service Account Ownership To Manager
+     * @param identityName
+     * @param attributeName
+     * @param ownerManager
+     * @return
+     */
+    public  List getServiceAccountOwnershipToManagerAccountRequests(String identityName, String attributeName, String ownerManager) 
+    {
+		LogEnablement.isLogDebugEnabled(logger,"Enter getServiceAccountOwnershipToManagerAccountRequests");
+		List allAcctRequests = new ArrayList();
+      	AccountRequest acctReq = new AccountRequest();
+        acctReq.setApplication(ProvisioningPlan.APP_IIQ);
+   		acctReq.setNativeIdentity(identityName);
+		acctReq.setOperation(ProvisioningPlan.AccountRequest.Operation.Modify);	
+	    AttributeRequest attrReq = new AttributeRequest();   	
+        attrReq.setName(attributeName);
+        attrReq.setOperation(ProvisioningPlan.Operation.Set);
+        attrReq.setValue(ownerManager);
+        if (acctReq != null) 
+        {
+        	acctReq.add(attrReq);
+        }
+       LogEnablement.isLogDebugEnabled(logger,"Exit getServiceAccountOwnershipToManagerAccountRequests");
+		allAcctRequests.add(acctReq);
+       	return allAcctRequests;
+    }
+    /**
+     * Build Leaver Plan
+     * @param context
+     * @param identityName
+     * @param workItemComments
+     * @param workflow
+     * @return
+     * @throws Exception
+     */
+    public ProvisioningPlan buildLeaverPlan(SailPointContext context, String identityName, String workItemComments, Workflow workflow) throws Exception {
+        LogEnablement.isLogDebugEnabled(logger,"Enter buildLeaverPlan");
+        Identity identity = context.getObjectByName(Identity.class, identityName);
+        String applicationProcess = "terminationProcess";
+        LogEnablement.isLogDebugEnabled(logger,"...Process from Applications = " + applicationProcess);
+        List links;
+        IdentityService idService = new IdentityService(context);
+ 		int countLinks=0;
+        countLinks=idService.countLinks(identity);
+        ProvisioningPlan plan = new ProvisioningPlan();
+        if (countLinks>0 && identity!=null) 
+        {
+        	links = idService.getLinks(identity,0,0);
+	        if (workItemComments != null) {
+	    		plan.setComments(workItemComments);
+	    	}
+	    	if (identity != null) {
+	            plan.setIdentity(identity);
+		    	for (Link link : links) 
+		    	{
+		    		List ar = new ArrayList();
+					String nativeId = "";
+					String appName = "";
+					String iiqDisabled = "";
+					String iiqLocked = "";
+					String psa="";
+					if (link != null) 
+					{
+					    psa=((String)link.getAttribute("psAccount"));
+					    LogEnablement.isLogDebugEnabled(logger,"..link psa = " + psa);
+						nativeId = link.getNativeIdentity();
+						LogEnablement.isLogDebugEnabled(logger,"..link nativeId = " + nativeId);
+        				appName = link.getApplicationName();
+        				LogEnablement.isLogDebugEnabled(logger,"..link appName = " + appName);
+						iiqDisabled=ROADUtil.isLinkDisabled(link);
+						LogEnablement.isLogDebugEnabled(logger,"..link iiqDisabled = " + iiqDisabled);
+						iiqLocked=ROADUtil.isLinkLocked(link);
+						LogEnablement.isLogDebugEnabled(logger,"..link iiqLocked = " + iiqLocked);
+					}
+		    		ar = addToLeaverPlan(context, psa, applicationProcess, nativeId, appName, identity, iiqDisabled, iiqLocked, workflow);
+		    		if (!ar.isEmpty() && plan != null) 
+		    		{
+		               	for (AccountRequest acctReq : ar) 
+		               	{
+		               		plan.add(acctReq);
+		               	}
+	            	}
+		  		}
+		  	}
+		}
+		if (identity != null) 
+		{	
+		   context.decache(identity);
+		}		  	
+		if (plan != null) 
+		{
+	        if (plan.getAllRequests() == null) {
+	            plan = null;
+	        }
+	    }
+        return plan;
+    	LogEnablement.isLogDebugEnabled(logger,"Exit buildLeaverPlan");
+    }
+    /**
+     * Get List of Account Request for  Leaver Plan based on Application Options
+     * @param context
+     * @param psa
+     * @param applicationProcess
+     * @param nativeId
+     * @param appName
+     * @param identity
+     * @param iiqDisabled
+     * @param iiqLocked
+     * @param workflow
+     * @return
+     */
+    private List addToLeaverPlan(SailPointContext context, String psa, String applicationProcess, String nativeId, String appName, Identity identity, String iiqDisabled, String iiqLocked, Workflow workflow) {
+    	LogEnablement.isLogDebugEnabled(logger,"Enter addToLeaverPlan..."+appName);
+		AccountRequest acctReq;
+		List allRequests = new ArrayList();
+		LogEnablement.isLogDebugEnabled(logger,"...Application Name = " + appName);
+		LogEnablement.isLogDebugEnabled(logger,"...applicationProcess = " + applicationProcess);
+        Application app = context.getObjectByName(Application.class, appName);
+		if (app != null) 
+		{
+			Object extObj = app.getAttributeValue(applicationProcess);
+			String extSetting = (String) extObj;
+	        LogEnablement.isLogDebugEnabled(logger,"application extSetting..."+extSetting);
+	        String extendedRule = "";
+	        String reqType = "";
+	        if (extSetting == null) 
+	        {
+	            ObjectConfig config = Application.getObjectConfig();
+	            if (config != null) 
+	            {
+	                extSetting = (String) config.getObjectAttribute(applicationProcess).getDefaultValue();
+	                //Default Value
+	                LogEnablement.isLogDebugEnabled(logger,"default extSetting..."+extSetting);
+	            }
+	        }
+	        if (applicationProcess.equalsIgnoreCase("terminationProcess")) 
+	        {
+	        	extendedRule = "terminationExtendedRule";
+	        	reqType = getRequestTypeName(context, workflow);
+	        	LogEnablement.isLogDebugEnabled(logger,"reqType..."+reqType);
+	        }
+	       	else 
+	       	{
+	       		extendedRule = "";
+	       	}
+	       	LogEnablement.isLogDebugEnabled(logger,"...Application Name = " + appName + ", Process = " + extSetting); 
+			allRequests = getAccountRequest(psa, extSetting, extendedRule, appName, nativeId, identity, iiqDisabled, iiqLocked, reqType,workflow,null);
+		}
+        if(app!=null)
+        {
+        context.decache(app);
+        } 
+        LogEnablement.isLogDebugEnabled(logger,"End addToLeaverPlan..."+appName);
+        return allRequests;
+    }
+    /**
+	 * Get Request Type Name
+	 * @param context
+	 * @param workflow
+	 * @return
+	 */
+    public String getRequestTypeName(SailPointContext context, Workflow workflow) 
+    {
+     	LogEnablement.isLogDebugEnabled(logger,"Start getRequestTypeName...");
+     	String requestType = LeaverRuleLibrary.LEAVERFEATURE;
+     	if(workflow!=null )
+     	{
+     	    String requestTypeInitialized=workflow.get("requestType");
+     		LogEnablement.isLogDebugEnabled(logger,"requestTypeInitialized..."+requestTypeInitialized);
+     		if(requestTypeInitialized!=null)
+     		{
+     			requestType=requestTypeInitialized;
+     		}
+     	}
+        LogEnablement.isLogDebugEnabled(logger,"End getRequestTypeName..."+requestType);
+        return requestType;
+    }
+    /**
+	 * Execute Post Leaver Rule
+	 * @param identityName
+	 * @param project
+	 * @param requestType
+	 */
+    public void postLeaverRule(String identityName, String requestType, ProvisioningProject project)
+    {
+    	LogEnablement.isLogDebugEnabled(logger,"Start  postLeaverRule" );
+    	LogEnablement.isLogDebugEnabled(logger,"..identityName..."+identityName );
+    	LogEnablement.isLogDebugEnabled(logger,"..requestType..."+requestType );
+    	LogEnablement.isLogDebugEnabled(logger,"..project..."+project );
+    	Map map = new HashMap();
+	    //Common Configuration
+        map = ROADUtil.getCustomGlobalMap(context);
+        if(map!=null && map.containsKey("postLeaverRule"))
+		{
+		    String ruleName=map.get("postLeaverRule");
+		    if(ruleName!=null && ruleName.length()>0)
+		    {
+		    ROADUtil.invokePostExtendedRuleNoObjectReferences(context,null,ruleName, null,  requestType, null, null, null, identityName,null, project);
+		    }
+		 }
+	 	LogEnablement.isLogDebugEnabled(logger,"End  postLeaverRule" );
+    }
+      /**
+     * Execute Leaver Defer Action Plan
+     * @param context
+     * @param identityName
+     * @param workflow
+     * @return
+     * @throws Exception
+     */
+    public void executeDeferPlan(SailPointContext context, String identityName, Workflow workflow) throws Exception {
+        LogEnablement.isLogDebugEnabled(logger,"Enter executeDeferPlan");
+        Identity identity = context.getObjectByName(Identity.class, identityName);
+        List links;
+        IdentityService idService = new IdentityService(context);
+ 		int countLinks=0;
+        countLinks=idService.countLinks(identity);
+        String reqType = getRequestTypeName(context, workflow);
+        if (countLinks>0 && identity!=null) 
+        {
+        	links = idService.getLinks(identity,0,0);
+	      	if (identity != null) 
+	    	{
+	           for (Link link : links) 
+	 	    	{
+		    		List ar = new ArrayList();
+					String nativeId = "";
+					String appName = "";
+					String iiqDisabled = "";
+					String iiqLocked = "";
+					String psa="";
+					if (link != null) 
+					{
+					    psa=((String)link.getAttribute("psAccount"));
+						nativeId = link.getNativeIdentity();
+        				appName = link.getApplicationName();
+						iiqDisabled=ROADUtil.isLinkDisabled(link);
+						iiqLocked=ROADUtil.isLinkLocked(link);
+					}
+		    		executeDeferRequestPerApp(psa, nativeId, appName, identity, iiqDisabled, iiqLocked,reqType,workflow);
+		    	}
+		  	}
+		}
+		if (identity != null) 
+		{	
+		   context.decache(identity);
+		}		  	
+	    LogEnablement.isLogDebugEnabled(logger,"Exit executeDeferPlan");
+    }
+    /**
+	 * Execute Postponed Request Per Application
+	 * @param psa
+	 * @param appName
+	 * @param nativeId
+	 * @param identity
+	 * @param iiqDisabled
+	 * @param iiqLocked
+	 * @param requestType
+	 * @param workflow
+	 * @return
+	 * @throws GeneralException
+	 */
+	public void executeDeferRequestPerApp(String psa, String nativeId, String appName, Identity identity, String iiqDisabled, String iiqLocked, String requestType, Workflow workflow) throws GeneralException 
+	{
+	 	LogEnablement.isLogDebugEnabled(logger,"Enter getDeferAccountRequest");
+	 	LogEnablement.isLogDebugEnabled(logger," appName="+appName);
+	 	LogEnablement.isLogDebugEnabled(logger,"requestType="+requestType);
+    	AccountRequest acctReq = null;
+    	List xDaysVal = new ArrayList();
+    	List removeEntRoleVal = new ArrayList();
+    	String appXAccountDays="xDeleteDays";
+    	String appXAccessDays="xDays";
+    	String terminationSettings="terminationProcess";
+    	String deferXAccountDays=null;
+    	String deferXAccessDays=null;
+    	//Get app object
+       	Application app = context.getObjectByName(Application.class, appName);
+       	//Get Identity Name
+       	String identityName=identity.getName();
+       	String extSetting = null;
+       	//Get Termination Settings
+       	Map populationMap=null;
+       	if(requestType!=null && (requestType.equalsIgnoreCase(LeaverRuleLibrary.LEAVERFEATURE) || requestType.equalsIgnoreCase(LeaverRuleLibrary.IMMEDIATELEAVERFEATURE)))
+       	{
+       		populationMap=LeaverRuleLibrary.overrideApplicationLeaverSettingsOnPopulationMatch(context, app,identity);
+       	}
+        if(app!=null && app.getAttributeValue(terminationSettings)!=null)
+       	{
+       		Object extObj=app.getAttributeValue(terminationSettings);
+       		//Default is Defined on UI
+	   		extSetting = (String) extObj;
+	   	}
+	   	LogEnablement.isLogDebugEnabled(logger," Application UI extSetting..."+extSetting);
+   		if(populationMap!=null && populationMap.containsKey(LeaverRuleLibrary.OPTIONSTOKEN) && populationMap.get(LeaverRuleLibrary.OPTIONSTOKEN)!=null)
+        {
+            //Override Per Population Debug Page
+        	extSetting=populationMap.get(LeaverRuleLibrary.OPTIONSTOKEN);
+        	LogEnablement.isLogDebugEnabled(logger,"Override Application Debug extSetting..."+extSetting);
+        }
+       	//Get Defer Account X Days 
+       	if(app!=null && app.getAttributeValue(appXAccountDays)!=null)
+       	{
+       		//Default is Defined on UI
+       		deferXAccountDays=(String) app.getAttributeValue(appXAccountDays);
+       	}
+       	//Get Defer Access X Days 
+       	if(app!=null && app.getAttributeValue(appXAccessDays)!=null)
+       	{
+       		//Default is Defined on UI
+       		deferXAccessDays=(String) app.getAttributeValue(appXAccessDays);
+       	}
+       	LogEnablement.isLogDebugEnabled(logger," Application UI deferXAccountDays..."+deferXAccountDays);
+       	LogEnablement.isLogDebugEnabled(logger," Application UI deferXAccessDays..."+deferXAccessDays);
+      	if(populationMap!=null && populationMap.containsKey(LeaverRuleLibrary.OPTIONSACCOUNTXTOKEN) && populationMap.get(LeaverRuleLibrary.OPTIONSACCOUNTXTOKEN)!=null)
+        {
+         	 //Override Per Population Debug Page
+        	deferXAccountDays=populationMap.get(LeaverRuleLibrary.OPTIONSACCOUNTXTOKEN);
+        	LogEnablement.isLogDebugEnabled(logger,"Override Application Debug deferXAccountDays..."+deferXAccountDays);
+        }
+        if(populationMap!=null && populationMap.containsKey(LeaverRuleLibrary.OPTIONSACCESSXTOKEN) && populationMap.get(LeaverRuleLibrary.OPTIONSACCESSXTOKEN)!=null)
+        {
+         	 //Override Per Population Debug Page
+        	deferXAccessDays=populationMap.get(LeaverRuleLibrary.OPTIONSACCESSXTOKEN);
+        	LogEnablement.isLogDebugEnabled(logger,"Override Application Debug deferXAccessDays..."+deferXAccessDays);
+        }
+       	//Delete Account After X Days
+        if (deferXAccountDays!=null && deferXAccountDays.trim()!=null && deferXAccountDays.trim().length()>0) 
+    	{
+    		acctReq = new AccountRequest(AccountRequest.Operation.Delete, appName, null, nativeId);
+       		acctReq.setNativeIdentity(nativeId);
+       		if (acctReq != null) 
+       		{
+        	  xDaysVal.add(acctReq);
+        	}
+        	LogEnablement.isLogDebugEnabled(logger,"Launch Delete Account After X Days.."+deferXAccountDays+"...identityName.."+identityName);
+        	LeaverRuleLibrary.invokeXdaysRule(context,LeaverRuleLibrary.LEAVERXDAYSRULE,xDaysVal,appName,requestType,(Attributes)workflow.get("spExtAttrs"), identityName, nativeId,deferXAccountDays);
+    	 } 
+    	 //Remove Entitlement After X Days
+         if(extSetting!=null && extSetting.contains("Remove Entitlements After X Days") && deferXAccessDays!=null && deferXAccessDays.trim()!=null && deferXAccessDays.trim().length()>0)
+	     {
+	       if(extSetting.startsWith("Disable and Move Account Immediately")||
+	       extSetting.startsWith("Disable and Move Account and Scramble Password and Add Comments Immediately") ||
+	       extSetting.startsWith("Lock and Move Account Immediately")||
+	       extSetting.startsWith("Lock and Move Account and Scramble Password and Add Comments Immediately"))
+	       {
+	         	//Role Access
+				List removeBundles = frameworkRemoveRequestedAssignedBundles(identity, appName);
+	           	if (removeBundles != null && !removeBundles.isEmpty()) 
+	           	{
+	           		removeEntRoleVal.addAll(removeBundles);
+	           	}
+	            //Entitlement Access
+			   List attrReq = LeaverRuleLibrary.frameworkRemoveAttributeRequestPerApplication(context,appName, identity,nativeId);
+			   if (attrReq != null && attrReq.size()>0) 
+		       {
+	          		for (AttributeRequest newAttrReq : attrReq)
+	          		{
+	          			acctReq = new AccountRequest(AccountRequest.Operation.Modify, appName, null, nativeId);
+	          			acctReq.setNativeIdentity(nativeId);
+	          			acctReq.add(newAttrReq);
+						if (acctReq != null) 
+						{
+						    removeEntRoleVal.add(acctReq);
+						}
+	          		}
+          		}
+	           	if(removeEntRoleVal!=null && removeEntRoleVal.size()>0)
+	           	{
+	           	LogEnablement.isLogDebugEnabled(logger,"Launch Delete Access After X Days..."+deferXAccountDays+"...identityName.."+identityName);
+	           	LeaverRuleLibrary.invokeXdaysRule(context,LeaverRuleLibrary.LEAVERXDAYSRULE,removeEntRoleVal,appName,requestType,(Attributes)workflow.get("spExtAttrs"), identityName, nativeId,deferXAccessDays);
+	           	}
+	       }
+         }
+    	 if(app!=null)
+	     {
+	      context.decache(app);
+	     }
+	    LogEnablement.isLogDebugEnabled(logger,"End getDeferAccountRequest.."+"...deferXAccountDays..."+deferXAccountDays+"...deferXAccessDays..."+deferXAccessDays);
+ }
+	
+	]]></Source>
+</Rule>

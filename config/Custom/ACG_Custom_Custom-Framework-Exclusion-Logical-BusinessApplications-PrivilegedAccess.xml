@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Custom PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Custom name="Custom-Framework-Exclusion-Logical-BusinessApplications-PrivilegedAccess">
+  <Attributes>
+    <Map>
+      <entry key="LogicalBusinessApps"/>
+      <entry key="excludePrivilegedAccess" value="FALSE"/>
+      <entry key="excludePrivilegedAccessRegularCert" value="FALSE"/>
+      <entry key="includeOnlyPrivilegedAccessAccountGroupMemCert" value="FALSE"/>
+      <entry key="includeOnlyPrivilegedAccessApplicationOwnerCert" value="FALSE"/>
+      <entry key="includeOnlyPrivilegedAccessEntitlementOwnerCert" value="FALSE"/>
+      <entry key="includeOnlyPrivilegedAccessNativeChangeCert" value="FALSE"/>
+    </Map>
+  </Attributes>
+</Custom>

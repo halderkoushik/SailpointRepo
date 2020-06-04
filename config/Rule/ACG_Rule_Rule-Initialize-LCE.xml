@@ -1,0 +1,89 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule-Initialize-LCE">
+  <Source><![CDATA[
+    import sailpoint.object.Attributes;
+	//Initialize LCE List
+	public List initializeLCE(Attributes roadSectionAttributes)
+	{
+		List displayList = new ArrayList();
+		List actualList = new ArrayList();
+		if( roadSectionAttributes!=null)
+		{
+			for (Map.Entry entry : roadSectionAttributes.entrySet()) 
+			{ 
+				String value=entry.getValue();
+				String key=entry.getKey();
+				if(value!=null && value.equalsIgnoreCase("FALSE"))
+				{
+					if(key!=null && key.equalsIgnoreCase("joinerProcess"))
+					{
+						actualList = new ArrayList();
+						actualList.add(key);
+						actualList.add("JOINER LIFECYCLE EVENT");
+						displayList.add(actualList);
+					}
+					else if(key!=null && key.equalsIgnoreCase("rehireProcess"))
+					{ 
+						actualList = new ArrayList();
+						actualList.add(key);
+						actualList.add("REHIRE LIFECYCLE EVENT");
+						displayList.add(actualList);
+					}
+					else if(key!=null && key.equalsIgnoreCase("reverseleaverProcess"))
+					{
+						actualList = new ArrayList();
+						actualList.add(key);
+						actualList.add("REVERSE LEAVER LIFECYCLE EVENT");
+						displayList.add(actualList);
+					}
+					else if(key!=null && key.equalsIgnoreCase("rtwltdProcess"))
+					{
+						actualList = new ArrayList();
+						actualList.add(key);
+						actualList.add("RETURN TO WORK LONG TERM DISABILITY LIFECYCLE EVENT");
+						displayList.add(actualList);
+					}
+					else if(key!=null && key.equalsIgnoreCase("rtwloaProcess"))
+					{
+						actualList = new ArrayList();
+						actualList.add(key);
+						actualList.add("RETURN TO WORK LEAVE OF ABSENCE LIFECYCLE EVENT");
+						displayList.add(actualList);
+					}
+					else if(key!=null && key.equalsIgnoreCase("moverProcess"))
+					{
+						actualList = new ArrayList();
+						actualList.add(key);
+						actualList.add("MOVER LIFECYCLE EVENT");
+						displayList.add(actualList);
+					}
+					else if(key!=null && key.equalsIgnoreCase("terminationProcess"))
+					{
+						actualList = new ArrayList();
+						actualList.add(key);
+						actualList.add("LEAVER LIFECYCLE EVENT");
+						displayList.add(actualList);
+					}
+					else if(key!=null && key.equalsIgnoreCase("loaProcess"))
+					{
+						actualList = new ArrayList();
+						actualList.add(key);
+						actualList.add("LEAVE OF ABSENCE LIFECYCLE EVENT");
+						displayList.add(actualList);
+					}
+					else if(key!=null && key.equalsIgnoreCase("ltdProcess"))
+					{
+						actualList = new ArrayList();
+						actualList.add(key);
+						actualList.add("LONG TERM DISABILITY LIFECYCLE EVENT");
+						displayList.add(actualList);
+					}
+				}
+			}// END FOR LOOP
+		}
+		return displayList;
+	}
+	return initializeLCE(roadSectionAttributes);
+ 	]]></Source>
+</Rule>

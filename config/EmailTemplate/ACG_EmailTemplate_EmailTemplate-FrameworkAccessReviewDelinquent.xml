@@ -1,0 +1,117 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE EmailTemplate PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<EmailTemplate name="EmailTemplate-FrameworkAccessReviewDelinquent">
+  <Body>
+		
+		#set($ctx = $spTools.class.forName("sailpoint.api.SailPointFactory").getMethod("getFactory", null).invoke(null,null).getCurrentContext())
+		#set($ruleObj = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Rule"), "Rule-Framework-Header-Footer-StyleSheet")) 
+		#set($ruleArgs = { 
+		    "keyEmailTemplate"  : "styleSheet"
+		}) 
+		#set($styleSheet = $ctx.runRule($ruleObj, $ruleArgs))
+		#if( $ruleObj )
+		$ctx.decache($ruleObj)
+		#end
+		#set($ruleObj = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Rule"), "Rule-Framework-Header-Footer-StyleSheet")) 
+		#set($ruleArgs = { 
+		    "keyEmailTemplate"  : "headerTemplate"
+		}) 
+		#set($headerTemplate = $ctx.runRule($ruleObj, $ruleArgs))
+		#if( $ruleObj )
+		$ctx.decache($ruleObj)
+		#end
+		#set($ruleObj = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Rule"), "Rule-Framework-Header-Footer-StyleSheet")) 
+		#set($ruleArgs = { 
+		    "keyEmailTemplate"  : "footerTemplate"
+		}) 
+		#set($footerTemplate = $ctx.runRule($ruleObj, $ruleArgs))
+		#if( $ruleObj )
+		$ctx.decache($ruleObj)
+		#end
+		#set($currentYear = $spTools.formatDate($certification.getActivated(),"YYYY"))
+		#set($dueDate = $spTools.formatDate($certification.getExpiration(),"MMMM dd, YYYY"))
+		 <![CDATA[<html>
+	   <head>
+		<meta charset="UTF-8">	    
+		#if( $styleSheet )
+		$styleSheet
+		#end 
+		</head>
+	    	<body>
+	    	#if( $headerTemplate )
+			$headerTemplate
+			#end
+			<br/>    	
+			#if ($workItem.getOwner().getDisplayName()) 
+				Dear $workItem.getOwner().getDisplayName(),<br/>
+			#elseif($workItem.getOwner().getFirstname())
+				Dear $workItem.getOwner().getFirstname(),<br/>
+			#else
+				Dear $workItem.getOwner().getName(),<br/>
+			#end<br/> 	
+   		   <p>
+			The $currentYear Mover Access Review was scheduled to be completed on $dueDate
+			</p>
+			<p>
+             $certification.getCertificationName() - #set($c=$certification.getExpiration().getTime()) #set($t = $nowDate.getTime())  #set($d = $c - $t) #set($dd = ($d/(24*60*60*1000))+1) $dd days remaining for completion
+            </p>
+			#if( $footerTemplate )
+			$footerTemplate
+			#end
+			</body>
+		</html>]]>
+    </Body>
+  <Description>
+		Email Template for alerting new work item owners when an item has
+		escalated into their queue
+	</Description>
+  <Signature>
+    <Inputs>
+      <Argument name="workItem" type="WorkItem">
+        <Description>The WorkItem object.</Description>
+      </Argument>
+      <Argument name="workItemName" type="string">
+        <Description>The name of the WorkItem.</Description>
+      </Argument>
+      <Argument name="certification" type="Certification">
+        <Description>The Certification object.</Description>
+      </Argument>
+      <Argument name="certificationName" type="string">
+        <Description>The name of the Certification.</Description>
+      </Argument>
+      <Argument name="ownerName" type="string">
+        <Description>The name of the Identity that owns the work item.</Description>
+      </Argument>
+      <Argument name="requester" type="Identity">
+        <Description>The identity object that represents the creator of the
+					work item.</Description>
+      </Argument>
+      <Argument name="ordinalNumReminders" type="string">
+        <Description>The number of this reminder, starting from 1. Passed as
+					a String.</Description>
+      </Argument>
+      <Argument name="remindersRemaining" type="string">
+        <Description>The number of reminders remaining after this one.
+					Passed as a String.</Description>
+      </Argument>
+      <Argument name="oldDueDate" type="date">
+        <Description>The former due date, passed as a java.util.Date.</Description>
+      </Argument>
+      <Argument name="newDueDate" type="date">
+        <Description>The new due date, passed as a java.util.Date.</Description>
+      </Argument>
+      <Argument name="nowDate" type="date">
+        <Description>The current date, passed as a java.util.Date.</Description>
+      </Argument>
+      <Argument name="created" type="date">
+        <Description>The date the work item was created, passed as a
+					java.util.Date.</Description>
+      </Argument>
+      <Argument name="expiration" type="date">
+        <Description>The optional date the work item completely expires,
+					passed as a java.util.Date.</Description>
+      </Argument>
+    </Inputs>
+  </Signature>
+  <Subject>Urgent Action Required Access Certification Delinquent</Subject>
+</EmailTemplate>

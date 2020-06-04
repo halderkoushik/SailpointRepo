@@ -1,0 +1,182 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule-FrameworkCertificationEntitlementOwnerExclusion" type="CertificationExclusion">
+  <Description>Excludes Entitlements/Roles from the Certification if they
+		match the exclusion criteria of the
+		corresponding Custom object.
+	</Description>
+  <Signature returnType="String">
+    <Inputs>
+      <Argument name="log">
+        <Description>
+					The log object associated with the SailPointContext.
+				</Description>
+      </Argument>
+      <Argument name="context">
+        <Description>
+					A sailpoint.api.SailPointContext object that can be used to query
+					the database if necessary.
+				</Description>
+      </Argument>
+      <Argument name="entity" type="AbstractCertifiableEntity">
+        <Description>
+					The AbstractCertifiableEntity that is part of the certification.
+					Currently, this is either an Identity, Entitlement, or Role.
+				</Description>
+      </Argument>
+      <Argument name="certification" type="Certification">
+        <Description>
+					The certification that this identity is part of.
+				</Description>
+      </Argument>
+      <Argument name="certContext" type="CertificationContext">
+        <Description>
+					The CertificationContext that is being used to generate the
+					certification.
+				</Description>
+      </Argument>
+      <Argument name="items" type="List">
+        <Description>
+					List of Certifiable items that are currently part of the
+					certification for this identity. Any items that should be excluded
+					from the certification should be deleted from this list and added
+					to the itemsToExclude list.
+				</Description>
+      </Argument>
+      <Argument name="itemsToExclude" type="List">
+        <Description>
+					A List of Certifiable items that should not be included in the
+					certification. This list will be empty when the rule is executed
+					and any items that should not be part of the certification should
+					be moved from the items list to the itemsToExclude list.
+				</Description>
+      </Argument>
+      <Argument name="state">
+        <Description>
+					A Map containing state information.
+				</Description>
+      </Argument>
+    </Inputs>
+    <Returns>
+      <Argument name="explanation" type="String">
+        <Description>
+					An optional explanation describing why the items were excluded.
+				</Description>
+      </Argument>
+    </Returns>
+  </Signature>
+  <Source><![CDATA[
+	
+	import sailpoint.object.Certifiable;
+	import sailpoint.object.EntitlementGroup;
+	import sailpoint.object.Entitlement;
+	import sailpoint.object.Attributes;
+	import sailpoint.object.Bundle;
+	import sailpoint.object.Custom;
+	import sailpoint.object.CustomGlobal;
+	import sailpoint.object.Identity;
+	import sailpoint.object.Application;
+	import sailpoint.object.ManagedAttribute;
+	import sailpoint.object.Filter;
+	import sailpoint.object.QueryOptions;
+	import sailpoint.tools.Util;
+	import sailpoint.api.SailPointContext;
+	import sailpoint.api.IdentityService;
+	import org.apache.commons.logging.Log;
+	import org.apache.commons.logging.LogFactory;
+	import sailpoint.object.CertificationItem;
+	import sailpoint.object.RoleAssignment;
+	import sailpoint.tools.GeneralException;
+	import sailpoint.object.ObjectConfig;
+	import sailpoint.api.certification.DataOwnerCertifiableEntity;
+	import sailpoint.api.certification.DataOwnerCertificationBuilder.DataOwnerCertifiable;
+	import sailpoint.rapidapponboarding.rule.ObjectConfigAttributesRuleLibrary;
+	import sailpoint.object.Entitlements;
+	import sailpoint.rapidapponboarding.logger.LogEnablement;
+	import sailpoint.rapidapponboarding.rule.CertificationRuleLibrary;
+	import sailpoint.rapidapponboarding.rule.ROADUtil;
+	Log logger = LogFactory.getLog("rapidapponboarding.rules");
+	/**
+	* Exclude
+	* - Role or Entitlement Doesn't Match Defined Business App List
+	* - Authoritative Application
+	* Include
+	* - Role or Entitlement Matches Defined Business App List
+	* - Accounts Only
+	**/
+	public boolean isEntitlementExcluded(Certifiable certObj, Identity identity, IdentityService service, boolean managePrivilegedAccessOnly) {
+		String appName = "";
+		String entName = "";
+		String entValue = "";
+		String isBirthright = "";
+		String isPrivileged = "";
+		String entAppName = "";
+		String busApp=null;
+		//TYPE IS ENTITLEMENT
+		if(certObj instanceof DataOwnerCertifiable) 
+		{
+			DataOwnerCertifiable certifiableItem = null;
+			certifiableItem = (DataOwnerCertifiable) certObj;
+			Entitlements ents = certifiableItem.getEntitlements();
+			//Obtain the entitlement name and its corresponding application
+			if(ents!=null && !ents.isAccountOnly() && ents.getAttributes() != null) 
+			{
+				appName = ents.getApplicationName();
+				entName = ents.getAttributeNames().get(0);
+				entValue = ents.getAttributes().get(entName);
+			    if(entValue!=null)
+			    {
+				    if(managePrivilegedAccessOnly && !ROADUtil.isEntPrivileged(context,entName,entValue,appName))
+                    {
+                    	LogEnablement.isLogDebugEnabled(logger,"...Exclude Managed Entitlement Non-Privileged "+entValue);
+                    	return true;
+                    }
+                 }
+			}
+        } 
+        else 
+        {
+            return false;
+        } 
+		return false;
+	}
+	String explanation = "";
+	Custom globalExclusionMap = null;
+	IdentityService service = new IdentityService(context);
+	globalExclusionMap = CertificationRuleLibrary.loadCustomMap(context, false);
+	Identity currentIdentity=null;
+	if(entity instanceof Identity)
+	{
+	 currentIdentity = (Identity) entity;
+	}
+	String privilegedAccessEnabled=ObjectConfigAttributesRuleLibrary.extendedAttrPrivRoleEntitlementEnabled(context);
+	boolean privAccessEnabled=false;
+	if(privilegedAccessEnabled!=null && privilegedAccessEnabled.length()>0 && privilegedAccessEnabled.equalsIgnoreCase("TRUE"))
+	{
+		privAccessEnabled=true;
+	}
+	boolean managePrivilegedAccessOnly=false;
+    if(privAccessEnabled && globalExclusionMap!=null && globalExclusionMap.getAttributes()!=null &&  
+	globalExclusionMap.getAttributes().containsKey("includeOnlyPrivilegedAccessEntitlementOwnerCert") && 
+	globalExclusionMap.getAttributes().get("includeOnlyPrivilegedAccessEntitlementOwnerCert") instanceof String &&
+	((String)globalExclusionMap.getAttributes().get("includeOnlyPrivilegedAccessEntitlementOwnerCert")).equalsIgnoreCase("TRUE"))
+	{
+		managePrivilegedAccessOnly=true;
+	}
+	// Skip RoleAssignments that are not correctly defined on Identity Cube anymore
+	items.removeAll(Collections.singleton(null));
+	//Iterate through the certifiable items and check if each one is in the exclusion list
+	Iterator it = items.iterator();
+	while(it.hasNext()) {
+		Certifiable certObj = it.next();
+		//Check if this certification object is in the list of exclusions
+		if(isEntitlementExcluded(certObj, currentIdentity, service,managePrivilegedAccessOnly)) {
+			itemsToExclude.add(certObj);
+			it.remove();
+			explanation = "Entitlements match the exclusion criteria";
+		}
+	}
+	return explanation;
+	
+	]]></Source>
+</Rule>

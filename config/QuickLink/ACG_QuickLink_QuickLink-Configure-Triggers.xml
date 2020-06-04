@@ -1,0 +1,27 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE QuickLink PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<QuickLink action="workflow" category="SmartConfig" messageKey="Lifecycle Triggers" name="QuickLink-Configure-Triggers" ordering="5">
+  <Attributes>
+    <Map>
+      <entry key="forceAllowOthers" value="true"/>
+      <entry key="forceAllowSelf" value="false"/>
+      <entry key="hideAllowOthers" value="true"/>
+      <entry key="hideAllowSelf" value="true"/>
+      <entry key="requester">
+        <value>
+          <Script>
+            <Source><![CDATA[
+                            return currentUser.getName();
+                        ]]></Source>
+          </Script>
+        </value>
+      </entry>
+      <entry key="workflowName" value="Workflow-Configure-Triggers"/>
+    </Map>
+  </Attributes>
+  <QuickLinkOptions allowSelf="true">
+    <DynamicScopeRef>
+      <Reference class="sailpoint.object.DynamicScope" name="Business Analyst"/>
+    </DynamicScopeRef>
+  </QuickLinkOptions>
+</QuickLink>

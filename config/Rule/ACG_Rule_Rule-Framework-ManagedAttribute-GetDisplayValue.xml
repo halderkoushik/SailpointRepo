@@ -1,0 +1,102 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule-Framework-ManagedAttribute-GetDisplayValue">
+  <Description>
+		Returns the displayName attribute from a ManagedAttribute object. If the displayValue is not available, it returns
+		the value
+ 	</Description>
+  <Signature returnType="string">
+    <Inputs>
+      <Argument name="log">
+        <Description>
+					The log object associated with the SailPointContext.
+				</Description>
+      </Argument>
+      <Argument name="context">
+        <Description>
+					A sailpoint.api.SailPointContext object that can be used to query
+					the database if necessary.
+				</Description>
+      </Argument>
+      <Argument name="attrName">
+        <Description>
+					The name of the Entitlement
+				</Description>
+      </Argument>
+      <Argument name="attrValue">
+        <Description>
+					The value of the Entitlement
+				</Description>
+      </Argument>
+      <Argument name="attrApp">
+        <Description>
+					The application name of the Entitlement
+				</Description>
+      </Argument>
+    </Inputs>
+    <Returns>
+      <Argument name="value">
+        <Description>
+					The result of the workflow rule; dependent on the rule itself.
+				</Description>
+      </Argument>
+    </Returns>
+  </Signature>
+  <Source><![CDATA[
+    	
+    		import sailpoint.object.ManagedAttribute;
+    		import sailpoint.object.QueryOptions;
+    		import sailpoint.object.Filter;
+    		import sailpoint.tools.Util;
+    		import org.apache.commons.logging.Log;
+			import org.apache.commons.logging.LogFactory;
+    		import sailpoint.rapidapponboarding.logger.LogEnablement;
+    		Log logger = LogFactory.getLog("rapidapponboarding.rules");
+    		LogEnablement.isLogDebugEnabled(logger,"Entering Rule-Framework-ManagedAttribute-GetDisplayValue with args: attrName=" + attrName + " attrValue=" + attrValue + " attrApp=" + attrApp);    	
+			String value = "";
+			String strValue = "";
+			if(attrName != null && attrValue != null && attrApp != null) 
+			{
+				//Lookup the Entitlement
+				QueryOptions qo = new QueryOptions();
+				qo.addFilter(Filter.eq("attribute", attrName));
+				if(attrValue instanceof List) 
+				{
+					if(((List)attrValue).size() > 0 && ((List)attrValue).get(0) != null) 
+					{
+						strValue = attrValue.get(0).toString();
+					}
+				}
+				else 
+				{
+					strValue = attrValue;
+				}
+				qo.addFilter(Filter.eq("value", strValue));
+				qo.addFilter(Filter.eq("application.name", attrApp));
+				Iterator managedAttrIterator = context.search(ManagedAttribute.class, qo, "displayName");
+				if(managedAttrIterator != null) 
+				{
+					while(managedAttrIterator.hasNext()) 
+					{
+						Object[] obj = managedAttrIterator.next();
+						if(obj != null) 
+						{
+							if(obj.length > 0 && obj[0] != null) 
+							{
+								LogEnablement.isLogDebugEnabled(logger,"Found ManagedAttribute displayName=" + obj[0]);
+								value = obj[0].toString();
+							}
+						}
+					}
+				}
+				Util.flushIterator(managedAttrIterator); 
+			}
+			if(Util.isNullOrEmpty(value)) 
+			{
+				value = strValue;
+			}			          
+			LogEnablement.isLogDebugEnabled(logger,"Exiting Rule-Framework-ManagedAttribute-GetDisplayValue with value: " + value);    	
+			return value;
+    	
+	]]></Source>
+</Rule>

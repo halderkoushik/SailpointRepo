@@ -1,0 +1,4537 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Workflow PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Workflow explicitTransitions="true" handler="sailpoint.api.StandardWorkflowHandler" name="Workflow-QuickLink-View-FrameWork-Settings" type="LCMProvisioning">
+  <Variable initializer="true" name="transient"/>
+  <Variable initializer="false" name="trace"/>
+  <Variable name="adminAttributes"/>
+  <Variable initializer="ref:launcher" name="owner">
+    <Description>Name of the user that will recieve the forms.</Description>
+  </Variable>
+  <Description>Accelerator Pack Global Definitions Workflow</Description>
+  <RuleLibraries>
+    <Reference class="sailpoint.object.Rule" name="Rule-Admin-RuleLibrary"/>
+  </RuleLibraries>
+  <Step icon="Start" name="Start" posX="28" posY="10">
+    <Transition to="Detect Installed Smart Services"/>
+  </Step>
+  <Step name="Detect Installed Smart Services" resultVariable="adminAttributes">
+    <Script>
+      <Source><![CDATA[
+	     
+	     		import sailpoint.object.Attributes;
+	     		Attributes adminAttributes = new Attributes();
+	       	    return detectInstalledSmartServices(context,adminAttributes);
+    			
+	      ]]></Source>
+    </Script>
+    <Transition to="Show Form"/>
+  </Step>
+  <Step name="Show Form">
+    <Approval name="Installed Smart Servives" owner="ref:requester" return="" send="adminAttributes">
+      <Form name="Installed Smart Servives" type="Workflow">
+        <Attributes>
+          <Map>
+            <entry key="title" value="Installed Accelerator Pack"/>
+          </Map>
+        </Attributes>
+        <Section columns="2" label="Lifecycle Triggers" name="lifeCycleTriggers" type="datatable">
+          <Attributes>
+            <Map>
+              <entry key="hidden">
+                <value>
+                  <Script>
+                    <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServiceslifeCycleTriggers"))
+			 {
+			 return adminAttributes.get("smartServiceslifeCycleTriggers");
+			 }
+			 else
+			 {
+			 return true;
+			 }
+			 ]]></Source>
+                  </Script>
+                </value>
+              </entry>
+              <entry key="subtitle" value="Subfeatures"/>
+            </Map>
+          </Attributes>
+          <Field displayName="User Interface to Add, Remove, and Update Triggers" name="userInterfaceTriggers" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesuserInterfaceTriggers"))
+			 {
+			 return adminAttributes.get("smartServicesuserInterfaceTriggers");
+			 }
+			 else
+			 {
+			 return true;
+			 }
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="High Water Marks" name="hwmScan" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServiceshwmScan"))
+			 {
+			 return adminAttributes.get("smartServiceshwmScan");
+			 }
+			 else
+			 {
+			 return true;
+			 }
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Logical Operators (AND/OR)" name="logicalOperators" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicestriggerFunctions"))
+			 {
+			 return adminAttributes.get("smartServicestriggerFunctions");
+			 }
+			 else
+			 {
+			 return true;
+			 }
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for And Logical Operation Override" name="andOperationsOverride" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicestriggerFunctions"))
+			 {
+			 return adminAttributes.get("smartServicestriggerFunctions");
+			 }
+			 else
+			 {
+			 return true;
+			 }
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Wild Character (*)" name="wildCharacter" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicestriggerFunctions"))
+			 {
+			 return adminAttributes.get("smartServicestriggerFunctions");
+			 }
+			 else
+			 {
+			 return true;
+			 }
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Date Fields" name="dateFields" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicestriggerFunctions"))
+			 {
+			 return adminAttributes.get("smartServicestriggerFunctions");
+			 }
+			 else
+			 {
+			 return true;
+			 }
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Date Format" name="dateFormatFields" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicestriggerFunctions"))
+			 {
+			 return adminAttributes.get("smartServicestriggerFunctions");
+			 }
+			 else
+			 {
+			 return true;
+			 }
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Date Clearence" name="dateFieldsClearance" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicestriggerFunctions"))
+			 {
+			 return adminAttributes.get("smartServicestriggerFunctions");
+			 }
+			 else
+			 {
+			 return true;
+			 }
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Date Equal,Less, Greater Than Operations" name="dateOperations" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicestriggerFunctions"))
+			 {
+			 return adminAttributes.get("smartServicestriggerFunctions");
+			 }
+			 else
+			 {
+			 return true;
+			 }
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Populations" name="groupDefinitions" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicestriggerFunctions"))
+			 {
+			 return adminAttributes.get("smartServicestriggerFunctions");
+			 }
+			 else
+			 {
+			 return true;
+			 }
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Single and Comma Seperated Values" name="csvValues" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicestriggerFunctions"))
+			 {
+			 return adminAttributes.get("smartServicestriggerFunctions");
+			 }
+			 else
+			 {
+			 return true;
+			 }
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Empty Values" name="emptyValues" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicestriggerFunctions"))
+			 {
+			 return adminAttributes.get("smartServicestriggerFunctions");
+			 }
+			 else
+			 {
+			 return true;
+			 }
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+        </Section>
+        <Section columns="2" label="Aggregation" name="aggregationFeature" type="datatable">
+          <Attributes>
+            <Map>
+              <entry key="hidden">
+                <value>
+                  <Script>
+                    <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesaggregationFeature"))
+			 {
+			 return adminAttributes.get("smartServicesaggregationFeature");
+			 }
+			  return true;
+			 ]]></Source>
+                  </Script>
+                </value>
+              </entry>
+              <entry key="subtitle" value="Subfeatures"/>
+            </Map>
+          </Attributes>
+          <Field displayName="Classification and Categorization of Authoritative Applications (BETA)" name="appAggregationFeature" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesappAggregationFeature"))
+			 {
+			 return adminAttributes.get("smartServicesappAggregationFeature");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Classification and Categorization of Accounts Based on Regular Expressions and String Comparisons" name="acctAggregationFeature" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesacctAggregationFeature"))
+			 {
+			 return adminAttributes.get("smartServicesacctAggregationFeature");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Correlation of Accounts Configuration Based on String Comparisons" name="accountCorrelationAttrExpression" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesaccountCorrelationAttrExpression"))
+			 return adminAttributes.get("smartServicesaccountCorrelationAttrExpression");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Classification and Categorization of Privileged Accounts Based on Regular Expressions and String Comparisons" name="privilegedAccountAttrExpression" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesprivilegedAccountAttrExpression"))
+			 {
+			 return adminAttributes.get("smartServicesprivilegedAccountAttrExpression");
+			 }
+			 return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+        </Section>
+        <Section columns="2" label="Mine Provisioning Policies (BETA)" name="provisioningDiscovery" type="datatable">
+          <Attributes>
+            <Map>
+              <entry key="hidden">
+                <value>
+                  <Script>
+                    <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesprovisioningDiscovery"))
+			 {
+			 return adminAttributes.get("smartServicesprovisioningDiscovery");
+			 }
+			  return true;
+			 ]]></Source>
+                  </Script>
+                </value>
+              </entry>
+              <entry key="subtitle" value="Subfeatures"/>
+            </Map>
+          </Attributes>
+          <Field displayName="User Interface to Mine Provisioning Policies Per Application (BETA)" name="minePolicies" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesprovisioningDiscovery"))
+			 {
+			 return adminAttributes.get("smartServicesprovisioningDiscovery");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Generates Bean Shell Rules for Mined and Discovery Form Selected Fields (BETA)" name="mineGenerateRule" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesprovisioningDiscovery"))
+			 {
+			 return adminAttributes.get("smartServicesprovisioningDiscovery");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+        </Section>
+        <Section columns="2" label="Joiner" name="joiner" type="datatable">
+          <Attributes>
+            <Map>
+              <entry key="hidden">
+                <value>
+                  <Script>
+                    <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesjoiner"))
+			 {
+			 return adminAttributes.get("smartServicesjoiner");
+			 }
+			 return true;
+			 ]]></Source>
+                  </Script>
+                </value>
+              </entry>
+              <entry key="subtitle" value="Subfeatures"/>
+            </Map>
+          </Attributes>
+          <Field displayName="Classification and Categorization of Birthright Entitlements Based on Regular Expressions and String Comparisons" name="birthrightEntAttrExpression" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesbirthrightEntAttrExpression"))
+			 {
+			 return adminAttributes.get("smartServicesbirthrightEntAttrExpression");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Joiner Accounts" name="joinerEnabled" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesjoinerEnabled"))
+			 {
+			 return adminAttributes.get("smartServicesjoinerEnabled");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Joiner Birthright Roles" name="joinerRoles" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesjoinerRoles"))
+			 {
+			 return adminAttributes.get("smartServicesjoinerRoles");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Joiner Population Identification Based on Regular Expressions or Population" name="joinerPopulationRegex" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesjoinerPopulationRegex"))
+			 {
+			 return adminAttributes.get("smartServicesjoinerPopulationRegex");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Menu Options for Rehire" name="rehireProcess" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null
+             && adminAttributes.containsKey("smartServicesrehire") && adminAttributes.get("smartServicesrehire").equalsIgnoreCase("FALSE")
+             && adminAttributes.containsKey("smartServicesrehireProcess"))
+			 {
+			 return adminAttributes.get("smartServicesrehireProcess");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Multiple Accounts For Rehire" name="rehirePrimaryaccount" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null 
+             && adminAttributes.containsKey("smartServicesrehire")  && adminAttributes.get("smartServicesrehire").equalsIgnoreCase("FALSE")
+             && adminAttributes.containsKey("smartServicesrehireProcess") && adminAttributes.get("smartServicesrehireProcess").equalsIgnoreCase("FALSE")
+             && adminAttributes.containsKey("smartServicesrehirePrimaryaccount") )
+			 {
+			 return adminAttributes.get("smartServicesrehirePrimaryaccount");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Rehire Option As an Extension Rule" name="rehireExtendedRule" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null 
+             && adminAttributes.containsKey("smartServicesrehire")  && adminAttributes.get("smartServicesrehire").equalsIgnoreCase("FALSE")
+             && adminAttributes.containsKey("smartServicesrehireProcess") && adminAttributes.get("smartServicesrehireProcess").equalsIgnoreCase("FALSE")
+             && adminAttributes.containsKey("smartServicesrehireExtendedRule"))
+			 {
+			 return adminAttributes.get("smartServicesrehireExtendedRule");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Menu Options for Return to Work LOA (BETA)" name="rtwloaProcess" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null 
+             && adminAttributes.containsKey("smartServicesjoinerloa")  && adminAttributes.get("smartServicesjoinerloa").equalsIgnoreCase("FALSE")
+             && adminAttributes.containsKey("smartServicesrtwloaProcess") )
+			 {
+			 return adminAttributes.get("smartServicesrtwloaProcess");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Return to Work LOA Option As an Extension Rule (BETA)" name="rtwLOAExtendedRule" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null 
+             && adminAttributes.containsKey("smartServicesjoinerloa")  && adminAttributes.get("smartServicesjoinerloa").equalsIgnoreCase("FALSE")
+             && adminAttributes.containsKey("smartServicesrtwloaProcess") && adminAttributes.get("smartServicesrtwloaProcess").equalsIgnoreCase("FALSE")
+             && adminAttributes.containsKey("smartServicesrtwLOAExtendedRule"))
+			 {
+			 return adminAttributes.get("smartServicesrtwLOAExtendedRule");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Menu Options for Return to Work LTD (BETA)" name="rtwltdProcess" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null 
+             && adminAttributes.containsKey("smartServicesjoinerltd")  && adminAttributes.get("smartServicesjoinerltd").equalsIgnoreCase("FALSE")
+			 && adminAttributes.containsKey("smartServicesrtwltdProcess"))
+             {
+			 return adminAttributes.get("smartServicesrtwltdProcess");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Return to Work LTD Option As an Extension Rule (BETA)" name="rtwLTDExtendedRule" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null 
+             && adminAttributes.containsKey("smartServicesjoinerltd")  && adminAttributes.get("smartServicesjoinerltd").equalsIgnoreCase("FALSE")
+             && adminAttributes.containsKey("smartServicesrtwltdProcess") && adminAttributes.get("smartServicesrtwltdProcess").equalsIgnoreCase("FALSE")
+             && adminAttributes.containsKey("smartServicesrtwLTDExtendedRule"))
+			 {
+			 return adminAttributes.get("smartServicesrtwLTDExtendedRule");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Menu Options for Reverse Leaver" name="reverseleaverProcess" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+              if(adminAttributes!=void && adminAttributes!=null 
+              && adminAttributes.containsKey("smartServicesreverseleaver")  && adminAttributes.get("smartServicesreverseleaver").equalsIgnoreCase("FALSE")
+              && adminAttributes.containsKey("smartServicesreverseleaverProcess"))
+			  {
+			  return adminAttributes.get("smartServicesreverseleaverProcess");
+			  }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Reverse Leaver Menu Option As an Extension Rule" name="reverseTerminationExtendedRule" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+              if(adminAttributes!=void && adminAttributes!=null 
+              && adminAttributes.containsKey("smartServicesreverseleaver")  && adminAttributes.get("smartServicesreverseleaver").equalsIgnoreCase("FALSE")
+              && adminAttributes.containsKey("smartServicesreverseleaverProcess") && adminAttributes.get("smartServicesreverseleaverProcess").equalsIgnoreCase("FALSE")
+              && adminAttributes.containsKey("smartServicesreverseTerminationExtendedRule"))
+			  {
+			  return adminAttributes.get("smartServicesreverseTerminationExtendedRule");
+			  }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Joiner Email Content Configuration" name="dynamicEmailContexntJoiner" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesdynamicEmailContexnt"))
+			 {
+			 return adminAttributes.get("smartServicesdynamicEmailContexnt");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Rehire Email Content Configuration" name="dynamicEmailContexntRehire" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesdynamicEmailContexnt") && adminAttributes.containsKey("smartServicesrehire")  
+             && adminAttributes.get("smartServicesrehire").equalsIgnoreCase("FALSE"))
+			 {
+			 return adminAttributes.get("smartServicesdynamicEmailContexnt");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Additional Joiner Password Email Configuration" name="additionalPasswordEmailJoiner" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesadditionalPasswordEmail"))
+			 {
+			 return adminAttributes.get("smartServicesadditionalPasswordEmail");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Additional Rehire Password Email Configuration" name="additionalPasswordEmailRehire" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesadditionalPasswordEmail")
+             && adminAttributes.containsKey("smartServicesrehire")  && adminAttributes.get("smartServicesrehire").equalsIgnoreCase("FALSE"))
+			 {
+			 return adminAttributes.get("smartServicesadditionalPasswordEmail");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Operational Manual Override for Birthright Entitlements" name="manualOverride" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesmanualOverride"))
+			 {
+			 return adminAttributes.get("smartServicesmanualOverride");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Rehire Before Plan Extension" name="rehireBeforePlanRule" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && 
+             adminAttributes.containsKey("smartServicesrehire")  && adminAttributes.get("smartServicesrehire").equalsIgnoreCase("FALSE")
+             && adminAttributes.containsKey("smartServicesrehireBeforePlanRule"))
+			 {
+			 return adminAttributes.get("smartServicesrehireBeforePlanRule");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Implict Joiner Trigger Event" name="implicitEvent" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesimplicitJoinerEvent"))
+			 {
+			 return adminAttributes.get("smartServicesimplicitJoinerEvent");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Post Joiner Rule" name="postJoinerRule" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicespostJoinerRule"))
+			 {
+			 return adminAttributes.get("smartServicespostJoinerRule");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Post Rehire Rule" name="postRehireRule" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicespostRehireRule"))
+			 {
+			 return adminAttributes.get("smartServicespostRehireRule");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Post RTW LOA Rule (BETA)" name="postRTWLOARule" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicespostRTWLOARule"))
+			 {
+			 return adminAttributes.get("smartServicespostRTWLOARule");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Post RTW LTD Rule (BETA)" name="postRTWLTDRule" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicespostRTWLTDRule"))
+			 {
+			 return adminAttributes.get("smartServicespostRTWLTDRule");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Post Reverse Leaver Rule" name="postReverseLeaverRule" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicespostReverseLeaverRule"))
+			 {
+			 return adminAttributes.get("smartServicespostReverseLeaverRule");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Override of Joiner and Rehire Email To Workgroup" name="wgJoinerRehireEmail" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServiceswgJoinerRehireEmail"))
+			 {
+			 return adminAttributes.get("smartServiceswgJoinerRehireEmail");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Attribute Synchronization After Rehire" name="apAfterRehireAttrSync" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesapAfterRehireAttrSync"))
+			 {
+			 return adminAttributes.get("smartServicesapAfterRehireAttrSync");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+        </Section>
+        <Section columns="2" label="Leaver" name="termination" type="datatable">
+          <Attributes>
+            <Map>
+              <entry key="hidden">
+                <value>
+                  <Script>
+                    <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicestermination"))
+			 {
+			 return adminAttributes.get("smartServicestermination");
+			 }
+			 return true;
+			 ]]></Source>
+                  </Script>
+                </value>
+              </entry>
+              <entry key="subtitle" value="Subfeatures"/>
+            </Map>
+          </Attributes>
+          <Field displayName="Menu Options for Leaver" name="terminationProcess" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesterminationProcess"))
+			 {
+			 return adminAttributes.get("smartServicesterminationProcess");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Leaver Menu Option As an Extension Rule" name="terminationExtendedRule" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+              if(adminAttributes!=void && adminAttributes!=null 
+              && adminAttributes.containsKey("smartServicesterminationProcess") && adminAttributes.get("smartServicesterminationProcess").equalsIgnoreCase("FALSE")
+              && adminAttributes.containsKey("smartServicesterminationExtendedRule"))
+			  {
+			  return adminAttributes.get("smartServicesterminationExtendedRule");
+			  }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Menu Options for LOA (BETA)" name="loaProcess" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesloaProcess")
+             && adminAttributes.containsKey("smartServicesloa")  && adminAttributes.get("smartServicesloa").equalsIgnoreCase("FALSE"))
+			 {
+			 return adminAttributes.get("smartServicesloaProcess");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Menu Option for LOA As an Extension Rule (BETA)" name="loaExtendedRule" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+              if(adminAttributes!=void && adminAttributes!=null 
+              && adminAttributes.containsKey("smartServicesloa")  && adminAttributes.get("smartServicesloa").equalsIgnoreCase("FALSE")
+              && adminAttributes.containsKey("smartServicesloaProcess") && adminAttributes.get("smartServicesloaProcess").equalsIgnoreCase("FALSE")
+              && adminAttributes.containsKey("smartServicesloaExtendedRule"))
+			  {
+			  return adminAttributes.get("smartServicesloaExtendedRule");
+			  }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Menu Options for LTD (BETA)" name="ltdProcess" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesltdProcess")
+             && adminAttributes.containsKey("smartServicesltd")  && adminAttributes.get("smartServicesltd").equalsIgnoreCase("FALSE"))
+			 {
+			 return adminAttributes.get("smartServicesltdProcess");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Menu Option for LTD As an Extension Rule (BETA)" name="ltdExtendedRule" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+              if(adminAttributes!=void && adminAttributes!=null 
+              && adminAttributes.containsKey("smartServicesltd")  && adminAttributes.get("smartServicesltd").equalsIgnoreCase("FALSE")
+              && adminAttributes.containsKey("smartServicesltdProcess") && adminAttributes.get("smartServicesltdProcess").equalsIgnoreCase("FALSE")
+              && adminAttributes.containsKey("smartServicesltdExtendedRule"))
+			  {
+			  return adminAttributes.get("smartServicesltdExtendedRule");
+			  }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Access Removal Exceptions Based on Regular Expressions or String Comparisons" name="removeEntitlementLeaverExceptionExpression" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesremoveEntitlementLeaverExceptionExpression"))
+			 {
+			 return adminAttributes.get("smartServicesremoveEntitlementLeaverExceptionExpression");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Reassignment of Artifacts Ownership to Manager" name="removeIIQArtifactsOwnershipToManager" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesremoveIIQArtifactsOwnershipToManager"))
+			 {
+			 return adminAttributes.get("smartServicesremoveIIQArtifactsOwnershipToManager");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Reassignment of Business Approvers to Manager" name="businessApproversremoveOwnershipToManager" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesbusinessApproversremoveOwnershipToManager"))
+			 {
+			 return adminAttributes.get("smartServicesbusinessApproversremoveOwnershipToManager");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Rule Based Artifacts Ownership Reassignment" name="reassignmentRule" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesreassignmentRule"))
+			 {
+			 return adminAttributes.get("smartServicesreassignmentRule");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Rule Business Approvers Reassignment" name="businessApproversreassignmentRule" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesbusinessApproversreassignmentRule"))
+			 {
+			 return adminAttributes.get("smartServicesbusinessApproversreassignmentRule");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Reassignment of Work Items from Inactive Owner to Owner's Manager" name="inactiveWorkItemRule" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesinactiveWorkItemRule"))
+			 {
+			 return adminAttributes.get("smartServicesinactiveWorkItemRule");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Auto Rejection of Pending Access Request" name="autoRejectItems" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesautoRejectItems"))
+			 {
+			 return adminAttributes.get("smartServicesautoRejectItems");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Removing Challenge Response Questions and Answers" name="clearQuestionAnswer" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesclearQuestionAnswer"))
+			 {
+			 return adminAttributes.get("smartServicesclearQuestionAnswer");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Post Leaver Rule" name="postLeaverRule" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicespostLeaverRule"))
+			 {
+			 return adminAttributes.get("smartServicespostLeaverRule");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Post LOA Rule (BETA)" name="postLOARule" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicespostLOARule"))
+			 {
+			 return adminAttributes.get("smartServicespostLOARule");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Post LTD Rule (BETA)" name="postLTDRule" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicespostLTDRule"))
+			 {
+			 return adminAttributes.get("smartServicespostLTDRule");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Leaver and Reverse Leaver Email Override" name="wgLeaverReverseLeaverEmail" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServiceswgLeaverReverseLeaverEmail"))
+			 {
+			 return adminAttributes.get("smartServiceswgLeaverReverseLeaverEmail");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Leaver Options Per Population" name="apPopulationLeaverOptions" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesapPopulationLeaverOptions"))
+			 {
+			 return adminAttributes.get("smartServicesapPopulationLeaverOptions");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+        </Section>
+        <Section columns="2" label="Mover" name="mover" type="datatable">
+          <Attributes>
+            <Map>
+              <entry key="hidden">
+                <value>
+                  <Script>
+                    <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesmover"))
+			 {
+			 return adminAttributes.get("smartServicesmover");
+			 }
+			  return true;
+			 ]]></Source>
+                  </Script>
+                </value>
+              </entry>
+              <entry key="subtitle" value="Subfeatures"/>
+            </Map>
+          </Attributes>
+          <Field displayName="Support for Both Mover Certification and Lifecycle Event" name="movercertevent" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesmovercertevent"))
+			 {
+			 return adminAttributes.get("smartServicesmovercertevent");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Menu Options for Mover" name="moverProcess" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesmoverProcess"))
+			 {
+			 return adminAttributes.get("smartServicesmoverProcess");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Menu Options for Before Mover" name="beforemoverAccount" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesbeforemoverAccount"))
+			 {
+			 return adminAttributes.get("smartServicesbeforemoverAccount");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Multiple Accounts Before Mover Options" name="beforemoverPrimaryaccount" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesbeforemoverPrimaryaccount"))
+			 {
+			 return adminAttributes.get("smartServicesbeforemoverPrimaryaccount");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Attribute Synchronization Before Mover" name="apBeforeMoverAttrSync" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesapBeforeMoverAttrSync"))
+			 {
+			 return adminAttributes.get("smartServicesapBeforeMoverAttrSync");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Joiner After Mover" name="apAfterMoverJoiner" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesapAfterMoverJoiner"))
+			 {
+			 return adminAttributes.get("smartServicesapAfterMoverJoiner");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Before Mover Option As an Extension Rule" name="moverExtendedRule" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesmoverExtendedRule"))
+			 {
+			 return adminAttributes.get("smartServicesmoverExtendedRule");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Automated Revocation of Allow Exceptions" name="mitigation" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesmitigation"))
+			 {
+			 return adminAttributes.get("smartServicesmitigation");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Menu Options on Account for Automated Revocation of Allow Exceptions" name="moverRevocation" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesmoverRevocation")
+               && adminAttributes.containsKey("smartServicesmitigation")  && adminAttributes.get("smartServicesmitigation").equalsIgnoreCase("FALSE"))
+			 {
+			 return adminAttributes.get("smartServicesmoverRevocation");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Exclude Automated RBAC and Birthright Assigned Roles" name="certificationExclusionRule" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicescertificationExclusionRule")
+               )
+			 {
+			 return adminAttributes.get("smartServicescertificationExclusionRule");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Exclude Configured Simplified Logical Applications" name="customCertExclusionlogApps" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicescustomCertExclusion")
+               )
+			 {
+			 return adminAttributes.get("smartServicescustomCertExclusion");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Exclude/Include Privileged Assigned Roles and Entitlements" name="customCertExclusionPriv" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicescustomCertExclusion")
+               )
+			 {
+			 return adminAttributes.get("smartServicescustomCertExclusion");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Additional Recipient Rule" name="certificationRecepientRule" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicescertificationRecepientRule")
+               )
+			 {
+			 return adminAttributes.get("smartServicescertificationRecepientRule");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Standard Mover Email Templates" name="moverEmailTemplates" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesmovercertevent")
+               )
+			 {
+			 return adminAttributes.get("smartServicesmovercertevent");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Post Mover Rule" name="postMoverRule" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicespostMoverRule"))
+			 {
+			 return adminAttributes.get("smartServicespostMoverRule");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Post Mitigation Rule (BETA)" name="postMitigationRule" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicespostMitigationRule"))
+			 {
+			 return adminAttributes.get("smartServicespostMitigationRule");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+        </Section>
+        <Section columns="2" label="Attribute Synchronization" name="attributeSync" type="datatable">
+          <Attributes>
+            <Map>
+              <entry key="hidden">
+                <value>
+                  <Script>
+                    <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesattributeSync"))
+			 {
+			 return adminAttributes.get("smartServicesattributeSync");
+			 }
+			  return true;
+			 ]]></Source>
+                  </Script>
+                </value>
+              </entry>
+              <entry key="subtitle" value="Subfeatures"/>
+            </Map>
+          </Attributes>
+          <Field displayName="Support for Create Policies Evaluation" name="evaluateCreateprovpolicy" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesevaluateCreateprovpolicy")
+               )
+			 {
+			 return adminAttributes.get("smartServicesevaluateCreateprovpolicy");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Multiple Accounts" name="primarySyncaccounts" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesprimarySyncaccounts")
+               )
+			 {
+			 return adminAttributes.get("smartServicesprimarySyncaccounts");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Account Rename" name="renameLDAPaccount" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesrenameLDAPaccount")
+               )
+			 {
+			 return adminAttributes.get("smartServicesrenameLDAPaccount");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Extension Rules" name="attrSyncExtensionRule" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesattrSyncExtensionRule")
+               )
+			 {
+			 return adminAttributes.get("smartServicesattrSyncExtensionRule");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Post Attribute Synchronization Rule" name="postAttributeSyncRule" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicespostAttributeSyncRule"))
+			 {
+			 return adminAttributes.get("smartServicespostAttributeSyncRule");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+        </Section>
+        <Section columns="2" label="Certification" name="certification" type="datatable">
+          <Attributes>
+            <Map>
+              <entry key="hidden">
+                <value>
+                  <Script>
+                    <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicescertificationFeature"))
+			 {
+			 return adminAttributes.get("smartServicescertificationFeature");
+			 }
+			  return true;
+			 ]]></Source>
+                  </Script>
+                </value>
+              </entry>
+              <entry key="subtitle" value="Subfeatures"/>
+            </Map>
+          </Attributes>
+          <Field displayName="Exclude Automated RBAC and Birthright Assigned Roles (Manager Certification)" name="certificationExclusionRule" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicescertificationExclusionMgAdAppRule")
+               )
+			 {
+			 return adminAttributes.get("smartServicescertificationExclusionMgAdAppRule");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Exclude Configured Simplified Logical Applications (Manager and Mover Certificatio)" name="customCertExclusionlogApps" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicescustomCertExclusion")
+               )
+			 {
+			 return adminAttributes.get("smartServicescustomCertExclusion");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Exclude/Include Privileged Assigned Roles and Entitlements (All Certification Types)" name="customCertExclusionPriv" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicescustomCertExclusion")
+               )
+			 {
+			 return adminAttributes.get("smartServicescustomCertExclusion");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Additional Recipient Rule" name="certificationRecepientRule" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicescertificationRecepientRule")
+               )
+			 {
+			 return adminAttributes.get("smartServicescertificationRecepientRule");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Standard Certification Email Templates" name="certificationEmailTypes" type="string"/>
+        </Section>
+        <Section columns="2" label="Native Change (BETA)" name="nativeChange" type="datatable">
+          <Attributes>
+            <Map>
+              <entry key="hidden">
+                <value>
+                  <Script>
+                    <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesnativechange"))
+			 {
+			 return adminAttributes.get("smartServicesnativechange");
+			 }
+			  return true;
+			 ]]></Source>
+                  </Script>
+                </value>
+              </entry>
+              <entry key="subtitle" value="Subfeatures"/>
+            </Map>
+          </Attributes>
+          <Field displayName="Support for Both Native Change Certification and Lifecycle Event (BETA)" name="nativechangecertevent" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesnativechangecertevent"))
+			 {
+			 return adminAttributes.get("smartServicesnativechangecertevent");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Menu Options for Native Change (BETA)" name="nativeChangeProcessProcess" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesnativeChangeProcessProcess")
+               )
+			 {
+			 return adminAttributes.get("smartServicesnativeChangeProcessProcess");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Standard Native Change Email Templates (BETA)" name="nativeChangeEmailTemplates" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesnativechangecertevent")
+               )
+			 {
+			 return adminAttributes.get("smartServicesnativechangecertevent");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Post Native Change Rule (BETA)" name="postNativeChangeRule" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicespostNativeChangeRule"))
+			 {
+			 return adminAttributes.get("smartServicespostNativeChangeRule");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+        </Section>
+        <Section columns="2" label="Policy Violation (BETA)" name="policyviolations" type="datatable">
+          <Attributes>
+            <Map>
+              <entry key="hidden">
+                <value>
+                  <Script>
+                    <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicescrossApplicationPolicyViolations"))
+			 {
+			 return adminAttributes.get("smartServicescrossApplicationPolicyViolations");
+			 }
+			  return true;
+			 ]]></Source>
+                  </Script>
+                </value>
+              </entry>
+              <entry key="subtitle" value="Subfeatures"/>
+            </Map>
+          </Attributes>
+          <Field displayName="Menu Options for Advanced Policies on Multiple Accounts (BETA)" name="policyType" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicespolicyType"))
+			 {
+			 return adminAttributes.get("smartServicespolicyType");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Menu Option Single Entitlement Exceptions (BETA)" name="policytypeExceptions" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicespolicytypeExceptions"))
+			 {
+			 return adminAttributes.get("smartServicespolicytypeExceptions");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Group Definitions and Regular Expressions on Eligibility Policy Violations (BETA)" name="eligibilityExpress" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServiceseligibilityExpression"))
+			 {
+			 return adminAttributes.get("smartServiceseligibilityExpression");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Hard Access Request Violations (BETA)" name="hardPolicyviolations" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServiceshardPolicyviolations"))
+			 {
+			 return adminAttributes.get("smartServiceshardPolicyviolations");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Soft Access Request Violations (BETA)" name="softPolicyviolations" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicessoftPolicyviolations"))
+			 {
+			 return adminAttributes.get("smartServicessoftPolicyviolations");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Hard Access Request Violations Filter (BETA)" name="policyDenyFilter" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicespolicyDenyFilter"))
+			 {
+			 return adminAttributes.get("smartServicespolicyDenyFilter");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Soft Access Request Violations Filter (BETA)" name="policySoftFilter" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicespolicySoftFilter"))
+			 {
+			 return adminAttributes.get("smartServicespolicySoftFilter");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Advanced Policy SOD Matrix Report (BETA)" name="matrixReport" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesmatrixReport"))
+			 {
+			 return adminAttributes.get("smartServicesmatrixReport");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Miltiple Applications Hard and Soft Stop Access Request Violations (BETA)" name="crossApplicationPolicyViolations" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicescrossApplicationPolicyViolations"))
+			 {
+			 return adminAttributes.get("smartServicescrossApplicationPolicyViolations");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+        </Section>
+        <Section columns="2" label="New Account Dependency Entitlements" name="accountCreateEntitlements" type="datatable">
+          <Attributes>
+            <Map>
+              <entry key="hidden">
+                <value>
+                  <Script>
+                    <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesaccountCreateEntitlements"))
+			 {
+			 return adminAttributes.get("smartServicesaccountCreateEntitlements");
+			 }
+			  return true;
+			 ]]></Source>
+                  </Script>
+                </value>
+              </entry>
+              <entry key="subtitle" value="Subfeatures"/>
+            </Map>
+          </Attributes>
+          <Field displayName="Support for Conditional Entitlement Dependency Rule" name="accountCreateConditionalRule" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesaccountCreateConditionalRule"))
+			 {
+			 return adminAttributes.get("smartServicesaccountCreateConditionalRule");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+        </Section>
+        <Section columns="2" label="Approval Access and Accounts" name="approvalsAccessAccounts" type="datatable">
+          <Attributes>
+            <Map>
+              <entry key="hidden">
+                <value>
+                  <Script>
+                    <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesapprovalMappings"))
+			 {
+			 return adminAttributes.get("smartServicesapprovalMappings");
+			 }
+			  return true;
+			 ]]></Source>
+                  </Script>
+                </value>
+              </entry>
+              <entry key="subtitle" value="Subfeatures"/>
+            </Map>
+          </Attributes>
+          <Field displayName="Two level Application Business Approvers" name="appTwoLevel" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesappTwoLevel"))
+			 {
+			 return adminAttributes.get("smartServicesappTwoLevel");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Two Level Entitlement Business Approvers" name="entTwoLevel" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesentTwoLevel"))
+			 {
+			 return adminAttributes.get("smartServicesentTwoLevel");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Two Level Role Business Approvers" name="roleTwoLevel" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesRoleTwoLevel"))
+			 {
+			 return adminAttributes.get("smartServicesRoleTwoLevel");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Conditional Manager Approval Rule" name="skipSupervisorApproval" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesskipSupervisorApproval"))
+			 {
+			 return adminAttributes.get("smartServicesskipSupervisorApproval");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Conditional Application 1st Level Approval Rule" name="appBusApprovalRule" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesappBusApprovalRule"))
+			 {
+			 return adminAttributes.get("smartServicesappBusApprovalRule");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Conditional Application 2nd Level Approval Rule" name="additionalAppBusApprovalRule" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesadditionalAppBusApprovalRule"))
+			 {
+			 return adminAttributes.get("smartServicesadditionalAppBusApprovalRule");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Conditional Entitlement 1st Level Approval Rule" name="entBusApprovalRule" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesentBusApprovalRule"))
+			 {
+			 return adminAttributes.get("smartServicesentBusApprovalRule");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Conditional Entitlement 2nd Level Approval Rule" name="additionalEntBusApproversRule" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesadditionalEntBusApproversRule"))
+			 {
+			 return adminAttributes.get("smartServicesadditionalEntBusApproversRule");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Conditional Role 1st Level Approval Rule" name="roleBusApprovalRule" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesroleBusApprovalRule"))
+			 {
+			 return adminAttributes.get("smartServicesroleBusApprovalRule");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Conditional Role 2nd Level Approval Rule" name="additionalRoleBusApprovalRule" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesadditionalRoleBusApprovalRule"))
+			 {
+			 return adminAttributes.get("smartServicesadditionalRoleBusApprovalRule");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Application Form Based Request" name="formappName" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesformappName"))
+			 {
+			 return adminAttributes.get("smartServicesformappName");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Conditional Application Form Based Request Rule" name="displayFormRule" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesdisplayFormRule"))
+			 {
+			 return adminAttributes.get("smartServicesdisplayFormRule");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Service Account Administartive Access Approval (BETA)" name="serviceAccountApprovalLevel" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesserviceAccountApprovalLevel"))
+			 {
+			 return adminAttributes.get("smartServicesserviceAccountApprovalLevel");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Privileged Access Request Validations (BETA)" name="enablepsaValidation" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesenablepsaValidation"))
+			 {
+			 return adminAttributes.get("smartServicesenablepsaValidation");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Privileged Access Request Validations for Account Type Tiers (BETA)" name="privilegedTierAccountType" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesprivilegedTierAccountType"))
+			 {
+			 return adminAttributes.get("smartServicesprivilegedTierAccountType");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Conditional Manager Approval Privileged Access (BETA)" name="omitmanagerPrivgaccess" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesomitmanagerPrivgaccess"))
+			 {
+			 return adminAttributes.get("smartServicesomitmanagerPrivgaccess");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="GRC Integration Workflow" name="gRCIntegartion" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesGRCIntegartion"))
+			 {
+			 return adminAttributes.get("smartServicesGRCIntegartion");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="GRC Integration Rule To Set Dates" name="gRCIntegartionrule" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesGRCIntegartionrule"))
+			 {
+			 return adminAttributes.get("smartServicesGRCIntegartionrule");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+        </Section>
+        <Section columns="2" label="Operations" name="operations" type="datatable">
+          <Attributes>
+            <Map>
+              <entry key="hidden">
+                <value>
+                  <Script>
+                    <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesoperationsFeature"))
+			 {
+			 return adminAttributes.get("smartServicesoperationsFeature");
+			 }
+			  return true;
+			 ]]></Source>
+                  </Script>
+                </value>
+              </entry>
+              <entry key="subtitle" value="Subfeatures"/>
+            </Map>
+          </Attributes>
+          <Field displayName="Terminate Identity Access" name="terminateIdentity" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesterminateIdentity"))
+			 {
+			 return adminAttributes.get("smartServicesterminateIdentity");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Recover Identity Access" name="recoverIdentity" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesrecoverIdentity"))
+			 {
+			 return adminAttributes.get("smartServicesrecoverIdentity");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Process Identity Access" name="processIdentity" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesprocessIdentity"))
+			 {
+			 return adminAttributes.get("smartServicesprocessIdentity");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Suspend / Restore All Access" name="suspendIdentity" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesSuspendIdentity"))
+			 {
+			 return adminAttributes.get("smartServicesSuspendIdentity");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Activate Identity Access" name="activateIdentity" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesActivateIdentity"))
+			 {
+			 return adminAttributes.get("smartServicesActivateIdentity");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Provisioning Error Notifications To Workgroup" name="errorNotificationWorkGroup" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServiceserrorNotificationWorkGroup"))
+			 {
+			 return adminAttributes.get("smartServiceserrorNotificationWorkGroup");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Lifecycle Events Staging" name="temporaryApprovalsWorkGroup" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicestemporaryApprovalsWorkGroup"))
+			 {
+			 return adminAttributes.get("smartServicestemporaryApprovalsWorkGroup");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Holistic Application Health Check Report" name="holisticApp" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesholisticApp"))
+			 {
+			 return adminAttributes.get("smartServicesholisticApp");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+        </Section>
+        <Section columns="2" label="Privileged Account" name="cartReq" type="datatable">
+          <Attributes>
+            <Map>
+              <entry key="hidden">
+                <value>
+                  <Script>
+                    <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesquickLinkPrivAccess"))
+			 {
+			 return adminAttributes.get("smartServicesquickLinkPrivAccess");
+			 }
+			  return true;
+			 ]]></Source>
+                  </Script>
+                </value>
+              </entry>
+              <entry key="subtitle" value="Subfeatures"/>
+            </Map>
+          </Attributes>
+          <Field displayName="Privileged Access and Account Type Assignments (BETA)" name="privilegedTierAccountTypeAss" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesprivilegedTierAccountType"))
+			 {
+			 return adminAttributes.get("smartServicesprivilegedTierAccountType");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Classification and Categorization of Privileged Entitlements Based on Regular Expressions and String Comparisons" name="privilegedEntAttrExpression" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesprivilegedEntAttrExpression"))
+			 {
+			 return adminAttributes.get("smartServicesprivilegedEntAttrExpression");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Filter Birthright and Regular Access (Entitlement and Role)" name="filterRolesEnts" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesfilterRolesEnts"))
+			 {
+			 return adminAttributes.get("smartServicesfilterRolesEnts");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Request Privileged Access QuickLink (BETA)" name="quickLinkPrivAccess" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesquickLinkPrivAccess"))
+			 {
+			 return adminAttributes.get("smartServicesquickLinkPrivAccess");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Passsword Expiration Notifications and Actions (BETA)" name="enableenablepswexpNotification" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesenableenablepswexpNotification"))
+			 {
+			 return adminAttributes.get("smartServicesenableenablepswexpNotification");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Menu Options After Passsword Expiration (BETA)" name="afterPassExpProcess" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesafterPassExpProcess"))
+			 {
+			 return adminAttributes.get("smartServicesafterPassExpProcess");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Operational Manual Override for Privileged Entitlements" name="manualOverride" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesmanualOverride"))
+			 {
+			 return adminAttributes.get("smartServicesmanualOverride");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+        </Section>
+        <Section columns="2" label="Service Account (BETA)" name="mining" type="datatable">
+          <Attributes>
+            <Map>
+              <entry key="hidden">
+                <value>
+                  <Script>
+                    <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesserviceCube"))
+			 {
+			 return adminAttributes.get("smartServicesserviceCube");
+			 }
+			 return true;
+			 ]]></Source>
+                  </Script>
+                </value>
+              </entry>
+              <entry key="subtitle" value="Subfeatures"/>
+            </Map>
+          </Attributes>
+          <Field displayName="Classification and Correlation of Service Accounts Based on Regular Expressions and String Comparisons (BETA)" name="serviceAccountAttrExpression" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesserviceAccountAttrExpression"))
+			 {
+			 return adminAttributes.get("smartServicesserviceAccountAttrExpression");
+			 }
+			 return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Classification and Categorization of Service Account Authoritative Applications (BETA)" name="authoritativeServiceAccount" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesauthoritativeServiceAccount"))
+			 {
+			 return adminAttributes.get("smartServicesauthoritativeServiceAccount");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Service Account Owner Advanced Certifications (BETA)" name="servicesOwnerCert" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesservicesOwnerCert"))
+			 {
+			 return adminAttributes.get("smartServicesservicesOwnerCert");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Reassignment of Service Owners to Manager (BETA)" name="serviceAccountremoveOwnershipToManager" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesserviceAccountremoveOwnershipToManager"))
+			 {
+			 return adminAttributes.get("smartServicesserviceAccountremoveOwnershipToManager");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Service Owner Reassignment Rule (BETA)" name="serviceAccountreassignmentRule" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesserviceAccountreassignmentRule"))
+			 {
+			 return adminAttributes.get("smartServicesserviceAccountreassignmentRule");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+        </Section>
+        <Section columns="2" label="Create Identity (BETA)" name="createIdentity" type="datatable">
+          <Attributes>
+            <Map>
+              <entry key="hidden">
+                <value>
+                  <Script>
+                    <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicescreateFeature"))
+			 {
+			 return adminAttributes.get("smartServicescreateFeature");
+			 }
+			  return true;
+			 ]]></Source>
+                  </Script>
+                </value>
+              </entry>
+              <entry key="subtitle" value="Subfeatures"/>
+            </Map>
+          </Attributes>
+          <Field displayName="Support for Contractor Creation (BETA)" name="createIdentityCreation" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicescreateIdentity"))
+			 {
+			 return adminAttributes.get("smartServicescreateIdentity");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Service Accounts Creation (BETA)" name="serviceAccounts" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicescreateIdentity")
+             && adminAttributes.get("smartServicescreateIdentity").equalsIgnoreCase("FALSE") && adminAttributes.containsKey("smartServicesserviceCube")
+             && adminAttributes.get("smartServicesserviceCube").equalsIgnoreCase("FALSE") && 
+             adminAttributes.containsKey("smartServicescreateServiceCubes"))
+			 {
+			 return adminAttributes.get("smartServicescreateServiceCubes");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Joiner Trigger (BETA)" name="joinerTrigger" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicescreateIdentity"))
+			 {
+			 return adminAttributes.get("smartServicescreateIdentity");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Authoritative Source Contractor Synchronization (BETA)" name="authoritativeNonEmployee" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesauthoritativeNonEmployee"))
+			 {
+			 return adminAttributes.get("smartServicesauthoritativeNonEmployee");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Authoritative Source Service Account Synchronization (BETA)" name="authoritativeServiceAccount" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesauthoritativeServiceAccount")
+             && adminAttributes.containsKey("smartServicesserviceCube") && adminAttributes.get("smartServicesserviceCube").equalsIgnoreCase("FALSE"))
+			 {
+			 return adminAttributes.get("smartServicesauthoritativeServiceAccount");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+        </Section>
+        <Section columns="2" label="Edit Identity (BETA)" name="editIdentity" type="datatable">
+          <Attributes>
+            <Map>
+              <entry key="hidden">
+                <value>
+                  <Script>
+                    <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServiceseditFeature"))
+			 {
+			 return adminAttributes.get("smartServiceseditFeature");
+			 }
+			  return true;
+			 ]]></Source>
+                  </Script>
+                </value>
+              </entry>
+              <entry key="subtitle" value="Subfeatures"/>
+            </Map>
+          </Attributes>
+          <Field displayName="Support for Contractor Modification (BETA)" name="editIdentityCreation" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServiceseditIdentity"))
+			 {
+			 return adminAttributes.get("smartServiceseditIdentity");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Service Accounts Modification (BETA)" name="serviceAccounts" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServiceseditIdentity")
+             && adminAttributes.get("smartServiceseditIdentity").equalsIgnoreCase("FALSE") && 
+             adminAttributes.containsKey("smartServiceseditServiceCubes") 
+             && adminAttributes.containsKey("smartServicesserviceCube") 
+             && adminAttributes.get("smartServicesserviceCube").equalsIgnoreCase("FALSE"))
+			 {
+			 return adminAttributes.get("smartServiceseditServiceCubes");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Contractor Attribute Synchronization, Leaver, and Mover Trigger (BETA)" name="attrSyncTrigger" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServiceseditIdentity"))
+			 {
+			 return adminAttributes.get("smartServiceseditIdentity");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Authoritative Source Contractor Synchronization (BETA)" name="authoritativeNonEmployee" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesauthoritativeNonEmployee"))
+			 {
+			 return adminAttributes.get("smartServicesauthoritativeNonEmployee");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Authoritative Source Service Account Synchronization (BETA)" name="authoritativeServiceAccount" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesauthoritativeServiceAccount")
+             && adminAttributes.containsKey("smartServicesserviceCube") && adminAttributes.get("smartServicesserviceCube").equalsIgnoreCase("FALSE"))
+			 {
+			 return adminAttributes.get("smartServicesauthoritativeServiceAccount");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+        </Section>
+        <Section columns="2" label="Register Identity (BETA)" name="registerFeature" type="datatable">
+          <Attributes>
+            <Map>
+              <entry key="hidden">
+                <value>
+                  <Script>
+                    <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesregisterFeature"))
+			 {
+			 return adminAttributes.get("smartServicesregisterFeature");
+			 }
+			  return true;
+			 ]]></Source>
+                  </Script>
+                </value>
+              </entry>
+              <entry key="subtitle" value="Subfeatures"/>
+            </Map>
+          </Attributes>
+          <Field displayName="Support for Joiner Trigger (BETA)" name="joinerTrigger" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesregisterIdentity"))
+			 {
+			 return adminAttributes.get("smartServicesregisterIdentity");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+        </Section>
+        <Section columns="2" label="Batch" name="batch" type="datatable">
+          <Attributes>
+            <Map>
+              <entry key="hidden">
+                <value>
+                  <Script>
+                    <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesbatchFeature"))
+			 {
+			 return adminAttributes.get("smartServicesbatchFeature");
+			 }
+			  return true;
+			 ]]></Source>
+                  </Script>
+                </value>
+              </entry>
+              <entry key="subtitle" value="Subfeatures"/>
+            </Map>
+          </Attributes>
+          <Field displayName="Batch Request Approvals same as Cart Request Approvals" name="interactiveRequestEnabled" type="string"/>
+          <Field displayName="Support to Bypass Approval Scheme" name="byPassBatchApprovalsCapability" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesbyPassBatchApprovalsCapability"))
+			 {
+			 return adminAttributes.get("smartServicesbyPassBatchApprovalsCapability");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+        </Section>
+        <Section columns="2" label="Logical Applications" name="logApp" type="datatable">
+          <Attributes>
+            <Map>
+              <entry key="hidden">
+                <value>
+                  <Script>
+                    <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServiceslogApp"))
+			 {
+			 return adminAttributes.get("smartServiceslogApp");
+			 }
+			  return true;
+			 ]]></Source>
+                  </Script>
+                </value>
+              </entry>
+              <entry key="subtitle" value="Subfeatures"/>
+            </Map>
+          </Attributes>
+          <Field displayName="Support for Simple Extended Attribute" name="extendedSupport" type="string"/>
+        </Section>
+        <Section columns="2" label="Epic (BETA)" name="serLink" type="datatable">
+          <Attributes>
+            <Map>
+              <entry key="hidden">
+                <value>
+                  <Script>
+                    <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesserLink"))
+			 {
+			 return adminAttributes.get("smartServicesserLink");
+			 }
+			  return true;
+			 ]]></Source>
+                  </Script>
+                </value>
+              </entry>
+              <entry key="subtitle" value="Subfeatures"/>
+            </Map>
+          </Attributes>
+          <Field displayName="Epic SER Linking (BETA)" name="epicSerlink" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesepicSerlink"))
+			 {
+			 return adminAttributes.get("smartServicesepicSerlink");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+        </Section>
+        <Section columns="2" label="Persona (BETA)" name="persona" type="datatable">
+          <Attributes>
+            <Map>
+              <entry key="hidden">
+                <value>
+                  <Script>
+                    <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicespersona"))
+			 {
+			 return adminAttributes.get("smartServicespersona");
+			 }
+			  return true;
+			 ]]></Source>
+                  </Script>
+                </value>
+              </entry>
+              <entry key="subtitle" value="Subfeatures"/>
+            </Map>
+          </Attributes>
+          <Field displayName="Support for New Relationship As Joiner Event (BETA)" name="personaJoiner" type="string"/>
+          <Field displayName="Support for All Relationships Drop As Leaver Event (BETA)" name="personaLeaver" type="string"/>
+          <Field displayName="Support for All Relationships Reverted as Reverse Leaver Event (BETA)" name="personaReversleaver" type="string"/>
+          <Field displayName="Support for One Relationship Drop As Mover Event (BETA)" name="personaMover" type="string"/>
+          <Field displayName="Support for Relationship Index Attribute Rule (BETA)" name="relationshipRule" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesrelationshipRule"))
+			 {
+			 return adminAttributes.get("smartServicesrelationshipRule");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+                <entry key="subtitle" value="Subfeatures"/>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Manager Index Attribute Rule (BETA)" name="managerIndexRule" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesmanagerIndexRule"))
+			 {
+			 return adminAttributes.get("smartServicesmanagerIndexRule");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+                <entry key="subtitle" value="Subfeatures"/>
+              </Map>
+            </Attributes>
+          </Field>
+        </Section>
+        <Section columns="2" label="Delimited File Application" name="flatfile" type="datatable">
+          <Attributes>
+            <Map>
+              <entry key="hidden">
+                <value>
+                  <Script>
+                    <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesflatfile"))
+			 {
+			 return adminAttributes.get("smartServicesflatfile");
+			 }
+			  return true;
+			 ]]></Source>
+                  </Script>
+                </value>
+              </entry>
+              <entry key="subtitle" value="Subfeatures"/>
+            </Map>
+          </Attributes>
+          <Field displayName="Validation for Required Header on Groups and Accounts File " name="headerValidation" type="string"/>
+          <Field displayName="Support for Ignore case during Merge for Unsorted File" name="ignoreCaseMerge" type="string"/>
+        </Section>
+        <Section columns="2" label="IdentityIQ Application (BETA)" name="identityIQ" type="datatable">
+          <Attributes>
+            <Map>
+              <entry key="hidden">
+                <value>
+                  <Script>
+                    <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesidentityIQ"))
+			 {
+			 return adminAttributes.get("smartServicesidentityIQ");
+			 }
+			  return true;
+			 ]]></Source>
+                  </Script>
+                </value>
+              </entry>
+              <entry key="subtitle" value="Subfeatures"/>
+            </Map>
+          </Attributes>
+          <Field displayName="Leaver Option - Disable and Remove Entitlements (WorkGroups and Capabilities) (BETA)" name="removeAccess" type="string"/>
+          <Field displayName="Mover Option - Manager Certification (BETA)" name="certidentityiqAccess" type="string"/>
+          <Field displayName="Mitigation Option - Disable Account (BETA)" name="certidentityiqAccessDisable" type="string"/>
+          <Field displayName="Rehire Option - Enable Account (BETA)" name="rehireEnableAccount" type="string"/>
+          <Field displayName="Categorized Privileged Entitlement (BETA)" name="categorePrivEntidentityiq" type="string"/>
+          <Field displayName="Read Only Capability Available (BETA)" name="readCapability" type="string"/>
+          <Field displayName="WorkGroups and Capabilities for Access Request (BETA)" name="accessRequestWorkGroupCap" type="string"/>
+        </Section>
+        <Section columns="2" label="Ticket Integration (BETA)" name="ticketIntegration" type="datatable">
+          <Attributes>
+            <Map>
+              <entry key="hidden">
+                <value>
+                  <Script>
+                    <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesticketConfig"))
+			 {
+			 return adminAttributes.get("smartServicesticketConfig");
+			 }
+			  return true;
+			 ]]></Source>
+                  </Script>
+                </value>
+              </entry>
+              <entry key="subtitle" value="Subfeatures"/>
+            </Map>
+          </Attributes>
+          <Field displayName="Supports After Provisioning Rule (BETA)" name="afterTicketProvisioningOptionsRule" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesafterTicketProvisioningOptionsRule"))
+			 {
+			 return adminAttributes.get("smartServicesafterTicketProvisioningOptionsRule");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Check Ticket Status (BETA)" name="ticketStatus" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesticketStatus"))
+			 {
+			 return adminAttributes.get("smartServicesticketStatus");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="User Interfacte to Manage Ticket Configuration (BETA)" name="ticketConfig" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesticketConfig"))
+			 {
+			 return adminAttributes.get("smartServicesticketConfig");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Supports Assignmnet Group Per Applications (BETA)" name="assignmentGroupname" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesassignmentGroupname"))
+			 {
+			 return adminAttributes.get("smartServicesassignmentGroupname");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Supports Ticket Data Generation Rule (BETA)" name="dataRule" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesdataRule"))
+			 {
+			 return adminAttributes.get("smartServicesdataRule");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Installed Ticket Generation Simulator (BETA)" name="ticketIntegrationSimulator" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesticketIntegrationSimulator"))
+			 {
+			 return adminAttributes.get("smartServicesticketIntegrationSimulator");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Universal Configuration For Ticket Polling Time Inervals and Retries (BETA)" name="universalPolling" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesuniversalPolling"))
+			 {
+			 return adminAttributes.get("smartServicesuniversalPolling");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+        </Section>
+        <Section columns="2" label="Self Service" name="sselfService" type="datatable">
+          <Attributes>
+            <Map>
+              <entry key="hidden">
+                <value>
+                  <Script>
+                    <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesselfService"))
+			 {
+			 return adminAttributes.get("smartServicesselfService");
+			 }
+			  return true;
+			 ]]></Source>
+                  </Script>
+                </value>
+              </entry>
+              <entry key="subtitle" value="Subfeatures"/>
+            </Map>
+          </Attributes>
+          <Field displayName="User Interface to Onboard Applications" name="onboardApplications" type="string"/>
+        </Section>
+        <Section columns="2" label="Email" name="emailConfig" type="datatable">
+          <Attributes>
+            <Map>
+              <entry key="hidden">
+                <value>
+                  <Script>
+                    <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesdynamicEmailContexnt")
+             && adminAttributes.containsKey("smartServicesemailHeaderFooterCss") &&  adminAttributes.get("smartServicesemailHeaderFooterCss").equalsIgnoreCase("FALSE")
+             &&  adminAttributes.get("smartServicesdynamicEmailContexnt").equalsIgnoreCase("FALSE"))
+			 {
+			 return false;
+			 }
+			 return true;
+			 ]]></Source>
+                  </Script>
+                </value>
+              </entry>
+              <entry key="subtitle" value="Subfeatures"/>
+            </Map>
+          </Attributes>
+          <Field displayName="Header, Footer, and CSS Configuration" name="emailHeaderFooterCss" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesemailHeaderFooterCss"))
+			 {
+			 return adminAttributes.get("smartServicesemailHeaderFooterCss");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for CC Workgroup Email on All Manager Notifications" name="apCCEmailWorkgroup" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesapCCEmailWorkgroup"))
+			 {
+			 return adminAttributes.get("smartServicesapCCEmailWorkgroup");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for CC Rule Email on All Manager Notifications" name="apCCEmailRule" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesapCCEmailRule"))
+			 {
+			 return adminAttributes.get("smartServicesapCCEmailRule");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support To Hide Static Content of Manager Email Notifications" name="apDisableStaticManagerEmailContent" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesapDisableStaticManagerEmailContent"))
+			 {
+			 return adminAttributes.get("smartServicesapDisableStaticManagerEmailContent");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Dynamic Email Content Configuration" name="dynamicEmailContexnt" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesdynamicEmailContexnt"))
+			 {
+			 return adminAttributes.get("smartServicesdynamicEmailContexnt");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+        </Section>
+        <Section columns="2" label="Global" name="modifyRoadGlobal" type="datatable">
+          <Attributes>
+            <Map>
+              <entry key="hidden">
+                <value>
+                  <Script>
+                    <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesglobalDefinitions"))
+			 {
+			 return adminAttributes.get("smartServicesglobalDefinitions");
+			 }
+			  return true;
+			 ]]></Source>
+                  </Script>
+                </value>
+              </entry>
+              <entry key="subtitle" value="Subfeatures"/>
+            </Map>
+          </Attributes>
+          <Field displayName="User Interface for Smart Services Global Definitions " name="ownershipReassignmnet" type="string"/>
+        </Section>
+        <Section columns="2" label="Password Synchronization (BETA)" name="pwdSync" type="datatable">
+          <Attributes>
+            <Map>
+              <entry key="hidden">
+                <value>
+                  <Script>
+                    <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicespasswordFeature"))
+			 {
+			 return adminAttributes.get("smartServicespasswordFeature");
+			 }
+			  return true;
+			 ]]></Source>
+                  </Script>
+                </value>
+              </entry>
+              <entry key="subtitle" value="Subfeatures"/>
+            </Map>
+          </Attributes>
+          <Field displayName="User Interface To Change Enterprise Password (BETA)" name="changePassword" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServiceschangePassword"))
+			 {
+			 return adminAttributes.get("smartServiceschangePassword");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Configuration To Exclude HelpDesk Identity Verification Attributes (BETA)" name="excludeVerificationAttrs" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesexcludeVerificationAttrs"))
+			 {
+			 return adminAttributes.get("smartServicesexcludeVerificationAttrs");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Installed Password Synchronization From Source To Target (BETA)" name="targetpasswordSync" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicestargetpasswordSync"))
+			 {
+			 return adminAttributes.get("smartServicestargetpasswordSync");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Password Change on Primary Account Detection (BETA)" name="primarypasswordSyncaccounts" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesprimarypasswordSyncaccounts"))
+			 {
+			 return adminAttributes.get("smartServicesprimarypasswordSyncaccounts");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+        </Section>
+        <Section columns="2" label="Audit" name="auditFeature" type="datatable">
+          <Attributes>
+            <Map>
+              <entry key="hidden">
+                <value>
+                  <Script>
+                    <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesauditFeature"))
+			 {
+			 return adminAttributes.get("smartServicesauditFeature");
+			 }
+			  return true;
+			 ]]></Source>
+                  </Script>
+                </value>
+              </entry>
+              <entry key="subtitle" value="Subfeatures"/>
+            </Map>
+          </Attributes>
+          <Field displayName="Lifecycle Provisioning Audits" name="" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesLifeCycleEventRequest"))
+			 {
+			 return adminAttributes.get("smartServicesLifeCycleEventRequest");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Assignment Provisioning Rule Audits" name="" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesRoleEntitlementAssignmentsRequest"))
+			 {
+			 return adminAttributes.get("smartServicesRoleEntitlementAssignmentsRequest");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Lifecycle Certification Generation Event Audits" name="" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesCertificationLifeCycleEventRequest"))
+			 {
+			 return adminAttributes.get("smartServicesCertificationLifeCycleEventRequest");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Interactive Requests Provisioning Audits" name="" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesInteractiveRequest"))
+			 {
+			 return adminAttributes.get("smartServicesInteractiveRequest");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Operational Requests Provisioning Audits" name="" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesOperationalRequest"))
+			 {
+			 return adminAttributes.get("smartServicesOperationalRequest");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Background Service Requests Provisioning Audits" name="" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesBackGroundServiceRequest"))
+			 {
+			 return adminAttributes.get("smartServicesBackGroundServiceRequest");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Policy Violation Requests Provisioning Audits" name="" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesPolicyViolationDeprovisioningRequest"))
+			 {
+			 return adminAttributes.get("smartServicesPolicyViolationDeprovisioningRequest");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Certification Revocation Requests Provisioning Audits" name="" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesCertificationRemediation"))
+			 {
+			 return adminAttributes.get("smartServicesCertificationRemediation");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Webservices Request Provisioning Audits" name="" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesWebservicesRequest"))
+			 {
+			 return adminAttributes.get("smartServicesWebservicesRequest");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+        </Section>
+        <Section columns="2" label="Provisioning" name="provisionFeature" type="datatable">
+          <Attributes>
+            <Map>
+              <entry key="hidden">
+                <value>
+                  <Script>
+                    <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesProvisioning"))
+			 {
+			 return adminAttributes.get("smartServicesProvisioning");
+			 }
+			  return true;
+			 ]]></Source>
+                  </Script>
+                </value>
+              </entry>
+              <entry key="subtitle" value="Subfeatures"/>
+            </Map>
+          </Attributes>
+          <Field displayName="Support for Post Wrapper Rule" name="" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicespostWrapperRule"))
+			 {
+			 return adminAttributes.get("smartServicespostWrapperRule");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Plan Interceptor Rule" name="" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesinterceptorPlanRule"))
+			 {
+			 return adminAttributes.get("smartServicesinterceptorPlanRule");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+          <Field displayName="Support for Project Interceptor Rule" name="" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesinterceptorProjectRule"))
+			 {
+			 return adminAttributes.get("smartServicesinterceptorProjectRule");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+        </Section>
+        <Section columns="2" label="IdentityIQ Access" name="identityIQAccess" type="datatable">
+          <Attributes>
+            <Map>
+              <entry key="hidden">
+                <value>
+                  <Script>
+                    <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesIdentityIQAccess"))
+			 {
+			 return adminAttributes.get("smartServicesIdentityIQAccess");
+			 }
+			  return true;
+			 ]]></Source>
+                  </Script>
+                </value>
+              </entry>
+              <entry key="subtitle" value="Subfeatures"/>
+            </Map>
+          </Attributes>
+          <Field displayName="Loopback Connector" name="" type="string">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+             
+             if(adminAttributes!=void && adminAttributes!=null && adminAttributes.containsKey("smartServicesIdentityIQAccess"))
+			 {
+			 return adminAttributes.get("smartServicesIdentityIQAccess");
+			 }
+			  return true;
+			 ]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+          </Field>
+        </Section>
+        <Button action="next" label="Ok"/>
+      </Form>
+    </Approval>
+    <Transition to="end"/>
+  </Step>
+  <Step icon="Stop" name="end" posX="502" posY="10"/>
+</Workflow>

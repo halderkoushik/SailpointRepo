@@ -1,0 +1,69 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE EmailTemplate PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<EmailTemplate name="EmailTemplate-FrameworkAccessReviewDelegationCompletion">
+  <Body>
+  
+  		#set($ctx = $spTools.class.forName("sailpoint.api.SailPointFactory").getMethod("getFactory", null).invoke(null,null).getCurrentContext())
+		#set($ruleObj = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Rule"), "Rule-Framework-Header-Footer-StyleSheet")) 
+		#set($ruleArgs = { 
+		    "keyEmailTemplate"  : "styleSheet"
+		}) 
+		#set($styleSheet = $ctx.runRule($ruleObj, $ruleArgs))
+		#if( $ruleObj )
+		$ctx.decache($ruleObj)
+		#end
+		#set($ruleObj = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Rule"), "Rule-Framework-Header-Footer-StyleSheet")) 
+		#set($ruleArgs = { 
+		    "keyEmailTemplate"  : "headerTemplate"
+		}) 
+		#set($headerTemplate = $ctx.runRule($ruleObj, $ruleArgs))
+		#if( $ruleObj )
+		$ctx.decache($ruleObj)
+		#end
+		#set($ruleObj = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Rule"), "Rule-Framework-Header-Footer-StyleSheet")) 
+		#set($ruleArgs = { 
+		    "keyEmailTemplate"  : "footerTemplate"
+		}) 
+		#set($footerTemplate = $ctx.runRule($ruleObj, $ruleArgs))
+		#if( $ruleObj )
+		$ctx.decache($ruleObj)
+		#end
+			<![CDATA[<html>		
+				<head>
+				<meta charset="UTF-8">	    
+				#if( $styleSheet )
+				$styleSheet
+				#end 
+				</head>
+		    	<body>
+			    	#if( $headerTemplate )
+					$headerTemplate
+					#end
+					<br/>       
+					$delegateeName has finished the delegated item '$workItemName'.
+					Please review the items. 
+					#if( $footerTemplate )
+					$footerTemplate
+					#end
+				</body>
+		    </html>]]>
+		
+    </Body>
+  <Description>
+      Email Template for notifying the original owner that the delegated item has been completed.
+    </Description>
+  <Signature>
+    <Inputs>
+      <Argument name="workItemName" type="string">
+        <Description>The description property of the delegation WorkItem.</Description>
+      </Argument>
+      <Argument name="certification" type="Certification">
+        <Description>The Certification object containing the delegated item.</Description>
+      </Argument>
+      <Argument name="delegateeName" type="string">
+        <Description>The display name of the Identity that finished the delegation.</Description>
+      </Argument>
+    </Inputs>
+  </Signature>
+  <Subject>Access Certification Delegation Completed by $delegateeName</Subject>
+</EmailTemplate>

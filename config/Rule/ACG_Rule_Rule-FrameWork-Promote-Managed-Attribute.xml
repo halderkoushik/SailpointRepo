@@ -1,0 +1,184 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule-FrameWork-Promote-Managed-Attribute" type="ManagedAttributePromotion">
+  <Description>
+    A ManagedAttributePromotion rule is called when Entitlements are automatically created during aggregation, refresh, or from the missing entitlement descriptions task.
+    This can modify the Entitlement that is passed in to set fields such as owner, requestable, or explanations before they are saved.
+  </Description>
+  <Signature>
+    <Inputs>
+      <Argument name="attribute">
+        <Description>
+          The sailpoint.object.ManagedAttribute being promoted.
+        </Description>
+      </Argument>
+      <Argument name="application">
+        <Description>
+          The sailpoint.object.Application the managed attribute is from.
+        </Description>
+      </Argument>
+      <Argument name="state" type="Map">
+        <Description>
+          A Map that contains managed attribute customization shared state during a task run.
+        </Description>
+      </Argument>
+    </Inputs>
+  </Signature>
+  <Source><![CDATA[
+  
+  	import sailpoint.tools.Util;
+	import sailpoint.object.Attributes;
+	import sailpoint.rapidapponboarding.rule.AggregationRuleLibrary;
+	import sailpoint.rapidapponboarding.rule.ObjectConfigAttributesRuleLibrary;
+	Attributes groupSchemaAttrs=attribute.getAttributes();
+	String type=attribute.getType();
+	String attr=attribute.getAttribute();
+	Object text=attribute.getValue();
+     //Step 1: Start Privileged Entitlement Data Classification
+    String privilegedAccessEnabled=ObjectConfigAttributesRuleLibrary.extendedAggrPrivEntEnabled(context);
+	boolean privAccessEnabled=false;
+	if(privilegedAccessEnabled!=null && privilegedAccessEnabled.length()>0 && privilegedAccessEnabled.equalsIgnoreCase("TRUE"))
+	{
+		privAccessEnabled=true;
+	}
+	if(privAccessEnabled)
+	{
+	    String privilegedEntAttrExpression=null;
+	    if(state!=null && state.get("privilegedEntAttrExpression")!=null)
+		{
+		 	privilegedEntAttrExpression=state.get("privilegedEntAttrExpression");
+		}
+		else
+		{
+		 	privilegedEntAttrExpression=application.getAttributeValue("privilegedEntAttrExpression");
+			if(privilegedEntAttrExpression!=null && state!=null)
+			{
+			state.put("privilegedEntAttrExpression",privilegedEntAttrExpression);
+			}
+		}
+		if(privilegedEntAttrExpression!=null && text!=null && attr!=null)
+	   {
+		  String[] entPrivilegedAttrExpressionArr = privilegedEntAttrExpression.split("#IIQEntitlementPrivileged#");
+		  String attrExpression=null;
+		  String regex=null;
+		  String operation=null;
+		  if(entPrivilegedAttrExpressionArr != null && entPrivilegedAttrExpressionArr.length == 3 && 
+		  Util.isNotNullOrEmpty(entPrivilegedAttrExpressionArr[0]) && Util.isNotNullOrEmpty(entPrivilegedAttrExpressionArr[1])
+		  && Util.isNotNullOrEmpty(entPrivilegedAttrExpressionArr[2]))
+		  {
+			 attrExpression=entPrivilegedAttrExpressionArr[0];
+			 regex=entPrivilegedAttrExpressionArr[1];
+			 operation=entPrivilegedAttrExpressionArr[2];
+			 if(attrExpression.contains("."))
+			 {
+			   AggregationRuleLibrary.setPrivBirthEntsStrCompareDotNotation(attrExpression,attr,operation,text,regex,attribute,"entPrivileged",groupSchemaAttrs,type,application);
+			 }
+			 else
+			 {
+			   AggregationRuleLibrary.setPrivBirthEntsStrCompare(attrExpression,attr,operation,text,regex,attribute,"entPrivileged",groupSchemaAttrs,application);
+			 }
+		  }
+		  else if(entPrivilegedAttrExpressionArr != null && entPrivilegedAttrExpressionArr.length == 2 && Util.isNotNullOrEmpty(entPrivilegedAttrExpressionArr[0]) && Util.isNotNullOrEmpty(entPrivilegedAttrExpressionArr[1]))
+		  {
+			 attrExpression=entPrivilegedAttrExpressionArr[0];
+			 regex=entPrivilegedAttrExpressionArr[1];
+			 if(attrExpression.contains("."))
+			 {
+			 	  	AggregationRuleLibrary.setPrivBirthEntsRegexDotNotation(attrExpression,attr,text,regex,attribute,"entPrivileged",groupSchemaAttrs,type,application);
+			 }
+			 else
+			 {
+			  		AggregationRuleLibrary.setPrivBirthEntsRegex(attrExpression,attr,text,regex,attribute,"entPrivileged",groupSchemaAttrs,application);
+			 }
+		  }
+		}
+	}
+	//End Privileged Entitlement Data Classification
+	//Step 2:Start Birthright Entitlement Data Classification
+	String joinerDisabled=ObjectConfigAttributesRuleLibrary.extendedAttrJoinerBirthrightAppDisabled(context);
+	boolean enabledJoiner=true;
+	if(joinerDisabled!=null && joinerDisabled.length()>0 && joinerDisabled.equalsIgnoreCase("TRUE"))
+	{
+		enabledJoiner=false;
+	}
+	if(enabledJoiner)
+	{
+	    String birthrightEntAttrExpression=null;
+	    if(state!=null && state.get("birthrightEntAttrExpression")!=null)
+		{
+			 birthrightEntAttrExpression=state.get("birthrightEntAttrExpression");
+		}
+		else
+		{
+		 	birthrightEntAttrExpression=application.getAttributeValue("birthrightEntAttrExpression");
+			if(birthrightEntAttrExpression!=null && state!=null)
+			{
+			state.put("birthrightEntAttrExpression",birthrightEntAttrExpression);
+			}
+		}
+		if(birthrightEntAttrExpression!=null && text!=null && attr!=null)
+	    {
+	     String attrExpression=null;
+	     String regex=null;
+	     String operation=null;
+		 String[] entBirthrightAttrExpressionArr = birthrightEntAttrExpression.split("#IIQEntitlementBirthright#");
+		 if(entBirthrightAttrExpressionArr != null && entBirthrightAttrExpressionArr.length == 3 && Util.isNotNullOrEmpty(entBirthrightAttrExpressionArr[0]) 
+		 && Util.isNotNullOrEmpty(entBirthrightAttrExpressionArr[1]) && Util.isNotNullOrEmpty(entBirthrightAttrExpressionArr[2]))
+		  {
+			 attrExpression=entBirthrightAttrExpressionArr[0];
+			 regex=entBirthrightAttrExpressionArr[1];
+			 operation=entBirthrightAttrExpressionArr[2];
+			 if(attrExpression.contains("."))
+			 {
+			 	AggregationRuleLibrary.setPrivBirthEntsStrCompareDotNotation(attrExpression,attr,operation,text,regex,attribute,"isBirthright",groupSchemaAttrs,type,application);
+			 }
+			 else
+			 {
+		 	 	AggregationRuleLibrary.setPrivBirthEntsStrCompare(attrExpression,attr,operation,text,regex,attribute,"isBirthright",groupSchemaAttrs,application);
+		 	 }
+		  }
+		  else if(entBirthrightAttrExpressionArr != null && entBirthrightAttrExpressionArr.length == 2 && Util.isNotNullOrEmpty(entBirthrightAttrExpressionArr[0]) && Util.isNotNullOrEmpty(entBirthrightAttrExpressionArr[1]))
+		  {
+			 attrExpression=entBirthrightAttrExpressionArr[0];
+			 regex=entBirthrightAttrExpressionArr[1];
+			 if(attrExpression.contains("."))
+			 {
+			  	AggregationRuleLibrary.setPrivBirthEntsRegexDotNotation(attrExpression,attr,text,regex,attribute,"isBirthright",groupSchemaAttrs,type,application);
+			 }
+			 else
+			 {
+		     	AggregationRuleLibrary.setPrivBirthEntsRegex(attrExpression,attr,text,regex,attribute,"isBirthright",groupSchemaAttrs,application);
+		     }
+		  }
+		}
+	}
+	//End Birthright Entitlement Data Classification
+	//Step 3:Start Entitlement Logical Application Classification and Infrastructure/Technology Entitlement Requestability
+	String businessAppEnabled=ObjectConfigAttributesRuleLibrary.extendedAttrBusAppEnabled(context);
+	boolean enabledBusinessApp=false;
+	if(businessAppEnabled!=null && businessAppEnabled.length()>0 && businessAppEnabled.equalsIgnoreCase("TRUE"))
+	{
+		enabledBusinessApp=true;
+	}
+	String logicalAppEnabled=ObjectConfigAttributesRuleLibrary.extendedAttrLogicalAppEnabled(context);
+	boolean logApp=false;
+	if(logicalAppEnabled!=null && logicalAppEnabled.length()>0 && logicalAppEnabled.equalsIgnoreCase("TRUE"))
+	{
+		logApp=true;
+	}
+	if(logApp && enabledBusinessApp)
+	{
+		AggregationRuleLibrary.setEntititlementRequestability(attribute,application);
+	}
+	//End Entitlement Logical Application Classification and Infrastructure/Technology Entitlement Requestability
+	//Additional Managed Attribute Customization Rule - Start
+	HashMap params = new HashMap();
+	params.put("context", context);
+	params.put("attribute", attribute);
+	params.put("application", application);
+	params.put("state", state);
+	AggregationRuleLibrary.runApManagedAttributeCustomizationRule(context,application,attribute,params);
+	//Additional Managed Attribute Customization Rule - End
+    
+  ]]></Source>
+</Rule>

@@ -1,0 +1,76 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE EmailTemplate PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<EmailTemplate name="EmailTemplate-Framework-RemediationWorkItem">
+  <Body>
+		
+		#set($ctx = $spTools.class.forName("sailpoint.api.SailPointFactory").getMethod("getFactory", null).invoke(null,null).getCurrentContext())
+		#set($ruleObj = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Rule"), "Rule-Framework-Header-Footer-StyleSheet")) 
+		#set($ruleArgs = { 
+		    "keyEmailTemplate"  : "styleSheet"
+		}) 
+		#set($styleSheet = $ctx.runRule($ruleObj, $ruleArgs))
+		#if( $ruleObj )
+		$ctx.decache($ruleObj)
+		#end
+		#set($ruleObj = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Rule"), "Rule-Framework-Header-Footer-StyleSheet")) 
+		#set($ruleArgs = { 
+		    "keyEmailTemplate"  : "headerTemplate"
+		}) 
+		#set($headerTemplate = $ctx.runRule($ruleObj, $ruleArgs))
+		#if( $ruleObj )
+		$ctx.decache($ruleObj)
+		#end
+		#set($ruleObj = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Rule"), "Rule-Framework-Header-Footer-StyleSheet")) 
+		#set($ruleArgs = { 
+		    "keyEmailTemplate"  : "footerTemplate"
+		}) 
+		#set($footerTemplate = $ctx.runRule($ruleObj, $ruleArgs))
+		#if( $ruleObj )
+		$ctx.decache($ruleObj)
+		#end
+		<![CDATA[<html>
+			<head>
+			<meta charset="UTF-8">	    
+			#if( $styleSheet )
+			$styleSheet
+			#end 
+			</head>
+	    	<body>
+	    	#if( $headerTemplate )
+			$headerTemplate
+			#end
+			<br/>				
+			$!requesterName has assigned a new remediation work item to you: $!workItemName.<br/>
+			Comments from $!requesterName:<br/>
+			--------------------------------------------------------------------------------<br/>
+			$!comments<br/>
+			--------------------------------------------------------------------------------<br/>
+			Login and view your work item inbox to complete this request.<br/>
+	  		#if( $footerTemplate )
+			$footerTemplate
+			#end
+			</body>
+		</html>]]>
+		
+	</Body>
+  <Description>
+      Email Template for notifying work item owners of new remediation requests.
+    </Description>
+  <Signature>
+    <Inputs>
+      <Argument name="workItemName" type="string">
+        <Description>The name (also the description) of the remediation work item.</Description>
+      </Argument>
+      <Argument name="workItem" type="WorkItem">
+        <Description>The WorkItem object representing the remediation.</Description>
+      </Argument>
+      <Argument name="requesterName" type="string">
+        <Description>The display name of the Identity that requested the remediation.</Description>
+      </Argument>
+      <Argument name="comments" type="string">
+        <Description>The Identity object that is the owner of the work item.</Description>
+      </Argument>
+    </Inputs>
+  </Signature>
+  <Subject>New remediation request: $!workItemName</Subject>
+</EmailTemplate>

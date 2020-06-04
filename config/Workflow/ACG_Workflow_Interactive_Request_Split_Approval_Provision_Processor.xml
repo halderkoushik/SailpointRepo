@@ -1,0 +1,358 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Workflow PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Workflow explicitTransitions="true" libraries="Identity" name="Interactive Request Split Approval Provision Processor" type="subprocesses">
+  <Variable input="true" name="trigger">
+    <Description>The IdentityTrigger</Description>
+  </Variable>
+  <Variable input="true" name="event">
+    <Description>The IdentityChangeEvent</Description>
+  </Variable>
+  <Variable input="true" name="policyScheme">
+    <Description>Disable Policy Violations</Description>
+  </Variable>
+  <Variable input="true" name="trace">
+    <Description>Used for debugging this workflow and when set to true trace
+      will be sent to stdout.</Description>
+  </Variable>
+  <Variable input="true" name="identityName">
+    <Description>The name of the identity.</Description>
+  </Variable>
+  <Variable input="true" name="flow">
+    <Description>The name of the identity.</Description>
+  </Variable>
+  <Variable input="true" name="launcher">
+    <Description>The name of the identity.</Description>
+  </Variable>
+  <Variable input="true" name="source">
+    <Description>The name of the identity.</Description>
+  </Variable>
+  <Variable input="true" name="identityDisplayName"/>
+  <Variable name="psaValidationError" output="true"/>
+  <Variable input="true" name="processManagerApproval"/>
+  <Variable input="true" name="enablePSA"/>
+  <Variable input="true" name="source"/>
+  <Variable editable="true" input="true" name="requestType"/>
+  <Variable input="true" name="requestor">
+    <Description>The name of the requestor.</Description>
+  </Variable>
+  <Variable name="endDate" output="true">
+    <Description>End date of the role assignment.</Description>
+  </Variable>
+  <Variable name="startDate" output="true">
+    <Description>Start date of the role assignment.</Description>
+  </Variable>
+  <Variable name="approvalSet" output="true">
+    <Description>
+  		Approval Set. 
+  	</Description>
+  </Variable>
+  <Variable input="true" name="plan"/>
+  <Variable name="project" output="true"/>
+  <Variable input="true" name="spExtAttrs"/>
+  <Variable input="true" name="doModifyProject"/>
+  <Variable input="true" name="formAttrs"/>
+  <Variable name="identityRequestId" output="true">
+    <Description>The IdentityChangeEvent</Description>
+  </Variable>
+  <Variable input="true" name="fallbackApprover"/>
+  <Variable input="true" name="autoVerifyIdentityRequest">
+    <Description>autoVerifyIdentityRequest</Description>
+  </Variable>
+  <Variable editable="true" input="true" name="doRefresh"/>
+  <Variable editable="true" input="true" name="doTargetAggregate"/>
+  <Variable editable="true" input="true" name="doRefreshLogicalApps"/>
+  <Variable editable="true" input="true" name="noApplicationTemplates"/>
+  <Variable editable="true" input="true" name="suppressNotifications"/>
+  <Variable editable="true" input="true" name="optimisticProvisioning"/>
+  <Variable editable="true" input="true" name="foregroundProvisioning"/>
+  <Variable initializer="Normal" input="true" name="workItemPriority">
+    <Description>
+            The String version of a WorkItem.Priority. This variable is
+            used to set the priority on all of the workitems generated
+            as part of this workflow and also set on the IdentityRequest
+            object.
+        </Description>
+  </Variable>
+  <Variable input="true" name="endOnManualWorkItems">
+    <Description>Option to skip requests with manual work items.</Description>
+  </Variable>
+  <Variable input="true" name="endOnProvisioningForms">
+    <Description>Option to skip requests with provisioning forms.</Description>
+  </Variable>
+  <Variable input="true" name="batchRequestItemId">
+    <Description>
+      Used by the batch interface to record back individual request item status. The specific item id for the individual request in the batch file.
+    </Description>
+  </Variable>
+  <Variable input="true" name="enableRetryRequest">
+    <Description>
+      When set to true it will disable the workflow retry loop and let the
+      Provision step launch requests to handle the retries.  Enabling
+      this flag will enable some older functionality.
+    </Description>
+  </Variable>
+  <Variable input="true" name="policiesToCheck">
+    <Description>
+      A List of policies that should be checked. If this list is
+      empty all violations will be checked. Used in combination
+      with policyScheme.
+    </Description>
+  </Variable>
+  <Variable input="true" name="allowRequestsWithViolations">
+    <Description>
+      If this variable is set to true, requesters will be able to proceed past
+      the Policy Violation Review form without taking any action on
+      policy violations resulting from the request. This is only relevant
+      if policyScheme=interactive.
+    </Description>
+  </Variable>
+  <Variable input="true" name="requireViolationReviewComments">
+    <Description>
+      If true, requesters will be required to enter in comments if they
+      proceed with a request that will result in policy violations. This
+      is only relevant if policyScheme=interactive.
+    </Description>
+  </Variable>
+  <Variable input="true" name="policyViolations" output="true">
+    <Description>
+       List of policy violations that were found during our initial policy scan.
+       This list is passed into each work item so the approvers can see
+       pending violations.
+    </Description>
+  </Variable>
+  <Variable input="true" name="violationReviewDecision">
+    <Description>
+       Decision made by the user in the Policy Violation Review step.
+       This may be one of three choices:
+       -ignore:   User is ignoring the violations and letting the request continue. If
+                   requireViolationReviewComments=true the user will be required to enter
+                   comments indicating why they are allowing the violations.
+       -remediate: Indicates that the user removed the request items that were causing the
+                   violations
+       -cancel:   Indicates that the user decided to abandon the request, terminating the workflow.
+     </Description>
+  </Variable>
+  <Variable input="true" name="workItemComments">
+    <Description>
+      Global comments accumulated during the workflow which should be shared
+      with other approvals. When a new approval is created, the comments in this
+      list will be added to the work item.
+    </Description>
+  </Variable>
+  <Variable input="true" name="ticketManagementApplication">
+    <Description>
+      Name of the application that can handle ticket requests.
+      When non-null the Manage Ticket Steps will be visited to open
+      tickets during the workflow lifecycle.
+    </Description>
+  </Variable>
+  <Variable input="true" name="ticketId">
+    <Description>
+      The id of the ticket that is generated by the ticketingManagementApplication.
+      This is typically generated on the "open" call, and then used in subsequent
+      calls.  It is also stored on the IdentityRequest object under the
+      externalTicketId variable.
+    </Description>
+  </Variable>
+  <Variable initializer="true" input="true" name="filterRejects">
+    <Description>True to filter rejected items when running in Serial/SerialPoll mode.</Description>
+  </Variable>
+  <Variable initializer="false" input="true" name="setPreviousApprovalDecisions">
+    <Description>True to pre-populate approval decisions from previous approvals.</Description>
+  </Variable>
+  <Variable input="true" name="splitPlans">
+    <Description>
+          List of ProvisioningPlan that is generated from the splitPlans step if approvalSplitPoint is set.
+      </Description>
+  </Variable>
+  <Variable input="true" name="splitProjects">
+    <Description>
+          Variable to store the returns if approvalSplitPoint is set. This will contain a List&lt;ProvisioningProject&gt;
+      </Description>
+  </Variable>
+  <Variable input="true" name="splitApprovalSet">
+    <Description>
+          Variable to store the list of approvalSets returned from the split subprocess if approvalSplitPoint is set.
+      </Description>
+  </Variable>
+  <Variable input="true" name="splitWorkItemComments">
+    <Description>
+          Variable to store the list of WorkItem comments returned from the split subprocess if approvalSplitPoint is set.
+      </Description>
+  </Variable>
+  <Variable input="true" name="splitProvisioning">
+    <Description>
+          True to denote this is a partial of the full ProvisioningPlan. This should be true in the case of LCM Provisioning
+          splits.
+      </Description>
+  </Variable>
+  <Variable input="true" name="clearApprovalDecisions">
+    <Description>
+          True to denote this is a partial of the full ProvisioningPlan. This should be true in the case of LCM Provisioning
+          splits.
+      </Description>
+  </Variable>
+  <Variable initializer="true" input="true" name="noFiltering">
+    <Description>True to filter rejected items when running in Serial/SerialPoll mode.</Description>
+  </Variable>
+  <Variable input="true" name="noTriggers">
+    <Description>
+      Used for debugging this subprocess and when set to true trace
+      statements will be sent to stdout.
+    </Description>
+  </Variable>
+  <Variable input="true" name="asyncCacheRefresh"/>
+  <Description>Accelerator Pack Workflow</Description>
+  <Step icon="Start" name="Start">
+    <Script>
+      <Source><![CDATA[
+  		]]></Source>
+    </Script>
+    <Transition to="Compile Project"/>
+  </Step>
+  <Step action="call:compileProvisioningProject" icon="Task" name="Compile Project" posX="120" posY="20" resultVariable="project">
+    <Arg name="identityName" value="ref:identityName"/>
+    <Arg name="plan" value="ref:plan"/>
+    <Arg name="requester" value="ref:launcher"/>
+    <Arg name="source" value="ref:source"/>
+    <Arg name="priority" value="ref:workItemPriority"/>
+    <Arg name="optimisticProvisioning" value="ref:optimisticProvisioning"/>
+    <Arg name="noApplicationTemplates" value="ref:noApplicationTemplates"/>
+    <Arg name="noFiltering" value="ref:noFiltering"/>
+    <Arg name="spExtAttrs" value="ref:spExtAttrs"/>
+    <Transition to="Build Approval Set"/>
+  </Step>
+  <Step action="call:buildSplitApprovalSet" icon="Task" name="Build Approval Set" posX="220" posY="20" resultVariable="approvalSet">
+    <Arg name="plan" value="ref:plan"/>
+    <Return name="approvalSet" to="approvalSet"/>
+    <Transition to="Approve"/>
+  </Step>
+  <Step icon="Task" name="Approve">
+    <Arg name="approvalSet" value="ref:approvalSet"/>
+    <Arg name="fallbackApprover" value="spadmin"/>
+    <Arg name="flow" value="ref:flow"/>
+    <Arg name="identityName" value="ref:identityName"/>
+    <Arg name="identityDisplayName" value="ref:identityDisplayName"/>
+    <Arg name="launcher" value="ref:launcher"/>
+    <Arg name="plan" value="ref:plan"/>
+    <Arg name="policyScheme" value="ref:policyScheme"/>
+    <Arg name="policyViolations" value="ref:policyViolations"/>
+    <Arg name="trace" value="ref:trace"/>
+    <Arg name="workItemComments" value="ref:workItemComments"/>
+    <Arg name="requestType" value="ref:requestType"/>
+    <Arg name="approvedTo" value="ref:approvedTo"/>
+    <Arg name="rejectedTo" value="ref:rejectedTo"/>
+    <Arg name="requestor" value="ref:requestor"/>
+    <Arg name="project" value="ref:project"/>
+    <Arg name="priority" value="ref:workItemPriority"/>
+    <Arg name="approvedTemplate" value="ref:approvedTemplate"/>
+    <Arg name="rejectedTemplate" value="ref:rejectedTemplate"/>
+    <Arg name="spExtAttrs" value="ref:spExtAttrs"/>
+    <Arg name="splitProvisioning" value="ref:splitProvisioning"/>
+    <Arg name="processManagerApproval" value="ref:processManagerApproval"/>
+    <Arg name="filterRejects" value="ref:filterRejects"/>
+    <Arg name="setPreviousApprovalDecisions" value="ref:setPreviousApprovalDecisions"/>
+    <Arg name="identityRequestId" value="ref:identityRequestId"/>
+    <Arg name="source" value="ref:source"/>
+    <Arg name="batchRequestItemId" value="ref:batchRequestItemId"/>
+    <Description>
+      Call the standard subprocess that will handle the built-in
+      owner, manager and security officer approval schemes.
+    </Description>
+    <Return name="approvalSet" to="approvalSet"/>
+    <Return merge="true" name="workItemComments" to="workItemComments"/>
+    <Return name="endDate" to="endDate"/>
+    <Return name="startDate" to="startDate"/>
+    <WorkflowRef>
+      <Reference class="sailpoint.object.Workflow" name="Interactive Request Dynamic Approval"/>
+    </WorkflowRef>
+    <Transition to="Update Ticket Post Approval"/>
+  </Step>
+  <Step condition="script:(ticketManagementApplication != null)" icon="Task" name="Update Ticket Post Approval" posX="470" posY="20">
+    <Arg name="action" value="postApproval"/>
+    <Arg name="priority" value="ref:workItemPriority"/>
+    <Arg name="project" value="ref:project"/>
+    <Arg name="source" value="ref:source"/>
+    <Arg name="ticketManagementApplication" value="ref:ticketManagementApplication"/>
+    <Arg name="identityRequestId" value="ref:identityRequestId"/>
+    <Arg name="ticketDataGenerationRule" value=""/>
+    <Arg name="ticketId" value="ref:ticketId"/>
+    <Arg name="trace" value="ref:trace"/>
+    <Description>
+            Call a subprocess to update the ticket in the ticketManagementApplication is non-null.
+            You can specify a specific 'ticketDataGenerationRule' here or you can also specify
+            it on the application.  It'll be read from the argument first and fall back to the '
+            application config.
+        </Description>
+    <WorkflowRef>
+      <Reference class="sailpoint.object.Workflow" name="Manage Ticket"/>
+    </WorkflowRef>
+    <Transition to="Provision"/>
+  </Step>
+  <Step icon="Task" name="Provision">
+    <Arg name="approvalSet" value="ref:approvalSet"/>
+    <Arg name="fallbackApprover" value="ref:fallbackApprover"/>
+    <Arg name="foregroundProvisioning" value="ref:foregroundProvisioning"/>
+    <Arg name="formTemplate" value="Form-Framework-IdentityUpdate"/>
+    <Arg name="flow" value="ref:flow"/>
+    <Arg name="priority" value="ref:workItemPriority"/>
+    <Arg name="identityDisplayName" value="ref:identityDisplayName"/>
+    <Arg name="identityName" value="ref:identityName"/>
+    <Arg name="launcher" value="ref:launcher"/>
+    <Arg name="manualActionsEmailTemplate" value="Pending Manual Changes"/>
+    <Arg name="optimisticProvisioning" value="ref:optimisticProvisioning"/>
+    <Arg name="policyViolations" value="ref:policyViolations"/>
+    <Arg name="project" value="ref:project"/>
+    <Arg name="policyScheme" value="ref:policyScheme"/>
+    <Arg name="plan" value="ref:plan"/>
+    <Arg name="trace" value="ref:trace"/>
+    <Arg name="doRefresh" value="ref:doRefresh"/>
+    <Arg name="spExtAttrs" value="ref:spExtAttrs"/>
+    <Arg name="noTriggers" value="ref:noTriggers"/>
+    <Arg name="noFiltering" value="ref:noFiltering"/>
+    <Arg name="workItemComments" value="ref:workItemComments"/>
+    <Arg name="splitProvisioning" value="ref:splitProvisioning"/>
+    <Arg name="clearApprovalDecisions" value="ref:clearApprovalDecisions"/>
+    <Arg name="doModifyProject" value="ref:doModifyProject"/>
+    <Arg name="formAttrs" value="ref:formAttrs"/>
+    <Arg name="enablePSA" value="ref:enablePSA"/>
+    <Arg name="source" value="ref:source"/>
+    <Arg name="requestType" value="ref:requestType"/>
+    <Arg name="endDate" value="ref:endDate"/>
+    <Arg name="startDate" value="ref:startDate"/>
+    <Description>
+      Call the standard subprocess that will process the 
+      approval decisisions and do provisioning.  This 
+      includes calling any configured provisioning 
+      connectors and building manual actions.
+    </Description>
+    <Return name="project" to="project"/>
+    <Return name="psaValidationError" to="psaValidationError"/>
+    <WorkflowRef>
+      <Reference class="sailpoint.object.Workflow" name="Interactive Request Identity Request Provision"/>
+    </WorkflowRef>
+    <Transition to="Update Ticket Post Provision"/>
+  </Step>
+  <Step condition="script:(ticketManagementApplication != null)" icon="Task" name="Update Ticket Post Provision" posX="700" posY="20">
+    <Arg name="action" value="postProvisioning"/>
+    <Arg name="source" value="ref:source"/>
+    <Arg name="priority" value="ref:workItemPriority"/>
+    <Arg name="project" value="ref:project"/>
+    <Arg name="ticketManagementApplication" value="ref:ticketManagementApplication"/>
+    <Arg name="identityRequestId" value="ref:identityRequestId"/>
+    <Arg name="ticketDataGenerationRule" value=""/>
+    <Arg name="ticketId" value="ref:ticketId"/>
+    <Arg name="trace" value="ref:trace"/>
+    <Description>
+            Call a subprocess to update the ticket in the ticketManagementApplication is non-null.
+            You can specify a specific 'ticketDataGenerationRule' here or you can also specify
+            it on the application.  It'll be read from the argument first and fall back to the '
+            application config.
+        </Description>
+    <WorkflowRef>
+      <Reference class="sailpoint.object.Workflow" name="Manage Ticket"/>
+    </WorkflowRef>
+    <Transition to="end"/>
+  </Step>
+  <Step icon="Stop" name="end"/>
+</Workflow>

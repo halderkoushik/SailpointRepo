@@ -1,0 +1,185 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE EmailTemplate PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<EmailTemplate name="EmailTemplate-FrameworkWorkItemForward">
+  <Body>
+   	
+   		#set($ctx = $spTools.class.forName("sailpoint.api.SailPointFactory").getMethod("getFactory", null).invoke(null,null).getCurrentContext())
+		#set($ruleObj = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Rule"), "Rule-Framework-Header-Footer-StyleSheet")) 
+		#set($ruleArgs = { 
+		    "keyEmailTemplate"  : "styleSheet"
+		}) 
+		#set($styleSheet = $ctx.runRule($ruleObj, $ruleArgs))
+		#if( $ruleObj )
+		$ctx.decache($ruleObj)
+		#end
+		#set($ruleObj = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Rule"), "Rule-Framework-Header-Footer-StyleSheet")) 
+		#set($ruleArgs = { 
+		    "keyEmailTemplate"  : "headerTemplate"
+		}) 
+		#set($headerTemplate = $ctx.runRule($ruleObj, $ruleArgs))
+		#if( $ruleObj )
+		$ctx.decache($ruleObj)
+		#end
+		#set($ruleObj = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Rule"), "Rule-Framework-Header-Footer-StyleSheet")) 
+		#set($ruleArgs = { 
+		    "keyEmailTemplate"  : "footerTemplate"
+		}) 
+		#set($footerTemplate = $ctx.runRule($ruleObj, $ruleArgs))
+		#if( $ruleObj )
+		$ctx.decache($ruleObj)
+		#end
+		#set($ruleObj = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Rule"), "Rule-Server-Root-Path")) 
+		#set($ruleArgs = {})
+		#set($rootPath = $ctx.runRule($ruleObj, $ruleArgs))
+		#if( $ruleObj )
+		$ctx.decache($ruleObj)
+		#end
+   		#if($workItem.getType().toString().equalsIgnoreCase("Certification"))
+		    #set($currentYear = $spTools.formatDate($workItem.getActivated(),"YYYY"))
+			<![CDATA[<html>
+				<head>
+				<meta charset="UTF-8">	    
+				#if( $styleSheet )
+				$styleSheet
+				#end 
+				</head>
+		    	<body>
+		    	#if( $headerTemplate )
+				$headerTemplate
+				#end
+				<br/>    
+		    	#if ($workItem.getOwner().getDisplayName()) 
+					Dear $workItem.getOwner().getDisplayName(),<br/>
+				#elseif($workItem.getOwner().getFirstname())
+					Dear $workItem.getOwner().getFirstname(),<br/>
+	 			#else 
+					Dear $workItem.getOwner().getName(),<br/>
+				#end<br/> 	
+				<p>
+	      		You are receiving this message as part of the $currentYear Access Certification process.
+				</p>
+				#if( $footerTemplate )
+				$footerTemplate
+				#end
+				</body>
+		</html>]]>
+   	#else
+	    #set($requesteeIdentity = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Identity"),$workItem.targetName))
+	    #set($ownerIdentity = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Identity"),$workItem.owner.name))
+	    #set($reqType = $workflow.requestType)
+	    #if( $workItem.identityRequestId )
+		#set($accessReqNumber = $workItem.identityRequestId)
+	    #end
+	    <![CDATA[<html>
+	    	<head>
+			<meta charset="UTF-8">	    
+			#if( $styleSheet )
+			$styleSheet
+			#end 
+			</head>
+        	<body>
+	    	#if( $headerTemplate )
+			$headerTemplate
+			#end
+			<br/>         
+			#if ($ownerIdentity.getDisplayName()) 
+				Dear $ownerIdentity.getDisplayName(),<br/>
+			#elseif($ownerIdentity.getFirstname())
+				Dear $ownerIdentity.getFirstname(),<br/>
+			#else
+				Dear $ownerIdentity.getName(),<br/>
+			#end<br/> 
+			<br/>
+			This is a notification of a request that has been forwarded and is now assigned to you. 
+			<br/>
+			<p>Please review and provide your decision <a href="$rootPath/workitem/workItem.jsf?id=$workItem.id">here.</a></p>
+	  #if( $accessReqNumber )
+      Request Number:  $accessReqNumber<br/>
+      #end
+      #if( $requesteeIdentity )
+      Request For Identity:  <strong>$requesteeIdentity.name</strong><br/>
+      Request For Identity Display Name:  <strong>$requesteeIdentity.getDisplayName()</strong><br/>
+      #end
+      Request:<br/>
+			#if ( $workItem.approvalSet.items )
+				#foreach ($approvalItem in $workItem.approvalSet.items)				
+					#if ( $approvalItem.displayValue )
+						<strong>$!approvalItem.operation $approvalItem.displayValue</strong><br/>
+					#elseif ($approvalItem.value && $approvalItem.name && $approvalItem.application)
+						#set($ruleObj = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Rule"), "Rule-Framework-ManagedAttribute-GetDisplayValue")) 
+						#set($ruleArgs = { 
+						    "attrName"  : $approvalItem.name, 
+						    "attrValue" : $approvalItem.value,
+						    "attrApp"   : $approvalItem.application 
+						}) 
+						#set($attrDisplayValue = $ctx.runRule($ruleObj, $ruleArgs))
+						#if( $ruleObj )
+						$ctx.decache($ruleObj)
+						#end
+						<strong>$!approvalItem.operation $attrDisplayValue</strong><br/>
+					#elseif ($approvalItem.value.class.name == "java.util.List" || $approvalItem.value.class.name == "java.util.ArrayList")
+						<strong>$!approvalItem.operation $approvalItem.value.get(0)</strong><br/>
+					 #elseif($approvalItem.value)
+						<strong>$!approvalItem.operation  $approvalItem.value</strong><br/>
+					    #elseif ($approvalItem.application)
+						<strong>$!approvalItem.operation  Account on $approvalItem.application</strong><br/>
+					   #end
+				#end
+			#end
+	    	#if ($dynamicAppContent)
+			<table>
+			#foreach( $key in $dynamicAppContent.keySet() )
+			<tr><td>$key</td><td>$dynamicAppContent.get($key)</td></tr>
+			#end
+			</table>
+			#end
+			#if( $footerTemplate )
+			$footerTemplate
+			#end
+			#if( $requesteeIdentity )
+			$ctx.decache($requesteeIdentity)
+			#end
+			#if( $ownerIdentity )
+			$ctx.decache($ownerIdentity)
+			#end
+			</body>
+	    </html>]]>
+    #end
+    
+	</Body>
+  <Description>
+		Email Template for notifying the requester/new owner of a work item
+		that it has been forwarded.
+	</Description>
+  <Signature>
+    <Inputs>
+      <Argument name="workItem" type="WorkItem">
+        <Description>The WorkItem object being forwarded.</Description>
+      </Argument>
+      <Argument name="workItemName" type="string">
+        <Description>The name (also the description) of the WorkItem on
+					which a comment was added.</Description>
+      </Argument>
+      <Argument name="previousOwner" type="string">
+        <Description>The display name of the Identity that was the previous
+					owner of the work item.</Description>
+      </Argument>
+      <Argument name="newOwner" type="string">
+        <Description>The display name of the Identity that is the new owner
+					of the work item.</Description>
+      </Argument>
+      <Argument name="requester" type="string">
+        <Description>The display name of the Identity that requested the
+					forwarding.</Description>
+      </Argument>
+      <Argument name="forwardDate" type="date">
+        <Description>The date the forwarding was requested, represented as a
+					java.util.Date object.</Description>
+      </Argument>
+      <Argument name="commentText" type="string">
+        <Description>Comments about the forwarding .</Description>
+      </Argument>
+    </Inputs>
+  </Signature>
+  <Subject>#if($workItem.getType().toString().equals("Certification"))New certification reassignment request: $workItemName #else Action Required:  Access Request Reassigned#end</Subject>
+</EmailTemplate>

@@ -1,0 +1,100 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule-FrameworkTerminateXDays">
+  <Description>
+  		Used for TerminationProcess and Delay
+ 	</Description>
+  <ReferencedRules>
+    <Reference class="sailpoint.object.Rule" name="Rule-Framework-WrapperRuleLibrary"/>
+  </ReferencedRules>
+  <Signature returnType="Object">
+    <Inputs>
+      <Argument name="context">
+        <Description>
+					SailPointContext
+				</Description>
+      </Argument>
+      <Argument name="allAcctRequests">
+        <Description>
+					Days
+				</Description>
+      </Argument>
+      <Argument name="xDays">
+        <Description>
+					Days
+				</Description>
+      </Argument>
+      <Argument name="identityName">
+        <Description>
+					Identity
+				</Description>
+      </Argument>
+      <Argument name="appName">
+        <Description>
+					Application
+				</Description>
+      </Argument>
+      <Argument name="nativeId">
+        <Description>
+					Native ID from Account
+				</Description>
+      </Argument>
+      <Argument name="requestType">
+        <Description>
+					Type of Request is equivalent to Feature
+				</Description>
+      </Argument>
+      <Argument name="spExtAttrs">
+        <Description>
+					Any extended attributes in the workflow
+				</Description>
+      </Argument>
+    </Inputs>
+  </Signature>
+  <Source><![CDATA[
+  
+  		import java.util.ArrayList;
+		import java.util.List;
+		import java.util.concurrent.TimeUnit;
+		import org.apache.log4j.Level;
+		import org.apache.commons.logging.Log;
+		import org.apache.commons.logging.LogFactory;
+		import sailpoint.api.SailPointContext;
+		import sailpoint.object.Application;
+		import sailpoint.object.Identity;
+		import sailpoint.object.ProvisioningPlan;
+		import sailpoint.object.ProvisioningPlan.AccountRequest;
+		import sailpoint.tools.GeneralException;	
+		import sailpoint.rapidapponboarding.rule.WorkflowUtil;
+		import sailpoint.rapidapponboarding.logger.LogEnablement;	
+	  	Log logger = LogFactory.getLog("rapidapponboarding.rules");
+	 	Identity identity= context.getObjectByName(Identity.class, identityName);
+		ProvisioningPlan plan = new ProvisioningPlan();
+   		List allRequests = new ArrayList();
+  		allRequests=allAcctRequests;  		
+  		if (!(allRequests.isEmpty())) 
+	    {
+			if (plan == null) 
+			{
+				plan = new ProvisioningPlan();
+			}
+			if (identity != null) 
+			{
+   				plan.setIdentity(identity);
+			}
+           	for (AccountRequest acctReq : allRequests) 
+           	{
+           		plan.add(acctReq);
+           	}
+           	// TAKE NUMBER OF DAYS AND GET TO THE SECONDS
+           	if(xDays!=null)
+           	{
+           	int amountOfDays = Integer.parseInt(xDays);
+			int daysInSeconds = TimeUnit.DAYS.toSeconds(amountOfDays);			
+			WorkflowUtil.launchRequestManagerWorkflow(context,identityName, plan, "", null, daysInSeconds,"XDAYS", null,null,"LeaverXDays",null);
+			}
+       	}
+		return null;
+    
+]]></Source>
+</Rule>

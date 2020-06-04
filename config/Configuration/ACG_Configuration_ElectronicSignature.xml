@@ -1,0 +1,19 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Configuration PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Configuration name="ElectronicSignature">
+  <Attributes>
+    <Map>
+      <entry key="types">
+        <value>
+          <List>
+            <ESignatureType displayName="" name="SmartServices Electronic Signature">
+              <Map>
+                <entry key="en_US" value="Electronic Signature Required:  Please provide your user name and password."/>
+              </Map>
+            </ESignatureType>
+          </List>
+        </value>
+      </entry>
+    </Map>
+  </Attributes>
+</Configuration>

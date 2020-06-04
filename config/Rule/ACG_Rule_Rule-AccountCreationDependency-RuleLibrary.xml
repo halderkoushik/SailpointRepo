@@ -1,0 +1,370 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule-AccountCreationDependency-RuleLibrary">
+  <Source><![CDATA[
+		
+			import sailpoint.object.ProvisioningPlan;
+			import sailpoint.object.ProvisioningResult;
+			import sailpoint.object.ProvisioningPlan.AccountRequest;
+			import sailpoint.object.ProvisioningPlan.AccountRequest.Operation;
+			import sailpoint.object.ProvisioningPlan.AttributeRequest;
+			import sailpoint.object.Application;
+			import sailpoint.object.Schema;
+			import sailpoint.object.Rule;
+			import sailpoint.object.QueryOptions;
+			import sailpoint.object.IdentityEntitlement;
+			import sailpoint.object.Filter;
+			import sailpoint.object.Identity;
+			import sailpoint.api.SailPointContext;
+			import sailpoint.tools.GeneralException;
+			import sailpoint.tools.Util;
+			import sailpoint.rapidapponboarding.rule.AuditRuleLibrary;
+			import sailpoint.rapidapponboarding.logger.LogEnablement;
+			import sailpoint.rapidapponboarding.rule.WorkflowUtil;
+			import org.apache.commons.logging.Log;
+			import org.apache.commons.logging.LogFactory;
+			Log acLogger = LogFactory.getLog("rapidapponboarding.rules");
+			/**
+		     * Inspects the specified ProvisioningPlan object and adds dependency entitlements as new Account Requests, if any are configured,
+		     * for the Application specified by appName. The following conditions must be met
+		     * 1) The ProvisioningPlan must have an Account Create operation for the Application
+		     * 2) The request type must be an internal Cart, Batch or Joiner/Rehire
+		     * 3) If the Application has a dependency conditional rule, it must evaluate to TRUE, or the conditional rule
+		     *    must be blank
+		     * 4) The Application must have dependency entitlements correctly configured
+		     * 5) The ProvisioningResult in the plan parameter must have a "committed" status
+		     *
+		     * @param plan the ProvisioningPlan object which is passed from an After Provisioning Rule
+		     * @param appName the Application name which requires the dependency
+		     * @throws GeneralException
+		     */
+			public void addAccountCreateDependencyRequests(ProvisioningPlan plan, String appName) throws GeneralException {
+				LogEnablement.isLogDebugEnabled(acLogger,"Enter addAccountCreateDependencyRequests for app: " + appName);
+				if(isOriginalProvisioningSuccessful(plan)) {
+					if(plan != null && appName != null) {
+						//Step 1:Examine the request type and make sure that it's either a Cart Request, Joiner/Rehire Lifecycle or Batch (this will also be Cart Request)
+						String requestType = plan.getString("requestType");
+						LogEnablement.isLogDebugEnabled(acLogger,"request type: " + requestType);
+						if(requestType == null || (requestType != null && (requestType.equalsIgnoreCase("CART REQUEST FEATURE") || requestType.equalsIgnoreCase("JOINER FEATURE") || requestType.equalsIgnoreCase("MANAGE ACCOUNTS FEATURE") || requestType.equalsIgnoreCase("JOINER REHIRE FEATURE")))) {
+							boolean provisionDependencies = true;
+							//Step 2: Check if this app has a conditional dependency rule, if yes then execute it
+							//If no rule exists, then continue with provisioning
+							Map appAttributesMap = getApplicationDependencyAttributes(appName);
+							if(appAttributesMap != null) {
+								if(appAttributesMap.get("ruleName") != null && Util.isNotNullOrEmpty(appAttributesMap.get("ruleName").toString())) {
+									//This map contains arguments passed into the conditional rule
+									//Add more parameters here if needed
+									Map ruleParams = new HashMap();
+									ruleParams.put("appName", appName);
+									ruleParams.put("originalPlan", plan); //Should we instead make a copy of the plan??
+									provisionDependencies = runDependencyConditionalRule(appAttributesMap.get("ruleName").toString(), ruleParams);	
+								}
+								//Step 3: Check if the provisioning should be executed
+								if(provisionDependencies) {
+									//Step 4: Check if the application in turn has dependency entitlements
+									if(appAttributesMap.get("dependencyEntitlements") != null && Util.isNotNullOrEmpty(appAttributesMap.get("dependencyEntitlements").toString())) {
+										//Step 5: Check if the current ProvisioningPlan contains account Create operations for the current application
+										if(hasAccountCreateOp(plan, appName)) {
+											//Step 6: Create a new ProvisioningPlan with the dependency entitlements and launch the provisioning in a new Workflow 
+											ProvisioningPlan dependencyPlan = createDependencyEntitlementPlan(appAttributesMap.get("dependencyEntitlements").toString(), plan);
+											launchDependencyEntitlementProvisioning(dependencyPlan, appName);
+										}
+										else {
+											LogEnablement.isLogDebugEnabled(acLogger,"Account dependency provisioning for app: " + appName + " will be skipped because the app has no account Create operation in this Provisioning Plan");
+										}
+									}
+									else {
+										LogEnablement.isLogDebugEnabled(acLogger,"Account dependency provisioning for app: " + appName + " will be skipped because the app has no dependency entitlements");
+									}
+								}
+								else {
+									LogEnablement.isLogDebugEnabled(acLogger,"Account dependency provisioning for app: " + appName + " will be skipped due to its conditional rule");
+								}
+							}
+						}
+						else {
+							LogEnablement.isLogDebugEnabled(acLogger,"Account dependency provisioning for app: " + appName + " will be skipped because the request type is not Cart, Batch or Joiner/Rehire");
+						}
+					}
+					else {
+						LogEnablement.isLogDebugEnabled(acLogger,"Account dependency provisioning for app: " + appName + " will be skipped because the provisioning plan or appName are null");
+					}
+				}
+				else {
+					LogEnablement.isLogDebugEnabled(acLogger,"Account dependency provisioning for app: " + appName + " will be skipped because the provisioning result for the original plan was unsuccessful");
+				}
+				LogEnablement.isLogDebugEnabled(acLogger,"Exit addAccountCreateDependencyRequests for app: " + appName);
+			}
+			/**
+		     * Launches a new Workflow instance to provision the specified ProvisioningPlan
+		     *
+		     * @param dependencyPlan the ProvisioningPlan which contains the new dependency requests
+		     * @param appName the name of the Application which requires the dependency
+		     */
+			public void launchDependencyEntitlementProvisioning(ProvisioningPlan dependencyPlan, String appName) {
+				if(dependencyPlan != null && dependencyPlan.getAccountRequests() != null && !dependencyPlan.getAccountRequests().isEmpty()) {
+						WorkflowUtil.launchRequestManagerWorkflow(context,dependencyPlan.getIdentity().getName(), dependencyPlan, "false", "", 10, null, "true", null, "NewAccountDependency",null);
+				}
+				else {
+					LogEnablement.isLogDebugEnabled(acLogger,"Dependency entitlement provisioning for: " + appName + " was not launched because the plan is null or has no account requests");
+				}
+			}
+			/**
+		     * Returns a new ProvisioningPlan containing dependency entitlements as new Account Requests, if any are configured, 
+		     * for the Application specified by appName. The entitlements are parsed based on the format:
+		     * AppName1#EntitlementName#EntitlementValue|AppName2#EntitlementName#EntitlementValue
+		     *
+		     * @param dependencyEntitlements a String representing the dependency entitlements in the format above
+		     * @param plan the ProvisioningPlan which is passed from an After Provisioning Rule
+		     * @return a new ProvisioningPlan containing dependency entitlements as new Account Requests, if any are configured, 
+		     * for the Application specified by appName.    
+		     */
+			public ProvisioningPlan createDependencyEntitlementPlan(String dependencyEntitlements, ProvisioningPlan plan) 
+			{
+				LogEnablement.isLogDebugEnabled(acLogger,"dependencyEntitlements: " + dependencyEntitlements);
+				String[] entitlementArray = null;
+				ProvisioningPlan dependencyPlan = new ProvisioningPlan();
+				dependencyPlan.setIdentity(plan.getIdentity());
+				dependencyPlan.setArguments(plan.getArguments());
+				//Split string into individual entitlements
+				if(dependencyEntitlements.indexOf("|") > 0) {
+					entitlementArray = dependencyEntitlements.split("\\|");
+				}
+				else {
+					entitlementArray = new String[1];
+					entitlementArray[0] = dependencyEntitlements;
+				}
+				 LogEnablement.isLogDebugEnabled(acLogger,"entitlementArray: " + entitlementArray);
+				if(entitlementArray != null && entitlementArray.length > 0) 
+				{
+					for(String entString : entitlementArray) 
+					{
+					    LogEnablement.isLogDebugEnabled(acLogger,"entString: " + entString);
+						//Check if the identity already has the dependency entitlement. Skip if it already has it
+						if(!hasDependencyEntitlement(plan.getIdentity(), entString)) {
+							AccountRequest newAcctReq = createAccountRequest(entString);
+							if(newAcctReq != null) {
+								dependencyPlan.add(newAcctReq);							
+							}
+						}
+					}
+				}
+				return dependencyPlan;
+			}
+			/**
+		     * Returns an AccountRequest built from parsing the input entString parameter.
+		     * The entitlement is parsed based on the format: AppName#EntitlementName#EntitlementValue.
+		     * Returns null if entString cannot be parsed into exactly three non-null, non-empty values.
+		     *
+		     * @param entString a String representing one entitlement in the format above
+		     * @return an Account Request built from parsing the input entString parameter. 
+		     *	Returns null if entString cannot be parsed into exactly three non-null, non-empty values.   
+		     */
+			public AccountRequest createAccountRequest(String entString) {
+				AccountRequest acctReq = null;
+				if(Util.isNotNullOrEmpty(entString)) {
+					String[] entArr = entString.split("#");
+					LogEnablement.isLogDebugEnabled(acLogger,"entArr: " + entArr);
+					if(entArr != null && entArr.length == 3 && Util.isNotNullOrEmpty(entArr[0]) && Util.isNotNullOrEmpty(entArr[1]) && Util.isNotNullOrEmpty(entArr[2])) {
+						String appName = entArr[0];
+						LogEnablement.isLogDebugEnabled(acLogger,"appName: " + appName);
+						String entName = entArr[1];
+						LogEnablement.isLogDebugEnabled(acLogger,"entName: " + entName);
+						String entValue = entArr[2];
+						LogEnablement.isLogDebugEnabled(acLogger,"entValue: " + entValue);
+						acctReq = new AccountRequest();
+						acctReq.setOperation(AccountRequest.Operation.Modify);
+						acctReq.setApplication(appName);
+						AttributeRequest attrReq = new AttributeRequest();
+						attrReq.setOp(getAttributeRequestOperation(appName, entName));
+						attrReq.setName(entName);
+						attrReq.setValue(entValue);
+						acctReq.add(attrReq);
+					}
+					else {
+						LogEnablement.isLogErrorEnabled(acLogger,"Cannot parse string " + entString + " into a valid AccountRequest");
+					}			
+				}
+				return acctReq;
+			}
+			/**
+		     * Returns true if the specified identity already has the entitlement parsed from the entString parameter. 
+		     * Otherwise returns false.
+		     *
+		     * @param identity the identity to check
+		     * @param entString a String representing one entitlement in the format AppName#EntitlementName#EntitlementValue
+		     * @return true if the specified identity already has the entitlement parsed from the entString parameter. 
+		     * Otherwise returns false.   
+		     */
+			public boolean hasDependencyEntitlement(Identity identity, String entString) {
+				boolean hasEntitlement = false;
+				if(Util.isNotNullOrEmpty(entString) && identity != null) {
+					String[] entArr = entString.split("#");
+					if(entArr != null && entArr.length == 3 && Util.isNotNullOrEmpty(entArr[0]) && Util.isNotNullOrEmpty(entArr[1]) && Util.isNotNullOrEmpty(entArr[2])) {
+						String appName = entArr[0];
+						String entName = entArr[1];
+						String entValue = entArr[2];
+						QueryOptions qo = new QueryOptions();
+						Filter queryFilter = Filter.and(Filter.eq("identity.name", identity.getName()),Filter.eq("application.name", appName), Filter.eq("name", entName), Filter.eq("value", entValue));
+						qo.addFilter(queryFilter);
+						Iterator resultIterator = context.search(IdentityEntitlement.class, qo, "id");
+						if(resultIterator != null) 
+						{
+							while(resultIterator.hasNext()) 
+							{
+								Object[] obj = resultIterator.next();
+								if(obj != null && obj.length > 0)
+								 {
+									hasEntitlement = true;
+								}
+							}
+						}
+						Util.flushIterator(resultIterator); 
+					}
+					else 
+					{
+						LogEnablement.isLogErrorEnabled(acLogger,"Cannot parse string " + entString);
+					}			
+				}
+				return hasEntitlement;
+			}
+			/**
+		     * Returns a ProvisioningPlan.Operation.Add if the attribute specified by entName exists in any
+		     * of the specified Application's Schemas as multi-valued. Otherwise returns a ProvisioningPlan.Operation.Set
+		     *
+		     * @param appName the name of the Application of the dependency entitlement being checked
+		     * @param entName the name of the attribute of the dependency entitlement being checked
+		     * @return a ProvisioningPlan.Operation.Add if the attribute specified by entName exists in any
+		     * of the specified Application's Schemas as multi-valued. Otherwise returns a ProvisioningPlan.Operation.Set.   
+		     */
+			public ProvisioningPlan.Operation getAttributeRequestOperation(String appName, String entName) {
+				ProvisioningPlan.Operation operation = ProvisioningPlan.Operation.Set;
+				Application app = context.getObjectByName(Application.class, appName);
+				if(app != null) {
+					List schemaList = app.getSchemas();
+					if(schemaList != null) {
+						for(Schema schema : schemaList) {
+							if(schema != null && schema.isMultiValued(entName)) {
+								operation = ProvisioningPlan.Operation.Add;
+							}
+						}
+					}
+				}
+				if(app!=null)
+				{
+				context.decache(app);
+				}
+				return operation;
+			}
+			/**
+		     * Returns true if the specified rule either doesn't exist or returns a TRUE Boolean or String value. 
+		     * Returns false if the returns any other value, or any other data type besides Boolean or String
+		     *
+		     * @param ruleName the name of the Rule to execute
+		     * @param ruleParams a Map with parameters that can be passed into the Rule
+		     * @return true if the specified rule either doesn't exist or returns a TRUE Boolean or String value.   
+		     */
+			public boolean runDependencyConditionalRule(String ruleName, Map ruleParams) {
+				Object ruleValue = null;
+				Rule rule = context.getObjectByName(Rule.class, ruleName);
+				if (rule == null){
+					LogEnablement.isLogErrorEnabled(acLogger,"No rule object found for: " + ruleName);
+					return true;
+				}
+				ruleValue = context.runRule(rule, ruleParams);
+				context.decache(rule);
+				if(ruleValue == null) {
+					return false;
+				}
+				else if(ruleValue instanceof Boolean) {
+					return ((Boolean)ruleValue).booleanValue();
+				}
+				else if(ruleValue instanceof String) {
+					return ((String)ruleValue).equalsIgnoreCase("TRUE");
+				}
+				else {
+					return false;
+				}
+			}
+			/**
+		     * Returns true if the Application specified by appName contains at least one AccountRequest with Create operation
+		     * in the specified ProvisioningPlan object.
+		     *
+		     * @param plan the ProvisioningPlan object
+		     * @param appName the name of the Application to check for 
+		     * @return true if the Application specified by appName contains at least one AccountRequest with Create operation
+		     * in the specified ProvisioningPlan object.
+		     */
+			public boolean hasAccountCreateOp(ProvisioningPlan plan, String appName) {
+				boolean hasAcctCreate = false;
+				List acctReqList = plan.getAccountRequests(appName);
+				if(acctReqList != null && !acctReqList.isEmpty()) {
+					for(AccountRequest acctReq : acctReqList) {
+						if(acctReq != null && acctReq.getOperation().equals(AccountRequest.Operation.Create)) {
+							hasAcctCreate = true;
+							break;
+						}
+					}
+				}
+				return hasAcctCreate;
+			}
+			/**
+		     * Returns a Map containing two keys called "dependencyEntitlements" and "ruleName", which contain values of
+		     * the respective specified Application's extended attribute named "accountCreateEntitlements" and "accountCreateConditionalRule".
+		     *
+		     * @param appName the name of the Application to retrieve the extended attributes for
+		     * @return Returns a Map containing two keys called "dependencyEntitlements" and "ruleName", which contain values of
+		     * 	the respective specified Application's extended attribute named "accountCreateEntitlements" and "accountCreateConditionalRule".   
+		     */
+			public Map getApplicationDependencyAttributes(String appName) {
+				Map attributeMap = new HashMap();
+				String ruleName = "";
+				String dependencyEntitlements = "";
+				if(appName != null) {
+					Application app = context.getObjectByName(Application.class, appName);
+					if(app != null) {
+						if(app.getAttributeValue("accountCreateEntitlements") != null) {
+							dependencyEntitlements = app.getAttributeValue("accountCreateEntitlements").toString();
+						}
+						if(app.getAttributeValue("accountCreateConditionalRule") != null) {
+							ruleName = app.getAttributeValue("accountCreateConditionalRule").toString();
+						}
+						context.decache(app);
+					}
+				}
+				attributeMap.put("ruleName", ruleName);
+				attributeMap.put("dependencyEntitlements", dependencyEntitlements);
+				return attributeMap;
+			}
+			/**
+		     * Returns true if any of the specified ProvisioningPlan or AccountRequests within the plan
+		     * contain a result status of "committed". Otherwise returns false.
+		     *
+		     * @param plan the ProvisioningPlan object that was provisioned and is passed from an After Provisioning rule.
+		     * @return true if any of the specified ProvisioningPlan or AccountRequests within the plan
+		     * contain a result status of "committed". Otherwise returns false.   
+		     */
+			public boolean isOriginalProvisioningSuccessful(ProvisioningPlan plan) {
+				boolean isSuccess = false;
+				if(plan != null) {
+					//Check the plan to see if the result is there
+					if(plan.getResult() != null && plan.getResult().isCommitted()) {
+						isSuccess = true;
+					}
+					else {
+						//If no plan result is available, then check the AccountRequests for this app to see if the result is there
+						List acctReqList = plan.getAccountRequests(application.getName());
+						if(acctReqList != null && !acctReqList.isEmpty()) {
+							for(AccountRequest acctReq : acctReqList) {
+								if(acctReq != null && acctReq.getResult() != null && acctReq.getResult().isCommitted()) {
+									isSuccess = true;
+								}
+							}
+						}
+					}
+				}
+				return isSuccess;
+			}
+		
+	]]></Source>
+</Rule>

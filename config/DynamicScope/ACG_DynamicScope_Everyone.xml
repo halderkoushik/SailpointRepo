@@ -1,3 +1,13 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <!DOCTYPE DynamicScope PUBLIC "sailpoint.dtd" "sailpoint.dtd">
-<DynamicScope allowAll="true" name="Everyone"/>
+<DynamicScope allowAll="true" name="Everyone">
+  <ManagedAttributeRequestControl>
+    <Reference class="sailpoint.object.Rule" name="Rule-FrameWorkRegularEntitlements"/>
+  </ManagedAttributeRequestControl>
+  <PopulationRequestAuthority>
+    <MatchConfig customControl="(correlated == true)" enableCustomControl="true" matchAll="true"/>
+  </PopulationRequestAuthority>
+  <RoleRequestControl>
+    <Reference class="sailpoint.object.Rule" name="Rule-FrameWorkRegularRoles"/>
+  </RoleRequestControl>
+</DynamicScope>

@@ -1,0 +1,100 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule-FrameWork-Move-Account">
+  <Signature returnType="Object">
+    <Inputs>
+      <Argument name="context">
+        <Description>
+				SailPointContext
+			</Description>
+      </Argument>
+      <Argument name="identityName">
+        <Description>
+				Identity Name
+			</Description>
+      </Argument>
+      <Argument name="appName">
+        <Description>
+				Application Name
+			</Description>
+      </Argument>
+      <Argument name="nativeId">
+        <Description>
+				Native ID from Account
+			</Description>
+      </Argument>
+      <Argument name="requestType">
+        <Description>
+				Type of Request is equivalent to Feature
+			</Description>
+      </Argument>
+      <Argument name="spExtAttrs">
+        <Description>
+				Any extended attributes in the workflow
+			</Description>
+      </Argument>
+      <Argument name="secondaryAccount">
+        <Description>
+				A String attribute to indicate which native Id needs to be returned from Create Provisioning Policy on Rule Execution
+				"TRUE" means , return privileged account native id
+			</Description>
+      </Argument>
+    </Inputs>
+    <Returns>
+      <Argument name="accReq">
+        <Description>
+				Return a List of Account Requests
+			</Description>
+      </Argument>
+    </Returns>
+  </Signature>
+  <Source><![CDATA[
+  
+  		import sailpoint.rapidapponboarding.rule.WrapperRuleLibrary;
+  		import sailpoint.rapidapponboarding.rule.ROADUtil;
+  		import sailpoint.object.ProvisioningPlan.AccountRequest;
+		import sailpoint.object.ProvisioningPlan.AttributeRequest;
+		//MOVE AND/OR RENAME Account
+	  	List retVal = new ArrayList();
+	  	AccountRequest.Operation acctOp = AccountRequest.Operation.Modify;
+	  	//Add DN Change - Start
+		String newDN=WrapperRuleLibrary.getNativeIdentityOnApplication(context,secondaryAccount,appName,identityName);
+		if(newDN!=null && nativeId!=null && !newDN.equalsIgnoreCase(nativeId))
+		{
+			 String newDNStrippedCN=WrapperRuleLibrary.stripCNFromNativeId(context,newDN);
+			 if(newDNStrippedCN!=null)
+			 {
+			 retVal.add(WrapperRuleLibrary.moveOU(newDNStrippedCN,appName,nativeId,"IdentityIQ Modified the DN on"));
+			 }
+		}
+		//Add DN Change - End
+		//Add CN Change - Start
+		if(newDN!=null && nativeId!=null)
+		{
+			String newCN=WrapperRuleLibrary.getCNFromNativeId(context,newDN);
+			if(newCN!=null)
+			{
+				newCN=newCN.toUpperCase();
+				String oldCN=WrapperRuleLibrary.getCNFromNativeId(context,nativeId);
+				if(oldCN!=null)
+				{
+					oldCN=oldCN.toUpperCase();
+					if(newCN!=null && oldCN!=null && newCN.length()>0 && oldCN.length()>0 && !newCN.equalsIgnoreCase(oldCN))
+					{
+						AttributeRequest renameAttrRequest= ROADUtil.renameCnFullName(newCN,appName,nativeId,"IdentityIQ Modified the CN on");
+						AccountRequest acctReq = new AccountRequest(acctOp, appName, null, nativeId);
+						if (acctReq != null && renameAttrRequest!=null) 
+						{
+							//Add CN Change
+							acctReq.add(renameAttrRequest);
+							retVal.add(acctReq);
+						}
+					}
+				}
+			}
+		}
+		//Add CN Change - End
+	 	return retVal;
+    
+]]></Source>
+</Rule>

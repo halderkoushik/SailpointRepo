@@ -1,0 +1,52 @@
+<!-- Copyright © 2018 SailPoint Technologies, Inc. All Rights Reserved.
+All logos, text, content, and works of authorship, including but not limited to underlying code, programming or scripting language, designs, and/or graphics,
+that are used and/or depicted herein are protected under United States and international copyright and trademark laws and treaties,
+and may not be used or reproduced without the prior express written permission of SailPoint Technologies, Inc. -->
+<!--
+Extended attribute mappings for ManagedAttributes.
+See comments in IdentityExtended.hbm.xml for more on how to manage
+extended attribute mappings.
+-->
+<!--OOTB , REPORTING START--> 
+<property name="extended1" type="string" length="450"
+          index="spt_manag_atr_extd1_ci"/>
+<property name="extended2" type="string" length="450"
+          index="spt_manag_atr_extd2_ci"/>
+<property name="extended3" type="string" length="450"
+          index="spt_manag_atr_extd3_ci"/>
+<!--               
+<property name="extended4" type="string" length="450"
+          index="spt_managed_attr_extended4_ci"/>
+<property name="extended5" type="string" length="450"
+          index="spt_managed_attr_extended5_ci"/>
+ -->
+<!--OOTB, REPORTING END--> 
+<!--JOINER, CERTIFICATION, ACCESS REQUEST, AGGREGATION, REPORTING START-->   
+<property name="isBirthright" type="string" length="450"
+              access="sailpoint.persistence.ExtendedPropertyAccessor"
+              index="spt_manag_atr_birth_ci"/>
+<!--JOINER, CERTIFICATION, ACCESS REQUEST, AGGREGATION, REPORTING END--> 
+<!--ACCESS REQUEST, REPORTING START-->  
+<property name="entBusApprovers" type="string" length="450"
+              access="sailpoint.persistence.ExtendedPropertyAccessor"
+              index="spt_manag_atr_eBusApp_ci"/>
+<property name="additionalEntBusApprovers" type="string" length="450"
+              access="sailpoint.persistence.ExtendedPropertyAccessor"
+              index="spt_manag_atr_addEntBusApr_ci"/>
+<!--ACCESS REQUEST, REPORTING END-->  
+<!--LOGICAL APPLICATIONS, CERTIFICATION, ACCESS REQUEST, REPORTING START-->  
+<property name="entAppName" type="string" length="450"
+              access="sailpoint.persistence.ExtendedPropertyAccessor"
+              index="spt_manag_atr_eAppName_ci"/>
+<!--LOGICAL APPLICATIONS, CERTIFICATION, ACCESS REQUEST, REPORTIN START-->  
+<!--PRIVILEGED SERVICE ACCOUNT,ACCESS REQUEST, AGGREGATION, REPORTING START--> 
+<property name="entPrivileged" type="string" length="450"
+              access="sailpoint.persistence.ExtendedPropertyAccessor"
+              index="spt_manag_atr_entPrivilgd_ci"/>        
+<!--PRIVILEGED SERVICE ACCOUNT,ACCESS REQUEST, AGGREGATION, REPORTING END--> 
+<!--AGGREGATION , REPORTING START--> 
+<property name="manualOverride" type="string" length="450"
+              access="sailpoint.persistence.ExtendedPropertyAccessor"
+              index="spt_manag_atr_manOver_ci"/>     
+<!--AGGREGATION, REPORTING END--> 
+              

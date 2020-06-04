@@ -1,0 +1,91 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE EmailTemplate PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<EmailTemplate name="EmailTemplate-Framework-ChallengeCreationNotification">
+  <Body>
+		
+		#set($ctx = $spTools.class.forName("sailpoint.api.SailPointFactory").getMethod("getFactory", null).invoke(null,null).getCurrentContext())
+		#set($ruleObj = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Rule"), "Rule-Framework-Header-Footer-StyleSheet")) 
+		#set($ruleArgs = { 
+		    "keyEmailTemplate"  : "styleSheet"
+		}) 
+		#set($styleSheet = $ctx.runRule($ruleObj, $ruleArgs))
+		#if( $ruleObj )
+		$ctx.decache($ruleObj)
+		#end
+		#set($ruleObj = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Rule"), "Rule-Framework-Header-Footer-StyleSheet")) 
+		#set($ruleArgs = { 
+		    "keyEmailTemplate"  : "headerTemplate"
+		}) 
+		#set($headerTemplate = $ctx.runRule($ruleObj, $ruleArgs))
+		#if( $ruleObj )
+		$ctx.decache($ruleObj)
+		#end
+		#set($ruleObj = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Rule"), "Rule-Framework-Header-Footer-StyleSheet")) 
+		#set($ruleArgs = { 
+		    "keyEmailTemplate"  : "footerTemplate"
+		}) 
+		#set($footerTemplate = $ctx.runRule($ruleObj, $ruleArgs))
+		#if( $ruleObj )
+		$ctx.decache($ruleObj)
+		#end
+		#set($ruleObj = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Rule"), "Rule-Server-Root-Path")) 
+		#set($ruleArgs = {})
+		#set($rootPath = $ctx.runRule($ruleObj, $ruleArgs))
+		#if( $ruleObj )
+		$ctx.decache($ruleObj)
+		#end
+		<![CDATA[<html>
+			<head>
+			<meta charset="UTF-8">	    
+			#if( $styleSheet )
+			$styleSheet
+			#end 
+			</head>
+	    	<body>
+	    	#if( $headerTemplate )
+			$headerTemplate
+			#end
+			<br/> 				
+			It has been determined that your access to '$challengeItem' will be limited or removed
+			completely.  You have $timeRemaining to challenge this decision.
+			Click on this link to challenge the decision: $rootPath/user/challenge.jsf?id=$challengeId
+	  		#if( $footerTemplate )
+			$footerTemplate
+			#end
+			</body>
+		</html>]]>
+		
+	</Body>
+  <Description>
+      Email Template for notifying a challenger that they can challenge a certification decision.
+    </Description>
+  <Signature>
+    <Inputs>
+      <Argument name="certification" type="Certification">
+        <Description>The Certification object containing the item being challenged.</Description>
+      </Argument>
+      <Argument name="certificationName" type="string">
+        <Description>The name of the certification.</Description>
+      </Argument>
+      <Argument name="entityName" type="string">
+        <Description>The name of the item being challenged.</Description>
+      </Argument>
+      <Argument name="challengeItem" type="string">
+        <Description>A short description of the item being challenged.</Description>
+      </Argument>
+      <Argument name="timeRemaining" type="string">
+        <Description>The time remaining in the challenge period, formatted as a string.</Description>
+      </Argument>
+      <Argument name="challengeId" type="string">
+        <Description>The database id of the WorkItem representing the challenge.</Description>
+      </Argument>
+      <Argument name="certificationItem" type="CertificationItem">
+        <Description>The CertificationItem being challenged.</Description>
+      </Argument>
+      <Argument name="workItem" type="WorkItem">
+        <Description>The WorkItem for the challenge</Description>
+      </Argument>
+    </Inputs>
+  </Signature>
+  <Subject>Access being removed or limited for '$challengeItem'</Subject>
+</EmailTemplate>

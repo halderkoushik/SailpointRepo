@@ -1,0 +1,160 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule-FrameworkEscalationType" type="Escalation">
+  <Description>Escalation rules are used by the Escalator to figure out
+        where to route notifiable items (work items or certification items)
+        that have expired.
+        Escalation rules return a string which specifies the name of the identity that
+        should receive the escalated item.</Description>
+  <Signature returnType="String">
+    <Inputs>
+      <Argument type="item">
+        <Description>
+                    The sailpoint.object.Notifiable to escalate.
+                </Description>
+      </Argument>
+    </Inputs>
+    <Returns>
+      <Argument type="newOwner">
+        <Description>
+                    The name of the Identity object that should be the new owner of
+                    the notifiable.
+                </Description>
+      </Argument>
+    </Returns>
+  </Signature>
+  <Source><![CDATA[
+        
+            import sailpoint.object.WorkItem;
+            import sailpoint.object.Attributes;
+            import sailpoint.object.Rule;
+            import sailpoint.object.Identity;
+            import sailpoint.object.EmailTemplate;
+            import sailpoint.object.EmailOptions;
+            import sailpoint.object.Notifiable;
+            import sailpoint.object.NotificationConfig;
+            import sailpoint.object.NotificationConfig.IConfig;
+            import sailpoint.object.NotificationConfig.EscalationConfig;
+            import sailpoint.tools.Util;
+            import org.apache.commons.logging.Log;
+            import org.apache.commons.logging.LogFactory;
+            import sailpoint.rapidapponboarding.logger.LogEnablement;
+            Log escalationLogger = LogFactory.getLog("rapidapponboarding.rules");
+            public String getManagerName(Notifiable item) {
+                String manager = "";
+                Identity owner = ((WorkItem)item).getOwner();
+                if(owner != null) {
+                    //If the owner is a workgroup, then it has no manager. Return the same owner
+                    if(owner.isWorkgroup()) {
+                        manager = owner.getName();
+                    }
+                    else {
+                        if(owner.getManager() != null) {
+                            manager = owner.getManager().getName();
+                            if(Util.isNullOrEmpty(manager)) {
+                                manager = null;
+                            }
+                        }
+                        else {
+                            manager = null;
+                        }
+                    }
+                }
+                return manager;
+            }
+            String newOwner = "";
+            if(item instanceof WorkItem) {
+                Attributes attrs = ((WorkItem)item).getAttributes();
+                //Be done if we're expired, otherwise IIQ will just keep
+                //escalating to the same individual.
+                if (item.isExpired()) {
+                    return null;
+                }
+                if(attrs != null) {
+                    Attributes workItemAttrs = (Attributes) attrs.get("workItemConfig");
+                    String escalationType = attrs.getString("escalationType");
+                    if(Util.isNotNullOrEmpty(escalationType)) {
+                        String templateName = "";
+                        EmailTemplate template = null;
+                        if(workItemAttrs != null && workItemAttrs.getString("escalationEmailTemplate") != null) {
+                            templateName = workItemAttrs.getString("escalationEmailTemplate");
+                            template = context.getObjectByName(EmailTemplate.class, templateName);
+                            //Clear the CC parameter in the email template, because it may have a cc email
+                            //from a previous escalation
+                            NotificationConfig notificationConfig = ((WorkItem)item).getNotificationConfig();
+                            if(notificationConfig != null && template != null) {
+                                template.setCc("");
+                                notificationConfig.setEscalationEmailTemplate(template);
+                                ((WorkItem)item).setNotificationConfig(notificationConfig);
+                            }
+                        }
+                        if(escalationType.equalsIgnoreCase("sameLevel")) {
+                            String sameLevelRuleName = attrs.getString("escalationSameLevelRule");
+                            if(Util.isNotNullOrEmpty(sameLevelRuleName)) {
+                                Rule sameLevelRule = context.getObjectByName(Rule.class, sameLevelRuleName);
+                                if(sameLevelRule != null) 
+                                {
+                                    Map ruleParams = new HashMap();
+                                    ruleParams.put("item", item);
+                                    newOwner = context.runRule(sameLevelRule, ruleParams);
+                                    context.decache(sameLevelRule);
+                                }
+                            }
+                        }
+                        else if(escalationType.equalsIgnoreCase("directManager")) {
+                            newOwner = getManagerName(item);
+                        }
+                        else if(escalationType.equalsIgnoreCase("emailToManager")) {
+                            String ownerEmail = "";
+                            //Do not escalate item, instead assign to same owner
+                            Identity owner = ((WorkItem)item).getOwner();
+                            if(owner != null) {
+                                if(owner.getEmail() != null) {
+                                    ownerEmail = owner.getEmail();
+                                }                               
+                            }
+                            String ccEmails = "";
+                            //If the owner is a Workgroup, then it has no manager
+                            if(!owner.isWorkgroup()) {
+                                String managerName = getManagerName(item);
+                                Identity manager = context.getObjectByName(Identity.class, managerName);
+                                if(manager != null && Util.isNotNullOrEmpty(manager.getEmail())) {
+                                    ccEmails += manager.getEmail();
+                                    context.decache(manager);           
+                                }
+                            }
+                            Identity requestee = context.getObjectById(Identity.class, ((WorkItem)item).getTargetId());
+                            if(requestee != null && Util.isNotNullOrEmpty(requestee.getEmail())) {
+                                if(Util.isNotNullOrEmpty(ccEmails)) {
+                                    ccEmails += ",";
+                                }
+                                ccEmails += requestee.getEmail();
+                                context.decache(requestee);         
+                            }
+                            if(Util.isNotNullOrEmpty(ccEmails)) {
+                                if(template != null) {
+                                    //Set the manager and requestee in the cc
+                                    NotificationConfig notificationConfig = ((WorkItem)item).getNotificationConfig();
+                                    if(notificationConfig != null) {
+                                        template.setTo(ownerEmail);
+                                        template.setCc(ccEmails);
+                                        notificationConfig.setEscalationEmailTemplate(template);
+                                        ((WorkItem)item).setNotificationConfig(notificationConfig);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            if(Util.isNotNullOrEmpty(newOwner)) 
+            {
+                return newOwner;
+            }
+            else 
+            {
+                return null;
+            }
+        
+    ]]></Source>
+</Rule>

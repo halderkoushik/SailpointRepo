@@ -1,0 +1,64 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule-FrameWorkApproversRule" type="Escalation">
+  <Description>Escalation rules are used by the Escalator to figure out
+		where to route notifiable items (work items or certification items)
+		that have expired.
+		Escalation rules return a string which specifies the name of the identity that
+		should receive the escalated item.</Description>
+  <Signature returnType="String">
+    <Inputs>
+      <Argument type="Workflow">
+        <Description>
+					The sailpoint.object.Notifiable to escalate.
+				</Description>
+      </Argument>
+    </Inputs>
+    <Returns>
+      <Argument type="sailpoint.object.Identity">
+        <Description>
+					The name of the Identity object
+				</Description>
+      </Argument>
+    </Returns>
+  </Signature>
+  <Source><![CDATA[
+		
+			import sailpoint.object.WorkItem;
+			import sailpoint.tools.Util;
+			import sailpoint.object.Identity;
+			import sailpoint.rapidapponboarding.rule.ROADUtil;
+			import org.apache.commons.logging.Log;
+			import org.apache.commons.logging.LogFactory;
+			import sailpoint.rapidapponboarding.logger.LogEnablement;
+			Log approvalLogger = LogFactory.getLog("rapidapponboarding.rules");
+			LogEnablement.isLogDebugEnabled(approvalLogger,"..Enter...Rule-FrameWorkApproversRule");
+			LogEnablement.isLogDebugEnabled(approvalLogger,"..workflow..."+workflow);
+			Map commonMap = ROADUtil.getCustomGlobalMap(context);
+			String apCreateEditWorkGroup=null;
+			if (commonMap != null && commonMap.containsKey("apCreateEditWorkGroup")) {
+			apCreateEditWorkGroup = (String) commonMap.get("apCreateEditWorkGroup");
+			}
+			if(apCreateEditWorkGroup!=null)
+			{
+				apCreateEditWorkGroup=apCreateEditWorkGroup.trim();
+			}
+			if(apCreateEditWorkGroup!=null && apCreateEditWorkGroup.length()>0)
+			{
+				LogEnablement.isLogDebugEnabled(approvalLogger,"..apCreateEditWorkGroup..."+apCreateEditWorkGroup);
+				Identity id=context.getObjectByName(Identity.class,apCreateEditWorkGroup);
+				if(id!=null)
+				{
+					LogEnablement.isLogDebugEnabled(approvalLogger,"..Exit...Rule-FrameWorkApproversRule");
+					return id;
+				}
+			}
+			else
+			{
+				LogEnablement.isLogDebugEnabled(approvalLogger,"..apCreateEditWorkGroup..."+apCreateEditWorkGroup);
+				LogEnablement.isLogDebugEnabled(approvalLogger,"..Exit...Rule-FrameWorkApproversRule");
+				return apCreateEditWorkGroup;
+			}
+		
+	]]></Source>
+</Rule>

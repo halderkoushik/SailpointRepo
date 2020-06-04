@@ -1,3 +1,37 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <!DOCTYPE ObjectConfig PUBLIC "sailpoint.dtd" "sailpoint.dtd">
-<ObjectConfig name="Link"/>
+<ObjectConfig name="Link">
+  <ObjectAttribute displayName="Locked Account" editMode="ReadOnly" name="lockedAccount" namedColumn="true" type="string">
+    <RuleRef>
+      <Reference class="sailpoint.object.Rule" name="Rule-FrameWork-Locked"/>
+    </RuleRef>
+    <AttributeSource name="GlobalRule:Rule-FrameWork-Locked">
+      <RuleRef>
+        <Reference class="sailpoint.object.Rule" name="Rule-FrameWork-Locked"/>
+      </RuleRef>
+    </AttributeSource>
+  </ObjectAttribute>
+  <ObjectAttribute displayName="Disabled Account" editMode="ReadOnly" name="disabledAccount" namedColumn="true" type="string">
+    <RuleRef>
+      <Reference class="sailpoint.object.Rule" name="Rule-FrameWork-Disabled"/>
+    </RuleRef>
+    <AttributeSource name="GlobalRule:Rule-FrameWork-Disabled">
+      <RuleRef>
+        <Reference class="sailpoint.object.Rule" name="Rule-FrameWork-Disabled"/>
+      </RuleRef>
+    </AttributeSource>
+  </ObjectAttribute>
+  <ObjectAttribute displayName="Privileged Account" editMode="ReadOnly" name="psAccount" namedColumn="true" type="string">
+    <RuleRef>
+      <Reference class="sailpoint.object.Rule" name="Rule-FrameWork-PSA"/>
+    </RuleRef>
+    <AttributeSource name="GlobalRule:Rule-FrameWork-PSA">
+      <RuleRef>
+        <Reference class="sailpoint.object.Rule" name="Rule-FrameWork-PSA"/>
+      </RuleRef>
+    </AttributeSource>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Privileged Account" displayName="Privileged Account Type" editMode="ReadOnly" name="apaccountType" namedColumn="true" type="string">
+    <Description>Privileged Account Type</Description>
+  </ObjectAttribute>
+</ObjectConfig>

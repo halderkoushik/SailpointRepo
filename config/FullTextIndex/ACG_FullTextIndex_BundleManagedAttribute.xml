@@ -1,8 +1,9 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <!DOCTYPE FullTextIndex PUBLIC "sailpoint.dtd" "sailpoint.dtd">
-<FullTextIndex name="BundleManagedAttribute">
+<FullTextIndex lastRefresh="1591302952395" name="BundleManagedAttribute">
   <Attributes>
     <Map>
+      <entry key="classes" value="BundleManagedAttribute"/>
       <entry key="fields">
         <value>
           <List>
@@ -32,6 +33,7 @@
         </value>
       </entry>
       <entry key="includeTargets" value="true"/>
+      <entry key="indexer" value="BundleManagedAttributeIndexer"/>
     </Map>
   </Attributes>
 </FullTextIndex>

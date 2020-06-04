@@ -1,0 +1,57 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule-FrameWork-View-SmartServices-RequestTypes" type="AllowedValues">
+  <Signature returnType="Object">
+    <Inputs>
+      <Argument name="log">
+        <Description>
+          The log object associated with the SailPointContext.
+        </Description>
+      </Argument>
+      <Argument name="context">
+        <Description>
+          A sailpoint.api.SailPointContext object that can be used to query the database if necessary.
+        </Description>
+      </Argument>
+      <Argument name="identity">
+        <Description>
+          The Identity object being provisioned.
+        </Description>
+      </Argument>
+      <Argument name="form">
+        <Description>
+          The Form object for the provisioning plan.
+        </Description>
+      </Argument>
+      <Argument name="field">
+        <Description>
+          The Field object being analyzed.
+        </Description>
+      </Argument>
+    </Inputs>
+    <Returns>
+      <Argument name="value">
+        <Description>
+          An Object (possibly a Collection) of the allowed values for the given
+          field.
+        </Description>
+      </Argument>
+    </Returns>
+  </Signature>
+  <Source><![CDATA[
+  	
+  			import sailpoint.rapidapponboarding.rule.ApprovalRuleLibrary;
+            List returnList  = new ArrayList();
+            Map customApprovalTypesMap = (Map) ApprovalRuleLibrary.getMappingObjectEntry(context, "Eligible Request Type Approvals");
+	        if(customApprovalTypesMap != null ) 
+	        {
+	            returnList = new ArrayList(customApprovalTypesMap.keySet());
+		        if(returnList!=null)
+		        {
+		        Collections.sort(returnList);
+		        return returnList;
+		        }
+		    }
+          
+  ]]></Source>
+</Rule>

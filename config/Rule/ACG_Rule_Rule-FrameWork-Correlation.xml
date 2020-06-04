@@ -1,0 +1,565 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule-FrameWork-Correlation" type="Correlation">
+  <Description>
+    Correlation rule
+  </Description>
+  <Signature returnType="Map">
+    <Inputs>
+      <Argument name="context">
+        <Description>
+          A sailpoint.api.SailPointContext object that can be used to
+          query the database to aid in correlation.
+        </Description>
+      </Argument>
+      <Argument name="environment" type="Map">
+        <Description>
+          Arguments passed to the aggregation task.
+        </Description>
+      </Argument>
+      <Argument name="application">
+        <Description>
+          Application being aggregated.
+        </Description>
+      </Argument>
+      <Argument name="account">
+        <Description>
+          A sailpoint.object.ResourceObject returned from the
+          collector.
+        </Description>
+      </Argument>
+      <Argument name="link">
+        <Description>
+          Existing link to this account.
+        </Description>
+      </Argument>
+    </Inputs>
+    <Returns>
+      <Argument name="identityName">
+        <Description>
+          The name of an Identity object.
+        </Description>
+      </Argument>
+      <Argument name="identity">
+        <Description>
+          A fully resolved Identity object if the rule wants
+          to do its own queries to locate the identity.
+        </Description>
+      </Argument>
+      <Argument name="identityAttributeName">
+        <Description>
+          The name of the extended attribute that can be used
+          to locate an existing identity.
+        </Description>
+      </Argument>
+      <Argument name="identityAttributeValue">
+        <Description>
+          The value of the named extended attribute that can be used
+          to locate an existing identity. This attribute is used
+          together with the identityAttributeName argument.
+        </Description>
+      </Argument>
+    </Returns>
+  </Signature>
+  <Source><![CDATA[
+    
+    import sailpoint.tools.Util;
+    import sailpoint.object.Filter;
+    import sailpoint.object.Filter.LeafFilter;
+    import sailpoint.object.QueryOptions;
+    import sailpoint.object.Identity;
+    import org.apache.commons.logging.Log;
+	import org.apache.commons.logging.LogFactory;
+    import java.util.regex.Matcher;
+	import java.util.regex.Pattern;
+	import sailpoint.object.CorrelationConfig;
+	import sailpoint.search.ExternalAttributeFilterBuilder;
+	import sailpoint.object.ObjectAttribute;
+	import sailpoint.object.ObjectConfig;
+	import sailpoint.object.Application;
+	import sailpoint.rapidapponboarding.rule.ROADUtil;
+	import sailpoint.rapidapponboarding.rule.ObjectConfigAttributesRuleLibrary;
+	import sailpoint.rapidapponboarding.rule.AggregationRuleLibrary;
+	import sailpoint.rapidapponboarding.logger.LogEnablement;
+	Log logger = LogFactory.getLog("rapidapponboarding.rules");
+	//Define Additional Correlation Parameters
+	HashMap params = new HashMap();
+	params.put("context", context);
+	params.put("environment", environment);
+	params.put("application", application);
+	params.put("account", account);
+	params.put("link", link);
+   /** 
+	* Get Regular Account Expression 
+	* 
+	*/
+	public String getRegularAttrExpression()
+	{
+	//Get Regular Account Expression
+	 String accountCorrelationAttrExpression=null;
+	 accountCorrelationAttrExpression=application.getAttributeValue("accountCorrelationAttrExpression");
+	 return accountCorrelationAttrExpression;
+	}
+	/** 
+	* Get Service Account Expression 
+	* 
+	*/
+	public String getSARegularAttrExpression()
+	{
+	//Get SA Account Expression
+	 String serviceAccountAttrExpression=null;
+	 serviceAccountAttrExpression=application.getAttributeValue("serviceAccountAttrExpression");
+	 return serviceAccountAttrExpression;
+	}
+    /** 
+	* Use Regular Expression to find service account, if matched, make sure it is not correlated to human cube
+	*/  
+     public String isSAAccountMatched()
+    {
+        String saText=null;
+	    String serviceAccountAttrExpression =getSARegularAttrExpression();
+	    if(serviceAccountAttrExpression!=null)
+		{
+			String[] saRegularAttrExpressionArr = serviceAccountAttrExpression.split("#IIQService#");
+			if(saRegularAttrExpressionArr != null && saRegularAttrExpressionArr.length == 3 && 
+			Util.isNotNullOrEmpty(saRegularAttrExpressionArr[0]) && Util.isNotNullOrEmpty(saRegularAttrExpressionArr[1])
+			&& Util.isNotNullOrEmpty(saRegularAttrExpressionArr[2]))
+			{
+				 String saAttr=saRegularAttrExpressionArr[0];
+				 String saRegeX=saRegularAttrExpressionArr[1];
+				 String operation=saRegularAttrExpressionArr[2];
+				 saText = account.getStringAttribute(saAttr);
+				 if(ROADUtil.executeStringComparison(saText,operation,saRegeX)>=1)
+				 {
+				  return saText; 
+				 }
+				 else
+				 {
+				 return null;
+				 }
+			}
+			else if(saRegularAttrExpressionArr != null && saRegularAttrExpressionArr.length == 2 && Util.isNotNullOrEmpty(saRegularAttrExpressionArr[0]) && Util.isNotNullOrEmpty(saRegularAttrExpressionArr[1]))
+			{
+				 String saAttr=saRegularAttrExpressionArr[0];
+				 String saRegeX=saRegularAttrExpressionArr[1];
+				 saText = account.getStringAttribute(saAttr);
+				 if(ROADUtil.executeRegex(saRegeX,saText)>=1)
+				 {
+				  return saText; 
+				 }
+				 else
+				 {
+				 return null;
+				 }
+			}
+		}
+		return saText;
+   }
+    /** 
+	* A convenience function that tells IdentityIQ to ignore workgroup indexes 
+	* in queries issued against the backing relational database.  This can be 
+	* a performance boost for installations on relational engines with poor 
+	* index performance for bit-wise/boolean data columns like used on 
+	* "spt_identity.workgroup" 
+	*/  
+	public QueryOptions setIgnoreWorkgroupIndexes(QueryOptions qo) {  
+		ArrayList trueAndFalse = new ArrayList();  
+		trueAndFalse.add(new java.lang.Boolean(true));  
+		trueAndFalse.add(new java.lang.Boolean(false));  
+		qo.addFilter(Filter.in("workgroup", trueAndFalse));  
+		return qo;  
+	}  
+  /** 
+	* Correlate Human Cube
+	*/  
+public HashMap correlateHumanCube(List correlationProperites, String acctName, String appName, String operation, Application application) 
+  {
+	   Map correlateMap = new HashMap();
+	    // If IdentityIQ already has a Link modeled for this account then it will pass  
+		// the Link object into this rule as "link".  This can be used to identify  
+		// circumstances where the Correlation Rule is going to change which Identity  
+		// object this account currently correlates to.  
+		// The messages logged here are expensive in terms of performance; the  
+		// link.getIdentity() loads a full Identity cube into memory and should be  
+		// avoided unless explicitly required.  This block of code guards that slow  
+		// operation with a isTraceEnabled() call to only run the code if the user  
+		// turns on trace-level debugging for the correlation rule.  
+                if ( (logger.isTraceEnabled()) && (void != link) && (null != link) )
+                {
+                   String linkName = link.getNativeIdentity();
+                   Identity id = link.getIdentity();
+                   if (null != id) {
+                     String oldIdName = id.getName();
+                     logger.trace("Account [" + linkName + "] previously correlated to [" + oldIdName + "]");
+                   } else {
+                     logger.trace("Link without an identity: " + linkName);
+                  }
+                }
+		String accountProperty=null;
+		String identityProperty=null;
+		String acctPropertyValue=null;
+		if(correlationProperites!=null && correlationProperites.size()==2)
+		{
+		  accountProperty  = (String) correlationProperites.get(0);  
+		  identityProperty = (String) correlationProperites.get(1); 
+		} 
+		if(accountProperty!=null)
+		{
+			acctPropertyValue = account.getStringAttribute(accountProperty); 
+			if ( (null == acctPropertyValue) || (0 == acctPropertyValue.length()) ) 
+			{  
+	  			LogEnablement.isLogDebugEnabled(logger,"Account [" + acctName +  "] has no value populated " + "for correlation property:[" + accountProperty + "]");  
+				return correlateMap;
+			} 
+		}
+		// We have a valid acctPropertyValue to try and match an Identity against.  
+		QueryOptions qo = new QueryOptions();  
+		setIgnoreWorkgroupIndexes(qo); // Performance optimization.
+		// Use a projection query first to return minimal data.  
+		ArrayList returnCols = new ArrayList();  
+		returnCols.add("id");  
+		returnCols.add("name");  
+		String identityId = null;  
+		String identityName = null;  
+		int matchCount = 0;  
+		//Let's see if we have Correlation Config Defined on Application
+		if(application.getAccountCorrelationConfig()!=null)
+		{
+		  LogEnablement.isLogDebugEnabled(logger,"Found Correlation Config");  
+		   CorrelationConfig config=application.getAccountCorrelationConfig();
+		   List correlateFilters = config.getAttributeAssignments();
+		   LogEnablement.isLogDebugEnabled(logger,"correlateFilters.."+correlateFilters);  
+           if ( correlateFilters!=null && Util.size(correlateFilters) > 0 )
+           {
+              ObjectConfig objConfig = Identity.getObjectConfig();
+              for ( Filter filter : correlateFilters ) 
+              {
+                        LeafFilter leafFilter = (LeafFilter)filter;
+                 		//Start Correlation Config Match Here
+                 		if(leafFilter!=null)
+                 		{
+	                 		String acctProperty = Util.getString((String)leafFilter.getValue());
+	                 		String acctPropertyValue=null;
+	                 		if(acctProperty!=null && account!=null)
+	                 		{
+	                 		  acctPropertyValue = Util.getString(account.getStringAttribute(acctProperty));
+	                 		}
+	                 		String identityProperty = leafFilter.getProperty();
+	                 		if(identityProperty!=null && acctPropertyValue!=null && identityProperty.length()>0 && acctPropertyValue.length()>0
+	                 		&& objConfig!=null && identityProperty!=null)
+	                 		{
+	                 		     Filter preparFilter=null;
+	                 		     ObjectAttribute objectAttr = objConfig.getObjectAttribute(identityProperty);
+	                 		      LogEnablement.isLogDebugEnabled(logger,"objectAttr.."+objectAttr);  
+	                 		     if(objectAttr.isMulti())
+	                 		     {
+		                 		   	 List listValues = Util.asList(acctPropertyValue);
+	            					 preparFilter = ExternalAttributeFilterBuilder.buildAndFilter(
+	                                 ExternalAttributeFilterBuilder.IDENTITY_EXTERNAL,
+	                                 ExternalAttributeFilterBuilder.IDENTITY_JOIN,
+	                                 identityProperty,
+	                                 listValues,
+	                                 leafFilter.getOperation().toString());
+                                 }
+                                 else
+                                 {
+                                 	 preparFilter=Filter.ignoreCase(Filter.eq(identityProperty, acctPropertyValue));
+                                 }
+		                         qo.addFilter(preparFilter);
+		                         LogEnablement.isLogDebugEnabled(logger,"qo.."+qo);  
+		                     	// Execute the query against the IdentityIQ database.  
+								Iterator configIteraor = context.search(Identity.class, qo, returnCols); 
+								if(configIteraor!=null)
+								{ 
+									while (configIteraor.hasNext()) 
+									{  
+										Object[] retObjsConfig = (Object[]) configIteraor.next();
+										if(retObjsConfig.length==2)
+										{  
+										identityId   = (String) retObjsConfig[0];  
+										identityName = (String) retObjsConfig[1];    
+										LogEnablement.isLogDebugEnabled(logger,"Matched property [" + accountProperty + "] of [" + acctPropertyValue + "] to identity [" + identityName + "]");  
+										matchCount++;
+										} 
+									}  
+									Util.flushIterator(configIteraor); 
+									if (1 == matchCount) 
+									{  
+							  		  // We matched exactly 1 and only 1 Identity.  Verify that it is not  
+									  // a workgroup and if it is not then this is an affirmative correlation.
+										if(identityId!=null)
+										{  
+											Identity identity = context.getObjectById(Identity.class, identityId);  
+											if (identity!=null && identity.isWorkgroup()) 
+											{  
+												logger.warn("Account " + acctName + " correlated to Workgroup " + identityName + ", skipping workgroup match.");  
+											} 
+											else if(identity!=null)
+											{  
+												// We have a definite non-workgroup, single Identity object  
+												// correlation. Return this Identity back to the Aggregator.  
+												LogEnablement.isLogDebugEnabled(logger,"Account [" + acctName + "] correlating to Identity [" + identity.getName() + "] by match on [" + accountProperty + "]");  
+												correlateMap.put("identity", identity);  
+												return correlateMap;                    
+											}  
+										}// Found Identity Id
+									}//Found Match
+								}//Found Iterator Match
+						}// Found Identity Property And Account Property Value
+					}//Filter is Defined
+               }// Iterator through All Filters in Order
+             }//Found Filters on Correlation Config
+        }// Found Correlation Config
+        else
+        {
+           //Operation Defined, Use String Comparison
+			if(operation!=null && operation.equalsIgnoreCase("STARTSWITH"))
+			{
+			qo.addFilter(Filter.ignoreCase(Filter.like(identityProperty, acctPropertyValue, Filter.MatchMode.START)));
+			}
+			else if(operation!=null && operation.equalsIgnoreCase("CONTAINS"))
+			{
+			qo.addFilter(Filter.ignoreCase(Filter.like(identityProperty, acctPropertyValue, Filter.MatchMode.ANYWHERE)));
+			}
+			else if(operation!=null && operation.equalsIgnoreCase("ENDSWITH"))
+			{
+			qo.addFilter(Filter.ignoreCase(Filter.like(identityProperty, acctPropertyValue, Filter.MatchMode.END)));
+			}
+			else if(operation!=null && operation.equalsIgnoreCase("EQUALS"))
+			{
+			qo.addFilter(Filter.ignoreCase(Filter.eq(identityProperty, acctPropertyValue)));
+			}
+			//No Operation Defined , Use Java Regular Expression
+			else
+			{
+			qo.addFilter(Filter.ignoreCase(Filter.eq(identityProperty, acctPropertyValue)));
+			}
+		}
+		// Execute the query against the IdentityIQ database.  
+		Iterator it = context.search(Identity.class, qo, returnCols); 
+		if(it!=null)
+		{ 
+			while (it.hasNext()) 
+			{  
+				Object[] retObjs = (Object[]) it.next();
+				if(retObjs.length==2)
+				{  
+				identityId   = (String) retObjs[0];  
+				identityName = (String) retObjs[1];    
+				LogEnablement.isLogDebugEnabled(logger,"Matched property [" + accountProperty + "] of [" + acctPropertyValue + "] to identity [" + identityName + "]");  
+				matchCount++;
+				} 
+			}  
+			Util.flushIterator(it); 
+		} 
+  		// Inform the log file in the event of a multi/non-deterministic match.  
+		if (1 < matchCount) 
+		{  
+			logger.warn("Multiple Identity objects matched property [" + accountProperty + "] of [" + acctPropertyValue + "]");  
+		}  
+  		if (1 == matchCount) 
+		{  
+  		// We matched exactly 1 and only 1 Identity.  Verify that it is not  
+		// a workgroup and if it is not then this is an affirmative correlation.
+			if(identityId!=null)
+			{  
+				Identity identity = context.getObjectById(Identity.class, identityId);  
+				if (identity!=null && identity.isWorkgroup()) 
+				{  
+					logger.warn("Account " + acctName + " correlated to Workgroup " + identityName + ", skipping workgroup match.");  
+				} 
+				else if(identity!=null)
+				{  
+					// We have a definite non-workgroup, single Identity object  
+					// correlation. Return this Identity back to the Aggregator.  
+					LogEnablement.isLogDebugEnabled(logger,"Account [" + acctName + "] correlating to Identity [" + identity.getName() + "] by match on [" + accountProperty + "]");  
+					correlateMap.put("identity", identity);  
+					return correlateMap;                    
+				}  
+			}
+		}  
+  		// Log the circumstances when no match was found for debugging purposes.  
+		if (0 == matchCount) 
+		{  
+		   LogEnablement.isLogDebugEnabled(logger,"Account [" + acctName + "] found no match for [" + accountProperty + "] of [" + acctPropertyValue + "] in Identity property [" + identityProperty + "]");  
+		}       
+		return correlateMap;  
+	}
+  /** 
+	* Correlate Service Cube
+	*/  
+  public HashMap correlateServiceCube(List correlationProperites, String acctName, String appName) 
+  {
+	   Map correlateMap = new HashMap();
+	    // If IdentityIQ already has a Link modeled for this account then it will pass  
+		// the Link object into this rule as "link".  This can be used to identify  
+		// circumstances where the Correlation Rule is going to change which Identity  
+		// object this account currently correlates to.  
+		// The messages logged here are expensive in terms of performance; the  
+		// link.getIdentity() loads a full Identity cube into memory and should be  
+		// avoided unless explicitly required.  This block of code guards that slow  
+		// operation with a isTraceEnabled() call to only run the code if the user  
+		// turns on trace-level debugging for the correlation rule.  
+                if ( (logger.isTraceEnabled()) && (void != link) && (null != link) )
+                {
+                  String linkName = link.getNativeIdentity();
+                  Identity id = link.getIdentity();
+                  if (null != id) {
+                    String oldIdName = id.getName();
+                    logger.trace("Account [" + linkName + "] previously correlated to [" + oldIdName + "]");
+                  } else {
+                    logger.trace("Link without an identity: " + linkName);
+                  }
+                }
+		String acctPropertyValue  = (String) correlationProperites.get(0);  
+		String identityProperty = (String) correlationProperites.get(1);  
+		// We have a valid acctPropertyValue to try and match an Identity against.  
+		QueryOptions qo = new QueryOptions();  
+		setIgnoreWorkgroupIndexes(qo); // Performance optimization.
+		qo.addFilter(Filter.ignoreCase(Filter.eq(identityProperty, acctPropertyValue)));
+			// Use a projection query first to return minimal data.  
+		ArrayList returnCols = new ArrayList();  
+		returnCols.add("id");  
+		returnCols.add("name");  
+		String identityId = null;  
+		String identityName = null;  
+		int matchCount = 0;  
+		// Execute the query against the IdentityIQ database.  
+		Iterator it = context.search(Identity.class, qo, returnCols);
+		if(it!=null)
+		{
+		while (it.hasNext()) 
+		{  
+			Object[] retObjs = (Object[]) it.next();
+			if(retObjs.length==2)
+			{ 
+			identityId   = (String) retObjs[0];  
+			identityName = (String) retObjs[1];    
+			LogEnablement.isLogDebugEnabled(logger,"Matched property  of [" + acctPropertyValue + "] to identity [" + identityName + "]");  
+			matchCount++; 
+			}   
+		}  
+		Util.flushIterator(it);  
+		}
+  		// Inform the log file in the event of a multi/non-deterministic match.  
+		if (1 < matchCount) 
+		{  
+			logger.warn("Multiple Identity objects matched property  of [" + acctPropertyValue + "]");  
+		}  
+  	   if (1 == matchCount) 
+		{  
+		   if(identityId!=null)
+		   {
+	  			// We matched exactly 1 and only 1 Identity.  Verify that it is not  
+				// a workgroup and if it is not then this is an affirmative correlation.  
+				Identity identity = context.getObjectById(Identity.class, identityId);  
+				if (identity!=null && identity.isWorkgroup()) 
+				{  
+					logger.warn("Account " + acctName + " correlated to Workgroup " + identityName + ", skipping workgroup match.");  
+				} 
+				else if(identity!=null)
+				{  
+					// We have a definite non-workgroup, single Identity object  
+					// correlation. Return this Identity back to the Aggregator.  
+					correlateMap.put("identity", identity);  
+					return correlateMap;                    
+				} 
+			} 
+		}  
+		// Log the circumstances when no match was found for debugging purposes.  
+		if (0 == matchCount) 
+		{  
+		   LogEnablement.isLogDebugEnabled(logger,"Account [" + acctName + "] found no match for [" + acctPropertyValue + "] in Identity property [" + identityProperty + "]");  
+		}       
+		return correlateMap;  
+	}
+  	// Correlation strategy:  
+	 Map returnMap = new HashMap();
+	 ArrayList correlationProperites = new ArrayList();
+	 String acctName = account.getIdentity();  
+	 String appName = application.getName();
+	 // 1) If not Human, match with cube name 
+	String serviceAccountEnabled = ObjectConfigAttributesRuleLibrary.extendedAttrServiceAccountEnabled(context);
+	boolean servAccEnabled=false;
+	if(serviceAccountEnabled!=null && serviceAccountEnabled.length()>0 && serviceAccountEnabled.equalsIgnoreCase("TRUE"))
+	{
+		servAccEnabled=true;
+	}
+	if(servAccEnabled)
+	{
+	    String saText=null;
+	    saText=isSAAccountMatched();
+		if( saText!=null) 
+	    {
+	    	boolean appendAppName=false;
+			String uniqueSAAttributeNameValue=null;
+			appendAppName=AggregationRuleLibrary.appendApplicationNameToServiceAccountName(application);
+			uniqueSAAttributeNameValue=AggregationRuleLibrary.getSAAttributeValue(application,account);
+			if(uniqueSAAttributeNameValue!=null)
+			{
+			uniqueSAAttributeNameValue=uniqueSAAttributeNameValue.trim();
+			}
+			if(uniqueSAAttributeNameValue!=null && uniqueSAAttributeNameValue.length()>0)
+			{
+				saText=uniqueSAAttributeNameValue;
+			}
+		   	saText=ROADUtil.getDNFormattedValue(saText);
+		   	if(appendAppName)
+			{
+		    	saText=application.getName().replaceAll("[^a-zA-Z0-9]", "")+saText;
+		    }
+		    correlationProperites.add(saText);
+	        correlationProperites.add("name");
+	        returnMap= correlateServiceCube(correlationProperites,acctName,appName);
+		    logger.info("Service Account " + appName + ":" + acctName + "  service correlation.");
+		    returnMap=AggregationRuleLibrary.runApCorrelationRule(context,application,returnMap,params);
+	        return returnMap;
+	    }
+    }
+	// 2) If  Human, correlate with  HR Feed Property Name  
+	String cubeProperty=null;
+    String linkProperty=null;
+    String operationProperty=null;
+    correlationProperites = new ArrayList();
+    //Let's see if we have Correlation Config Defined on Application
+	if(application!=null && application.getAccountCorrelationConfig()!=null)
+	{
+	 	returnMap = correlateHumanCube(correlationProperites,acctName,appName,operationProperty,application);
+	 	returnMap=AggregationRuleLibrary.runApCorrelationRule(context,application,returnMap,params);
+        return returnMap;
+	}
+	//Next Match on Regular Account Identification
+	String regularExp=getRegularAttrExpression();
+	if(regularExp!=null)
+	{
+		String[] regularExpArr = regularExp.split("#IIQCorrelated#");
+		if(regularExpArr != null && regularExpArr.length == 3 && Util.isNotNullOrEmpty(regularExpArr[0]) && Util.isNotNullOrEmpty(regularExpArr[1])
+		&& Util.isNotNullOrEmpty(regularExpArr[2]))
+	   {
+		  cubeProperty=regularExpArr[0];
+		  linkProperty=regularExpArr[1];
+		  operationProperty=regularExpArr[2];
+		  correlationProperites.add(linkProperty);
+          correlationProperites.add(cubeProperty);
+         returnMap= correlateHumanCube(correlationProperites,acctName,appName,operationProperty,application);
+         logger.info("Human Account " + appName + ":" + acctName + "  human correlation.");
+         returnMap=AggregationRuleLibrary.runApCorrelationRule(context,application,returnMap,params);
+         return returnMap;
+	    }
+		else if(regularExpArr != null && regularExpArr.length == 2 && Util.isNotNullOrEmpty(regularExpArr[0]) && Util.isNotNullOrEmpty(regularExpArr[1]))
+	   {
+		  cubeProperty=regularExpArr[0];
+		  linkProperty=regularExpArr[1];
+		  correlationProperites.add(linkProperty);
+          correlationProperites.add(cubeProperty);
+         returnMap= correlateHumanCube(correlationProperites,acctName,appName,operationProperty,application);
+         logger.info("Human Account " + appName + ":" + acctName + "  human correlation.");
+         returnMap=AggregationRuleLibrary.runApCorrelationRule(context,application,returnMap,params);
+         return returnMap;
+	    }
+	}
+	logger.info("Account " + appName + ":" + acctName + " does not correlate to an Identity.");
+	return returnMap;
+    
+  ]]></Source>
+</Rule>

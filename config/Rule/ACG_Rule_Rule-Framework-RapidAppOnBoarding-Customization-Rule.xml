@@ -1,0 +1,305 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule-Framework-RapidAppOnBoarding-Customization-Rule" type="ResourceObjectCustomization">
+  <Description>This rule is used for data classification of aggregated  data</Description>
+  <Signature returnType="ResourceObject">
+    <Inputs>
+      <Argument name="log">
+        <Description>
+          The log object associated with the SailPointContext.
+        </Description>
+      </Argument>
+      <Argument name="context">
+        <Description>
+          A sailpoint.api.SailPointContext object that can be used to query the database if necessary.
+        </Description>
+      </Argument>
+      <Argument name="object">
+        <Description>
+          The ResourceObject built by the connector.
+        </Description>
+      </Argument>
+      <Argument name="application">
+        <Description>
+          Application that references the connector.
+        </Description>
+      </Argument>
+      <Argument name="connector">
+        <Description>
+          The connector object.
+        </Description>
+      </Argument>
+      <Argument name="state">
+        <Description>
+          A Map containing state information.
+        </Description>
+      </Argument>
+    </Inputs>
+    <Returns>
+      <Argument name="resourceObject">
+        <Description>
+          The updated resource object.
+        </Description>
+      </Argument>
+    </Returns>
+  </Signature>
+  <Source><![CDATA[
+
+import java.util.ArrayList;  
+import java.util.Map;  
+import java.util.HashMap;  
+import sailpoint.connector.Connector;  
+import sailpoint.object.Application;  
+import sailpoint.object.Identity;  
+import sailpoint.object.ResourceObject;  
+import sailpoint.rapidapponboarding.rule.ROADUtil;
+import sailpoint.rapidapponboarding.rule.ObjectConfigAttributesRuleLibrary;
+import sailpoint.rapidapponboarding.rule.AggregationRuleLibrary;
+import sailpoint.tools.Util;
+String serviceAccountEnabled = ObjectConfigAttributesRuleLibrary.extendedAttrServiceAccountEnabled(context);
+boolean servAccEnabled=false;
+if(serviceAccountEnabled!=null && serviceAccountEnabled.length()>0 && serviceAccountEnabled.equalsIgnoreCase("TRUE"))
+{
+	servAccEnabled=true;
+}
+String privilegedAccessEnabled=ObjectConfigAttributesRuleLibrary.extendedAggrPrivAcctEnabled(context);
+boolean privAccessEnabled=false;
+if(privilegedAccessEnabled!=null && privilegedAccessEnabled.length()>0 && privilegedAccessEnabled.equalsIgnoreCase("TRUE"))
+{
+	privAccessEnabled=true;
+}
+String aggregationEnabled = ObjectConfigAttributesRuleLibrary.extendedAttrAggregationEnabled(context);
+boolean aggregationEnab=false;
+if(aggregationEnabled!=null && aggregationEnabled.length()>0 && aggregationEnabled.equalsIgnoreCase("TRUE"))
+{
+	aggregationEnab=true;
+}
+// Check to see if the script is executing against a Group or an Account object.  
+if ( object == null || object.getObjectType() == null ) 
+{
+	return (object);
+}
+// Check to see if the script is executing against object that is not account.  
+if (object.getObjectType().compareTo(Connector.TYPE_ACCOUNT) != 0 ) 
+{  
+   return (object);  
+}
+//Get Lock Account Expression
+String accountLockAttrExpression=null;
+if(state!=null && state.get("accountLockAttrExpression")!=null && aggregationEnab)
+{
+	 accountLockAttrExpression=state.get("accountLockAttrExpression");
+}
+else if(aggregationEnab)
+{
+	accountLockAttrExpression=application.getAttributeValue("accountLockAttrExpression");
+	if(accountLockAttrExpression!=null && state!=null)
+	{
+	state.put("accountLockAttrExpression",accountLockAttrExpression);
+	}
+}
+//Get Disable Account Expression
+String accountDisableAttrExpression=null;
+if(state!=null && state.get("accountDisableAttrExpression")!=null && aggregationEnab)
+{
+ 	accountDisableAttrExpression=state.get("accountDisableAttrExpression");
+}
+else if(aggregationEnab)
+{
+ 	accountDisableAttrExpression=application.getAttributeValue("accountDisableAttrExpression");
+ 	if(accountDisableAttrExpression!=null && state!=null)
+	{
+	state.put("accountDisableAttrExpression",accountDisableAttrExpression);
+	}
+}
+//Get Privileged Account Expression
+String privilegedAccountAttrExpression=null;
+if(state!=null && state.get("privilegedAccountAttrExpression")!=null && privAccessEnabled)
+{
+ 	privilegedAccountAttrExpression=state.get("privilegedAccountAttrExpression");
+}
+else if(privAccessEnabled)
+{
+ 	privilegedAccountAttrExpression=application.getAttributeValue("privilegedAccountAttrExpression");
+ 	if(privilegedAccountAttrExpression!=null && state!=null)
+	{
+	state.put("privilegedAccountAttrExpression",privilegedAccountAttrExpression);
+	}
+}
+//Get Service Account Expression
+String serviceAccountAttrExpression=null;
+if(state!=null && state.get("serviceAccountAttrExpression")!=null && servAccEnabled)
+{
+ 	serviceAccountAttrExpression=state.get("serviceAccountAttrExpression");
+}
+else if(servAccEnabled)
+{
+ 	serviceAccountAttrExpression=application.getAttributeValue("serviceAccountAttrExpression");
+ 	if(serviceAccountAttrExpression!=null && state!=null)
+	{
+	state.put("serviceAccountAttrExpression",serviceAccountAttrExpression);
+	}
+}
+// SET ACCOUNT LOCK PROPERTY
+if(accountLockAttrExpression!=null && aggregationEnab)
+{
+	String[] accountLockAttrExpressionArr = accountLockAttrExpression.split("#IIQLocked#");
+	if(accountLockAttrExpressionArr != null && accountLockAttrExpressionArr.length == 3 && Util.isNotNullOrEmpty(accountLockAttrExpressionArr[0]) && 
+	Util.isNotNullOrEmpty(accountLockAttrExpressionArr[1]) && Util.isNotNullOrEmpty(accountLockAttrExpressionArr[2]))
+	{
+		 String lockAttr=accountLockAttrExpressionArr[0];
+		 String lockRegeX=accountLockAttrExpressionArr[1];
+		 String lockOperation=accountLockAttrExpressionArr[2];
+		 String lockText = object.getStringAttribute(lockAttr);
+		 if(ROADUtil.executeStringComparison(lockText,lockOperation,lockRegeX)>=1)
+		 {
+		  object.put("IIQLocked", true); 
+		 }
+		 else
+		 {
+		  object.put("IIQLocked", false); 
+		 }
+	}
+	else if(accountLockAttrExpressionArr != null && accountLockAttrExpressionArr.length == 2 && Util.isNotNullOrEmpty(accountLockAttrExpressionArr[0]) && Util.isNotNullOrEmpty(accountLockAttrExpressionArr[1]))
+	{
+		 String lockAttr=accountLockAttrExpressionArr[0];
+		 String lockRegeX=accountLockAttrExpressionArr[1];
+		 String lockText = object.getStringAttribute(lockAttr);
+		 if(ROADUtil.executeRegex(lockRegeX,lockText)>=1)
+		 {
+		  object.put("IIQLocked", true); 
+		 }
+		 else
+		 {
+		  object.put("IIQLocked", false); 
+		 }
+	}
+	else
+	{
+	 object.put("IIQLocked", false); 
+	}
+}
+// SET ACCOUNT DISABLE PROPERTY
+if(accountDisableAttrExpression!=null && aggregationEnab)
+{
+	String[] accountDisableAttrExpressionArr = accountDisableAttrExpression.split("#IIQDisabled#");
+	if(accountDisableAttrExpressionArr != null && accountDisableAttrExpressionArr.length == 3 && 
+	Util.isNotNullOrEmpty(accountDisableAttrExpressionArr[0]) && Util.isNotNullOrEmpty(accountDisableAttrExpressionArr[1])
+	&& Util.isNotNullOrEmpty(accountDisableAttrExpressionArr[2]))
+	{
+		 String disableAttr=accountDisableAttrExpressionArr[0];
+		 String disableRegeX=accountDisableAttrExpressionArr[1];
+		 String disableOperation=accountDisableAttrExpressionArr[2];
+		 String disableText = object.getStringAttribute(disableAttr);
+		 if(ROADUtil.executeStringComparison(disableText,disableOperation,disableRegeX )>=1)
+		 {
+		  object.put("IIQDisabled", true); 
+		 }
+		 else
+		 {
+		  object.put("IIQDisabled", false); 
+		 }
+	}
+	else if(accountDisableAttrExpressionArr != null && accountDisableAttrExpressionArr.length == 2 && Util.isNotNullOrEmpty(accountDisableAttrExpressionArr[0]) && Util.isNotNullOrEmpty(accountDisableAttrExpressionArr[1]))
+	{
+		 String disableAttr=accountDisableAttrExpressionArr[0];
+		 String disableRegeX=accountDisableAttrExpressionArr[1];
+		 String disableText = object.getStringAttribute(disableAttr);
+		 if(ROADUtil.executeRegex(disableRegeX,disableText)>=1)
+		 {
+		  object.put("IIQDisabled", true); 
+		 }
+		 else
+		 {
+		  object.put("IIQDisabled", false); 
+		 }
+	}
+	else
+	{
+	 object.put("IIQDisabled", false); 
+	}
+}
+//SET PRIVILEGED ACCOUNT PROPERTY
+if(privilegedAccountAttrExpression!=null && privAccessEnabled)
+{
+	String[] psaRegularAttrExpressionArr = privilegedAccountAttrExpression.split("#IIQPrivileged#");
+	if(psaRegularAttrExpressionArr != null && psaRegularAttrExpressionArr.length == 3 && 
+	Util.isNotNullOrEmpty(psaRegularAttrExpressionArr[0]) && Util.isNotNullOrEmpty(psaRegularAttrExpressionArr[1])
+	&& Util.isNotNullOrEmpty(psaRegularAttrExpressionArr[2]))
+	{
+		 String psaAttr=psaRegularAttrExpressionArr[0];
+		 String psaRegeX=psaRegularAttrExpressionArr[1];
+		 String psaOperation=psaRegularAttrExpressionArr[2];
+		 String psaText = object.getStringAttribute(psaAttr);
+		 if(ROADUtil.executeStringComparison(psaText,psaOperation,psaRegeX)>=1)
+		 {
+		  object.put("IIQPrivileged", "true"); 
+		 }
+		 else 
+		 {
+		  object.put("IIQPrivileged", null); 
+		 }
+	}
+	else if(psaRegularAttrExpressionArr != null && psaRegularAttrExpressionArr.length == 2 && Util.isNotNullOrEmpty(psaRegularAttrExpressionArr[0]) && Util.isNotNullOrEmpty(psaRegularAttrExpressionArr[1]))
+	{
+		 String psaAttr=psaRegularAttrExpressionArr[0];
+		 String psaRegeX=psaRegularAttrExpressionArr[1];
+		 String psaText = object.getStringAttribute(psaAttr);
+		 if(ROADUtil.executeRegex(psaRegeX,psaText)>=1)
+		 {
+		  object.put("IIQPrivileged", "true"); 
+		 }
+		 else 
+		 {
+		  object.put("IIQPrivileged", null); 
+		 }
+	}
+}
+// SET SERVICE ACCOUNT PROPERTY
+if(serviceAccountAttrExpression!=null && servAccEnabled)
+{
+	String[] saRegularAttrExpressionArr = serviceAccountAttrExpression.split("#IIQService#");
+	if(saRegularAttrExpressionArr != null && saRegularAttrExpressionArr.length == 3 && Util.isNotNullOrEmpty(saRegularAttrExpressionArr[0]) && 
+	Util.isNotNullOrEmpty(saRegularAttrExpressionArr[1]) && Util.isNotNullOrEmpty(saRegularAttrExpressionArr[1]) &&  Util.isNotNullOrEmpty(saRegularAttrExpressionArr[2]))
+	{
+		 String saAttr=saRegularAttrExpressionArr[0];
+		 String saRegeX=saRegularAttrExpressionArr[1];
+		 String saOperation=saRegularAttrExpressionArr[2];
+		 String saText = object.getStringAttribute(saAttr);
+		 if(ROADUtil.executeStringComparison(saText,saOperation, saRegeX)>=1)
+		 {
+		  object.put("IIQService", "true"); 
+		 }
+		 else
+		 {
+		  object.put("IIQService", null); 
+		 }
+	}
+	else if(saRegularAttrExpressionArr != null && saRegularAttrExpressionArr.length == 2 && 
+	Util.isNotNullOrEmpty(saRegularAttrExpressionArr[0]) && Util.isNotNullOrEmpty(saRegularAttrExpressionArr[1]))
+	{
+		 String saAttr=saRegularAttrExpressionArr[0];
+		 String saRegeX=saRegularAttrExpressionArr[1];
+		 String saText = object.getStringAttribute(saAttr);
+		 if(ROADUtil.executeRegex(saRegeX,saText)>=1)
+		 {
+		  object.put("IIQService", "true"); 
+		 }
+		 else
+		 {
+		  object.put("IIQService", null); 
+		 }
+	}
+}
+//Let's Run Application Specific Rule Here
+HashMap params = new HashMap();
+params.put("context", context);
+params.put("object", object);
+params.put("application", application);
+params.put("connector", connector);
+params.put("state", state);
+object=AggregationRuleLibrary.runApCustomizationRule(context,application,object,params);
+return object;
+
+]]></Source>
+</Rule>

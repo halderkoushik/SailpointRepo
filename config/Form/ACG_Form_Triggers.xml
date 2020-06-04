@@ -1,0 +1,14 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Form PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Form name="Triggers">
+  <Attributes>
+    <Map>
+      <entry key="pageTitle" value="Add / Change Lifecycle Event Triggers"/>
+      <entry key="title" value="Add / Change Lifecycle Event Triggers"/>
+    </Map>
+  </Attributes>
+  <Button action="next" label="ADD TRIGGER ATTRIBUTE" parameter="ADDTRIGGER" skipValidation="true" value="ADDTRIGGER"/>
+  <Button action="next" label="UPDATE OR REMOVE TRIGGER DEFINITIONS" parameter="SAVETRIGGERS" value="SAVETRIGGERS"/>
+  <Button action="next" label="CHANGE LIFECYCLE EVENT" parameter="CHANGELCE" skipValidation="true" value="CHANGELCE"/>
+  <Button action="back" label="Cancel"/>
+</Form>

@@ -1,0 +1,57 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule-FrameworkEmailRecipientCcFirstManager" type="EmailRecipient">
+  <Description>Adds the item owner's immediate manager as an additional email recipient.</Description>
+  <Signature returnType="String or List of Strings">
+    <Inputs>
+      <Argument name="log">
+        <Description>
+					The log object associated with the SailPointContext.
+				</Description>
+      </Argument>
+      <Argument name="context">
+        <Description>
+					A sailpoint.api.SailPointContext object that can be used to query
+					the database if necessary.
+				</Description>
+      </Argument>
+      <Argument name="item">
+        <Description>
+					The sailpoint.object.Notifiable Interface for objects that can be
+					reminded, escalated, and expired.
+				</Description>
+      </Argument>
+    </Inputs>
+    <Returns>
+      <Argument name="identity name or names">
+        <Description>
+					You can return an identity name or a list of identity names.
+				</Description>
+      </Argument>
+    </Returns>
+  </Signature>
+  <Source><![CDATA[
+		
+		import sailpoint.object.Identity;
+		import sailpoint.object.Custom;
+		//Default owner is the No Manager Found workgroup
+		String defaultRecipient = "No Manager Found";
+		Identity newRecipient = null;
+		//Obtain the owner of the item
+		Identity owner = item.getOwner();
+		//If no owner, add default owner as recipient
+		if (owner == null) {
+			return defaultRecipient;
+		}
+		else {
+			//Add owner’s manager as additional recipient
+			newRecipient = owner.getManager();
+			//If manager is null
+			if(newRecipient == null) {
+				return defaultRecipient;
+			}
+		}
+		return newRecipient.getName();
+		
+	]]></Source>
+</Rule>

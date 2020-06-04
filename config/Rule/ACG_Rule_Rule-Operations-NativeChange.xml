@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule-Operations-NativeChange">
+  <Description>Operations - Native Change</Description>
+  <ReferencedRules>
+    <Reference class="sailpoint.object.Rule" name="Rule-Framework-OperationsRuleLibrary"/>
+  </ReferencedRules>
+  <Source><![CDATA[
+return launchWorkflow(config.get("CUBEID"), config.get("COMMENTS"), "Workflow-Lifecycle-NativeChangeDetection", "NATIVE CHANGE DETECTION FEATURE", taskResult.getLauncher(),  taskResult);
+  ]]></Source>
+</Rule>

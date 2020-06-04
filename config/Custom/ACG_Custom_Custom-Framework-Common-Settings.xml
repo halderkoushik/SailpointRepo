@@ -1,0 +1,151 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Custom PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Custom name="Custom-Framework-Common-Settings">
+  <Attributes>
+    <Map>
+      <entry key="SMARTSERVICES GLOBAL SETTINGS">
+        <value>
+          <Map>
+            <entry key="AutoRejection" value="EmailTemplate-FrameworkAutoRejection"/>
+            <entry key="BatchCompletion" value="EmailTemplate-FrameworkBatchCompletion"/>
+            <entry key="JoinerManager" value="EmailTemplate-FrameworkJoinerManager"/>
+            <entry key="LeaverManager" value="EmailTemplate-FrameworkLeaverManager"/>
+            <entry key="LeaverManagerOwnershipRemoval" value="EmailTemplate-FrameworkLeaverManagerOwnershipRemoval"/>
+            <entry key="MitigationExpiration" value="EmailTemplate-FrameworkMitigationExpiration"/>
+            <entry key="OperationsAttributeSync" value="EmailTemplate-FrameworkOperationsAttributeSync"/>
+            <entry key="OperationsLOA" value="EmailTemplate-FrameworkOperationsLOA"/>
+            <entry key="OperationsLTD" value="EmailTemplate-FrameworkOperationsLTD"/>
+            <entry key="OperationsNativeChange" value="EmailTemplate-FrameworkOperationsNativeChange"/>
+            <entry key="OperationsRTWLOA" value="EmailTemplate-FrameworkOperationsRTWLOA"/>
+            <entry key="OperationsRTWLTD" value="EmailTemplate-FrameworkOperationsRTWLTD"/>
+            <entry key="OperationsSER" value="EmailTemplate-FrameworkOperationsSER"/>
+            <entry key="PSAPasswordExpiration" value="EmailTemplate-FrameworkPSAPasswordExpiration"/>
+            <entry key="PasswordJoinerManager" value="EmailTemplate-FrameworkPasswordJoinerManager"/>
+            <entry key="Rejection" value="EmailTemplate-FrameworkRejection"/>
+            <entry key="RequestCompletion" value="EmailTemplate-FrameworkRequestCompletion"/>
+            <entry key="RequestSubmission" value="EmailTemplate-FrameworkRequestSubmission"/>
+            <entry key="ReverseLeaver" value="EmailTemplate-FrameworkReverseLeaver"/>
+            <entry key="additionalPasswordEmail" value="TRUE"/>
+            <entry key="apCCEmailRule"/>
+            <entry key="apCCEmailWorkgroup"/>
+            <entry key="apCreateEditWorkGroup"/>
+            <entry key="apDisableStaticManagerEmailContent" value="False"/>
+            <entry key="apEnableAutoApprovalsAccessAccountRequest" value="FALSE"/>
+            <entry key="apFilterDetectedRoles" value="TRUE"/>
+            <entry key="apSendEmailToOperations" value="FALSE"/>
+            <entry key="apSendEmailToOperationsEpicSER" value="FALSE"/>
+            <entry key="apSendEmailToOperationsLOA" value="FALSE"/>
+            <entry key="apSendEmailToOperationsLTD" value="FALSE"/>
+            <entry key="apSendEmailToOperationsNC" value="FALSE"/>
+            <entry key="apSendEmailToOperationsRLOA" value="FALSE"/>
+            <entry key="apSendEmailToOperationsRLTD" value="FALSE"/>
+            <entry key="attributeSyncParallelMover"/>
+            <entry key="attributeSyncParallelRehire"/>
+            <entry key="authSourceAppName"/>
+            <entry key="businessApproversToManager" value="TRUE"/>
+            <entry key="businessApproversreassignmentRule"/>
+            <entry key="businessApproversremoveOwnership" value="TRUE"/>
+            <entry key="byPassBatchApprovals" value="Operations"/>
+            <entry key="createEditCtrDateFormat" value="MM/dd/yyyy K:m:s a z"/>
+            <entry key="createServiceCubes" value="TRUE"/>
+            <entry key="defaultAllowRequest" value="True"/>
+            <entry key="defaultAllowRequestCommentsRequired" value="True"/>
+            <entry key="editServiceCubes" value="TRUE"/>
+            <entry key="errorNotificationWorkGroup" value="Operations"/>
+            <entry key="existingAccessRequest"/>
+            <entry key="existingAccountRequest"/>
+            <entry key="existingBatchAccessRequest"/>
+            <entry key="existingBatchAccountRequest"/>
+            <entry key="globalWait">
+              <value>
+                <Integer>60</Integer>
+              </value>
+            </entry>
+            <entry key="interceptorPlanRule"/>
+            <entry key="interceptorProjectRule"/>
+            <entry key="policyDenyFilter"/>
+            <entry key="policyScheme" value="interactive"/>
+            <entry key="policySoftFilter"/>
+            <entry key="postAttributeSyncRule"/>
+            <entry key="postJoinerRule"/>
+            <entry key="postLOARule"/>
+            <entry key="postLTDRule"/>
+            <entry key="postLeaverRule"/>
+            <entry key="postMitigationRule"/>
+            <entry key="postMoverRule"/>
+            <entry key="postNativeChangeRule"/>
+            <entry key="postRTWLOARule"/>
+            <entry key="postRTWLTDRule"/>
+            <entry key="postRehireRule"/>
+            <entry key="postReverseLeaverRule"/>
+            <entry key="postWrapperRule"/>
+            <entry key="provisioningMaxRetries">
+              <value>
+                <Integer>3</Integer>
+              </value>
+            </entry>
+            <entry key="provisioningRetryThreshold">
+              <value>
+                <Integer>720</Integer>
+              </value>
+            </entry>
+            <entry key="reassignOwnershipToManager" value="TRUE"/>
+            <entry key="reassignmentRule"/>
+            <entry key="rehireBeforePlanRule"/>
+            <entry key="removeIIQArtifactsOwnership" value="TRUE"/>
+            <entry key="requestSnapshot">
+              <value>
+                <List>
+                  <String>LEAVER FEATURE</String>
+                  <String>IMMEDIATE TERMINATION FEATURE</String>
+                </List>
+              </value>
+            </entry>
+            <entry key="sailpointArtifacts">
+              <value>
+                <List>
+                  <String>Bundle</String>
+                  <String>Application</String>
+                  <String>Policy</String>
+                  <String>ManagedAttribute</String>
+                  <String>GroupDefinition</String>
+                  <String>CertificationDefinition</String>
+                  <String>TaskDefinition</String>
+                  <String>Identity</String>
+                  <String>WorkItem</String>
+                </List>
+              </value>
+            </entry>
+            <entry key="sailpointBusinessApproversArtifacts">
+              <value>
+                <List>
+                  <String>appBusApprovers</String>
+                  <String>additionalAppBusApprovers</String>
+                  <String>entBusApprovers</String>
+                  <String>additionalEntBusApprovers</String>
+                  <String>roleBusApprovers</String>
+                  <String>additionalRoleBusApprovers</String>
+                </List>
+              </value>
+            </entry>
+            <entry key="serviceAccountOwnerAttrs" value="saccountOwnerone,administrator"/>
+            <entry key="serviceAccountreassignOwnershipToManager" value="TRUE"/>
+            <entry key="serviceAccountreassignmentRule"/>
+            <entry key="serviceAccountremoveOwnership" value="TRUE"/>
+            <entry key="targetAggregationAttributes">
+              <value>
+                <List>
+                  <String>AC_NewName</String>
+                  <String>AC_NewParent</String>
+                </List>
+              </value>
+            </entry>
+            <entry key="temporaryApprovalsWorkGroup" value="Operations"/>
+            <entry key="wgJoinerRehireEmail"/>
+            <entry key="wgLeaverReverseLeaverEmail"/>
+          </Map>
+        </value>
+      </entry>
+    </Map>
+  </Attributes>
+</Custom>

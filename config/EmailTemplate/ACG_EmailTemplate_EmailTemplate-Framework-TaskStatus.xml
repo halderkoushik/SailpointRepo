@@ -1,0 +1,96 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE EmailTemplate PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<EmailTemplate name="EmailTemplate-Framework-TaskStatus">
+  <Body>
+		
+		#set($ctx = $spTools.class.forName("sailpoint.api.SailPointFactory").getMethod("getFactory", null).invoke(null,null).getCurrentContext())
+		#set($ruleObj = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Rule"), "Rule-Framework-Header-Footer-StyleSheet")) 
+		#set($ruleArgs = { 
+		    "keyEmailTemplate"  : "styleSheet"
+		}) 
+		#set($styleSheet = $ctx.runRule($ruleObj, $ruleArgs))
+		#if( $ruleObj )
+		$ctx.decache($ruleObj)
+		#end
+		#set($ruleObj = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Rule"), "Rule-Framework-Header-Footer-StyleSheet")) 
+		#set($ruleArgs = { 
+		    "keyEmailTemplate"  : "headerTemplate"
+		}) 
+		#set($headerTemplate = $ctx.runRule($ruleObj, $ruleArgs))
+		#if( $ruleObj )
+		$ctx.decache($ruleObj)
+		#end
+		#set($ruleObj = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Rule"), "Rule-Framework-Header-Footer-StyleSheet")) 
+		#set($ruleArgs = { 
+		    "keyEmailTemplate"  : "footerTemplate"
+		}) 
+		#set($footerTemplate = $ctx.runRule($ruleObj, $ruleArgs))
+		#if( $ruleObj )
+		$ctx.decache($ruleObj)
+		#end
+		#set($ruleObj = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Rule"), "Rule-Server-Root-Path")) 
+		#set($ruleArgs = {})
+		#set($rootPath = $ctx.runRule($ruleObj, $ruleArgs))
+		#if( $ruleObj )
+		$ctx.decache($ruleObj)
+		#end
+		<![CDATA[<html>
+			<head>
+			<meta charset="UTF-8">	    
+			#if( $styleSheet )
+			$styleSheet
+			#end 
+			</head>
+	    	<body>
+	    	#if( $headerTemplate )
+			$headerTemplate
+			#end
+			<br/> 				
+			The '$taskName' task#if ($status == "Success" ) ended successfully.#{end}#if ($status == "Warning" ) ended with warning.#{end}#if ($status == "Terminated" ) terminated.#{end}#if ($status == "Error" ) ended with error.#{end}<br/>
+			Started : $spTools.formatDate($taskStartTime,3,1)<br/> 	
+			Completed : $spTools.formatDate($taskEndTime,3,1)<br/> 	
+			#foreach ($msg in $message)
+			$msg
+			#end
+			<br/>
+			For more details, please check - $rootPath/monitor/tasks/renderResults.jsf?TaskResultId=$resultId
+	  		#if( $footerTemplate )
+			$footerTemplate
+			#end
+			</body>
+		</html>]]>
+		
+	</Body>
+  <Description>
+    Email Template for notifying result of Task.
+  </Description>
+  <Signature>
+    <Inputs>
+      <Argument name="taskResult" type="TaskResult">
+        <Description>Task Result</Description>
+      </Argument>
+      <Argument name="taskName" type="string">
+        <Description>Task Name</Description>
+      </Argument>
+      <Argument name="taskDesc" type="string">
+        <Description>Task Description</Description>
+      </Argument>
+      <Argument name="taskStartTime" type="date">
+        <Description>Time when task is started</Description>
+      </Argument>
+      <Argument name="taskEndTime" type="date">
+        <Description>Time when task is completed.</Description>
+      </Argument>
+      <Argument name="status" type="string">
+        <Description>Task Status</Description>
+      </Argument>
+      <Argument multi="true" name="message" type="string">
+        <Description>List of Messages</Description>
+      </Argument>
+      <Argument name="resultId" type="string">
+        <Description>Task Result Id</Description>
+      </Argument>
+    </Inputs>
+  </Signature>
+  <Subject>Task $taskName Status - $status </Subject>
+</EmailTemplate>

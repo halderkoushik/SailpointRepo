@@ -1,0 +1,23 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule-Provisioner">
+  <Description>Launch Provisioner Rule</Description>
+  <Source><![CDATA[
+		 import org.apache.commons.logging.Log;
+		 import org.apache.commons.logging.LogFactory;
+		 import sailpoint.rapidapponboarding.logger.LogEnablement;
+		 import sailpoint.rapidapponboarding.rule.ROADUtil;
+		 import sailpoint.object.Identity;
+		 Log provLogger = LogFactory.getLog("rapidapponboarding.rules");
+		 LogEnablement.isLogDebugEnabled(provLogger,"identityName..Rule-Provisioner."+identityName);
+		if (identityName != null && plan!=null) 
+		{
+			//Use Provisioner
+			Identity identityObj=context.getObjectByName(Identity.class,identityName);
+			plan.setIdentity(identityObj);
+			LogEnablement.isLogDebugEnabled(provLogger,"Start..launchProvisionerPlan Rule-Provisioner.");
+			ROADUtil.launchProvisionerPlan(plan,context);
+			LogEnablement.isLogDebugEnabled(provLogger,"End..launchProvisionerPlan Rule-Provisioner.");
+		}
+  ]]></Source>
+</Rule>

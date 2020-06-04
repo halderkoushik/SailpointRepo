@@ -88,4 +88,61 @@ so generated ddl will have mysql indexes substringed to 255 by default.
     <many-to-one embed-xml="false" name="extendedIdentity3" class="sailpoint.object.Identity"/>
     <many-to-one embed-xml="false" name="extendedIdentity4" class="sailpoint.object.Identity"/>
     <many-to-one embed-xml="false" name="extendedIdentity5" class="sailpoint.object.Identity"/>
-    
+    <!--OOTB END-->
+<!--SERVICE ACCOUNT, LEAVER START - UNCOMMENT THIS FOR SERVICE ACCOUNTT BETA FEATURE-->
+<!--<property name="saccountOwnerone" type="string" length="450"
+          access="sailpoint.persistence.ExtendedPropertyAccessor"
+          index="spt_identity_sOwnone_ci"/>-->
+<!--SERVICE ACCOUNT, LEAVER END - UNCOMMENT THIS FOR SERVICE ACCOUNTT BETA FEATURE-->
+<!--SERVICE ACCOUNT,CREATE, AGGREGATION REPORTING START - UNCOMMENT THIS FOR SERVICE ACCOUNTT BETA FEATURE-->  
+<!--<property name="serviceCube" type="string" length="450"
+          access="sailpoint.persistence.ExtendedPropertyAccessor"
+          index="spt_identity_sCube_ci"/>-->
+<!--SERVICE ACCOUNT, CREATE, AGGREGATION, REPORTING END - - UNCOMMENT THIS FOR SERVICE ACCOUNTT BETA FEATURE-->
+<!--PERSONA, JOINER, LEAVER, MOVER, CREATE, EDIT, REPORTING START - UNCOMMENT THIS FOR PERSONA BETA FEATURE-->    
+<!--<property name="relationships" type="string" length="450"
+          access="sailpoint.persistence.ExtendedPropertyAccessor"
+          index="spt_identity_relationships_ci"/>
+<property name="mgrrelationships" type="string" length="450"
+          access="sailpoint.persistence.ExtendedPropertyAccessor"
+          index="spt_identity_mgrrltionships_ci"/>-->
+<!--PERSONA, JOINER, LEAVER, MOVER, CREATE, EDIT, REPORTING END - UNCOMMENT THIS FOR PERSONA BETA FEATURE--> 
+<!--JOINER START-->   
+<property name="needsJoiner" type="string" length="450"
+          access="sailpoint.persistence.ExtendedPropertyAccessor"
+          index="spt_identity_needsJoiner_ci"/>
+<!--JOINER END--> 
+<!--CREATE/EDIT/REGISTER IDENTITY START-->
+<property name="middleName" type="string" length="450"
+          access="sailpoint.persistence.ExtendedPropertyAccessor"
+          index="spt_identity_middleName_ci"/>
+<!--CREATE/EDIT/REGISTER IDENTITY END-->
+<!--CREATE/EDIT IDENTITY START - UNCOMMENT THIS FOR CONTRACTOR CREATE/EDIT BETA FEATURE-->
+<!--<property name="ctrexpDt" type="string" length="450"
+          access="sailpoint.persistence.ExtendedPropertyAccessor"
+          index="spt_identity_ctrexpDt_ci"/>
+<property name="ctrMgr" type="string" length="450"
+          access="sailpoint.persistence.ExtendedPropertyAccessor"
+          index="spt_identity_ctrMgr_ci"/>-->
+<!--CREATE/EDIT IDENTITY END - UNCOMMENT THIS FOR CONTRACTOR CREATE/EDIT BETA FEATURE-->
+<!--CONTRACTOR PLUGIN START - UNCOMMENT THIS FOR CONTRACTOR PLUGIN-->
+<!--<property name="ctrProfid" type="string" length="450"
+          access="sailpoint.persistence.ExtendedPropertyAccessor"
+          index="spt_identity_ctrProfid_ci"/>
+<property name="ctrDptid" type="string" length="450"
+          access="sailpoint.persistence.ExtendedPropertyAccessor"
+          index="spt_identity_ctrDptid_ci"/>
+<property name="ctrVendorid" type="string" length="450"
+          access="sailpoint.persistence.ExtendedPropertyAccessor"
+          index="spt_identity_ctrVendorid_ci"/>
+<property name="ctrPrfmgrdpids" type="string" length="450"
+          access="sailpoint.persistence.ExtendedPropertyAccessor"
+          index="spt_identity_ctrPrfmgrdpids_ci"/>
+<property name="ctrAcctadmdpids" type="string" length="450"
+          access="sailpoint.persistence.ExtendedPropertyAccessor"
+          index="spt_identity_ctrAcctadmdpids_ci"/>
+<property name="ctrAcctspndpids" type="string" length="450"
+          access="sailpoint.persistence.ExtendedPropertyAccessor"
+          index="spt_identity_ctrAcctspndpids_ci"/>-->
+<!--CONTRACTOR PLUGIN END -UNCOMMENT THIS FOR CONTRACTOR PLUGIN--> 
+

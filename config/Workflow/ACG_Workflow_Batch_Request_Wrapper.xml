@@ -4,26 +4,21 @@
   <Variable initializer="parallelPoll" input="true" name="approvalMode">
     <Description>
      A string that specifies how we should handle the approvals.
-
      parallel
        Approvals are processed concurrently and there must be consensus,
        we wait for all approvers to approve.  The first approver that
        rejects terminates the entire approval.
- 
      parallelPoll 
        Approvals are processed concurrently but consensus is not required.
-       All approvals will be processed, we don't stop if there are any
+       All approvals will be process, we don't stop if there any
        rejections.  
-
      serial
        Approvals are processed one at a time and there must be consensus.
        The first approver that rejects terminates the entire approval.
-
      serialPoll
        Approvals are processed in order but consensus is not required.
        All approvals will be processed, we don't stop if there are any
        rejections.  In effect we are "taking a poll" of the approvers.
-
      any
       Approvals are processed concurrently, the first approver to 
       respond makes the decision for the group.
@@ -42,12 +37,7 @@
       For batch requests you should use the batchRequest scheme.
     </Description>
   </Variable>
-  <Variable initializer="false" name="trace">
-    <Description>
-      Used for debugging this workflow and when set to true trace
-      will be sent to stdout.
-    </Description>
-  </Variable>
+  <Variable initializer="false" name="trace"/>
   <Variable input="true" name="identityName">
     <Description>The name of the identity being updated.</Description>
   </Variable>
@@ -70,16 +60,15 @@
        This attributes is set during the "Build Approval Set" step,
        which builds this list by going through the ProvisioningPlan
        to build the line items that need to be approved,
-
        This variable includes all ApprovalItems that are part of 
        the request process and is updated during the AfterScript
        of the approval process by assimilating the decisions 
        and comments from the Approvals copy of the ApprovalItem.
     </Description>
   </Variable>
+  <Description>Accelerator Pack Workflow</Description>
   <RuleLibraries>
-    <Reference class="sailpoint.object.Rule" name="Approval Library"/>
-    <Reference class="sailpoint.object.Rule" name="LCM Workflow Library"/>
+    <Reference class="sailpoint.object.Rule" name="Rule-Framework-NotificationRuleLibrary"/>
   </RuleLibraries>
   <Step icon="Start" name="Start" posX="25" posY="131">
     <Transition to="Approve" when="script:requireBatchRequestApproval"/>
@@ -105,7 +94,7 @@
     <Return name="approvalSet" to="approvalSet"/>
     <Return name="workItemComments"/>
     <WorkflowRef>
-      <Reference class="sailpoint.object.Workflow" name="Identity Request Approve"/>
+      <Reference class="sailpoint.object.Workflow" name="Batch Request Approve"/>
     </WorkflowRef>
     <Transition to="Batch Request Rejected" when="script:approvalSet.hasRejected()"/>
     <Transition to="Launch Batch Workflows"/>
@@ -116,6 +105,44 @@
     <Description>
       Call library method to launch all the workflows
     </Description>
+    <Transition to="Notify on Batch Completion"/>
+  </Step>
+  <Step action="call:sendEmail" icon="Email" name="Notify on Batch Completion">
+    <Arg name="template">
+      <Script>
+        <Source><![CDATA[
+				getWrapperEmailTemplateName(workflow, null, "BatchCompletion");
+			]]></Source>
+      </Script>
+    </Arg>
+    <Arg name="to">
+      <Script>
+        <Source><![CDATA[
+				getIdentityNameForNotification(workflow,launcher, null, false);
+			]]></Source>
+      </Script>
+    </Arg>
+    <Arg name="recipientDisplayName">
+      <Script>
+        <Source><![CDATA[
+	        	getIdentityDisplayName(workflow,launcher, null, false);
+	        ]]></Source>
+      </Script>
+    </Arg>
+    <Arg name="batchFileName">
+      <Script>
+        <Source><![CDATA[
+				getBatchFileName(batchRequestId);
+	  		]]></Source>
+      </Script>
+    </Arg>
+    <Arg name="batchRecordCount">
+      <Script>
+        <Source><![CDATA[
+				getBatchRecordCount(batchRequestId);
+	  		]]></Source>
+      </Script>
+    </Arg>
     <Transition to="end"/>
   </Step>
   <Step action="call:requestRejected" icon="Task" name="Batch Request Rejected" posX="339" posY="8">

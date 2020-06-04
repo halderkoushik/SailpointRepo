@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule-Self-Service-ROAD-Trasnformer">
+  <ReferencedRules>
+    <Reference class="sailpoint.object.Rule" name="Rule-Self-Service-Onboard-RuleLibrary"/>
+  </ReferencedRules>
+  <Source><![CDATA[
+  
+   initROADModelPerApplication(roadApplicationselect,roadModel);
+   
+	]]></Source>
+</Rule>

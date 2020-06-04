@@ -1,0 +1,79 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE EmailTemplate PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<EmailTemplate name="EmailTemplate-FrameworkAccessReviewDelegation">
+  <Body>
+  
+ 		#set($ctx = $spTools.class.forName("sailpoint.api.SailPointFactory").getMethod("getFactory", null).invoke(null,null).getCurrentContext())
+		#set($ruleObj = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Rule"), "Rule-Framework-Header-Footer-StyleSheet")) 
+		#set($ruleArgs = { 
+		    "keyEmailTemplate"  : "styleSheet"
+		}) 
+		#set($styleSheet = $ctx.runRule($ruleObj, $ruleArgs))
+		#if( $ruleObj )
+		$ctx.decache($ruleObj)
+		#end
+		#set($ruleObj = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Rule"), "Rule-Framework-Header-Footer-StyleSheet")) 
+		#set($ruleArgs = { 
+		    "keyEmailTemplate"  : "headerTemplate"
+		}) 
+		#set($headerTemplate = $ctx.runRule($ruleObj, $ruleArgs))
+		#if( $ruleObj )
+		$ctx.decache($ruleObj)
+		#end
+		#set($ruleObj = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Rule"), "Rule-Framework-Header-Footer-StyleSheet")) 
+		#set($ruleArgs = { 
+		    "keyEmailTemplate"  : "footerTemplate"
+		}) 
+		#set($footerTemplate = $ctx.runRule($ruleObj, $ruleArgs))
+		#if( $ruleObj )
+		$ctx.decache($ruleObj)
+		#end
+		<![CDATA[<html>		
+			<head>
+			<meta charset="UTF-8">	    
+			#if( $styleSheet )
+			$styleSheet
+			#end 
+			</head>
+	    	<body>
+	    	#if( $headerTemplate )
+			$headerTemplate
+			#end
+			<br/>       
+			$!requesterName has delegated the following work item to you: $!workItemName.
+			Comments from $!requesterName:
+			--------------------------------------------------------------------------------
+			$!comments
+			--------------------------------------------------------------------------------
+			Login and view your work item inbox to complete this request.
+			#if( $footerTemplate )
+			$footerTemplate
+			#end
+			</body>
+			</html>]]>
+		
+    </Body>
+  <Description>
+      Email Template for notifying work item owners of new delegations.
+    </Description>
+  <Signature>
+    <Inputs>
+      <Argument name="workItem" type="WorkItem">
+        <Description>The WorkItem created for this delegation</Description>
+      </Argument>
+      <Argument name="workItemName" type="string">
+        <Description>The description property (also the name property) of the delegation WorkItem.</Description>
+      </Argument>
+      <Argument name="comments" type="string">
+        <Description>Comments from the delegator.</Description>
+      </Argument>
+      <Argument name="certification" type="Certification">
+        <Description>The Certification object containing the delegated item.</Description>
+      </Argument>
+      <Argument name="requesterName" type="string">
+        <Description>The display name of the Identity that requested the delegation.</Description>
+      </Argument>
+    </Inputs>
+  </Signature>
+  <Subject>Access Certification New Delegation Request: $!workItemName</Subject>
+</EmailTemplate>

@@ -1,0 +1,88 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule-NewValues">
+  <Source><![CDATA[
+	
+	import sailpoint.object.Field;
+	import sailpoint.object.Form;
+	import sailpoint.rapidapponboarding.rule.ROADUtil;
+	import sailpoint.rapidapponboarding.rule.JoinerRuleLibrary;
+	//Initialize OldValues List
+	public List NewValues()
+	{
+			String oldFieldValue=null;
+			String attrFieldValue=null;
+			Field oldField=null;
+			Field attrField=null;
+			if(form!=null && field!=null)
+			{
+				String newfieldName=field.getName();
+				if(newfieldName!=null && newfieldName.contains("TriggerNewValues"))
+				{
+					String oldFieldName=newfieldName.replace("TriggerNewValues","TriggerOldValues");
+					String attributeFieldName=newfieldName.replace("TriggerNewValues","TriggerAttr");
+					if(oldFieldName!=null)
+					{
+						oldField = form.getField(oldFieldName);
+						if(oldField!=null)
+						{
+						oldFieldValue=oldField.getValue();
+						}
+					}
+					if(attributeFieldName!=null)
+					{
+						attrField = form.getField(attributeFieldName);
+						if(attrField!=null)
+						{
+						attrFieldValue=attrField.getValue();
+						}
+					}
+				}
+			}
+			//BUILD ALLOWED VALUES NEW
+			List allowedNewValues = new ArrayList();
+			String joinerDisabled=ROADUtil.roadAttributeDisabled(context, "Identity", JoinerRuleLibrary.JOINERATTRNEEDSJOINER);
+	        boolean joinerEnabled=false;
+			 //JOINER is ENABLED
+			 if(joinerDisabled!=null && joinerDisabled.length()>0 && joinerDisabled.equalsIgnoreCase("FALSE"))
+			 {
+			 joinerEnabled=true;
+			 }
+			if( attrFieldValue!=null && attrFieldValue.equalsIgnoreCase(JoinerRuleLibrary.JOINERATTRNEEDSJOINER) && joinerEnabled)
+			{
+					List displayAllowedValues = new ArrayList();
+					displayAllowedValues = new ArrayList();
+					displayAllowedValues.add(JoinerRuleLibrary.JOINERNEEDPROCESSING);
+					displayAllowedValues.add("IMPLICIT JOINER");
+					allowedNewValues.add(displayAllowedValues);
+			}
+			else
+			{
+				    List displayAllowedValues = new ArrayList();
+					displayAllowedValues.add("*");
+					displayAllowedValues.add("ANY NEW VALUE");
+					allowedNewValues.add(displayAllowedValues);
+					displayAllowedValues = new ArrayList();
+				    displayAllowedValues.add("EMPTY");
+				    displayAllowedValues.add("NEW VALUE EMPTY");
+				    allowedNewValues.add(displayAllowedValues);
+					displayAllowedValues = new ArrayList();
+					displayAllowedValues = new ArrayList();
+					displayAllowedValues.add("DATE");
+					displayAllowedValues.add("DATE ASSIGNMENT");
+					allowedNewValues.add(displayAllowedValues);
+					displayAllowedValues = new ArrayList();
+					displayAllowedValues.add("DATE CLEARED");
+					displayAllowedValues.add("ASSIGNED DATE RECALL");
+					allowedNewValues.add(displayAllowedValues);
+					displayAllowedValues = new ArrayList();
+					displayAllowedValues.add("COMMA SEPARATED VALUES OR SINGLE VALUE");
+					displayAllowedValues.add("COMMA SEPARATED VALUES OR SINGLE VALUE");
+					allowedNewValues.add(displayAllowedValues);
+				}
+			return allowedNewValues;
+	}
+	return NewValues();
+	
+	]]></Source>
+</Rule>

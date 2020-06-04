@@ -1,0 +1,36 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Custom PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Custom name="Custom-Framework-EmailTextMapping">
+  <Attributes>
+    <Map>
+      <entry key="CART REQUEST FEATURE">
+        <value>
+          <Map>
+            <entry key="EmailTemplate-FrameworkApproval"/>
+            <entry key="EmailTemplate-FrameworkAutoRejection"/>
+            <entry key="EmailTemplate-FrameworkEscalation"/>
+            <entry key="EmailTemplate-FrameworkReminder"/>
+            <entry key="EmailTemplate-FrameworkRequestCompletion"/>
+            <entry key="EmailTemplate-FrameworkRequestSubmission"/>
+          </Map>
+        </value>
+      </entry>
+      <entry key="JOINER FEATURE">
+        <value>
+          <Map>
+            <entry key="EmailTemplate-FrameworkJoinerManager"/>
+            <entry key="EmailTemplate-FrameworkPasswordJoinerManager"/>
+          </Map>
+        </value>
+      </entry>
+      <entry key="JOINER REHIRE FEATURE">
+        <value>
+          <Map>
+            <entry key="EmailTemplate-FrameworkJoinerManager"/>
+            <entry key="EmailTemplate-FrameworkPasswordJoinerManager"/>
+          </Map>
+        </value>
+      </entry>
+    </Map>
+  </Attributes>
+</Custom>

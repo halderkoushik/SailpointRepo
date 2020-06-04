@@ -1,0 +1,2997 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Form PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Form name="ROAD-Self-Service" type="Workflow">
+  <Attributes>
+    <Map>
+      <entry key="isWizard" value="true"/>
+      <entry key="pageTitle" value="Self Service Application Onboarding"/>
+      <entry key="title" value="Self Service Application Onboarding"/>
+    </Map>
+  </Attributes>
+  <Description>Application Onboarding</Description>
+  <Section columns="3" label="Aggregation" name="roadAggregation">
+    <Attributes>
+      <Map>
+        <entry key="hidden">
+          <value>
+            <Script>
+              <Source><![CDATA[
+             if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadAggregation"))
+             {
+             return roadSectionAttributes.get("roadAggregation");
+             }
+                            ]]></Source>
+            </Script>
+          </value>
+        </entry>
+        <entry key="readOnly">
+          <value>
+            <Script>
+              <Source><![CDATA[
+             if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadReadOnly"))
+             {
+             return roadSectionAttributes.get("roadReadOnly");
+             }
+                            ]]></Source>
+            </Script>
+          </value>
+        </entry>
+        <entry key="subtitle">
+          <value>
+            <Script>
+              <Source><![CDATA[
+        import sailpoint.tools.Internationalizer;
+        String message = Internationalizer.getMessage("aggregation_ROAD_configure_details", Locale.US);
+        String subtitle = message.format(message, roadApplicationselect);
+        return subtitle;
+    ]]></Source>
+            </Script>
+          </value>
+        </entry>
+      </Map>
+    </Attributes>
+    <Field columnSpan="3" displayName="Is Business Application" name="busApp" type="boolean">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+                if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadBusApp"))
+                 {
+                     return roadSectionAttributes.get("roadBusApp");
+                 }
+                
+            ]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="subtitle">
+            <value>
+              <Script>
+                <Source><![CDATA[
+            import sailpoint.tools.Internationalizer;
+            String message = Internationalizer.getMessage("aggregation_ROAD_configure_details_entitlements", Locale.US);
+            String subtitle = message;
+            return subtitle;
+        ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="3" displayName="aggregation_ROAD_configure_details_auth_emp" helpKey="Employee Authoritative Application" name="authoritativeEmployee" type="string">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+            List list = new ArrayList();    
+            List displayList = new ArrayList();
+            displayList.add("true");
+            displayList.add("Yes");
+            list.add(displayList);
+            displayList = new ArrayList();
+            displayList.add("false");
+            displayList.add("No");
+            list.add(displayList);
+            return list;
+            ]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+                if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadAuthoritative"))
+                 {
+                     if(roadSectionAttributes.get("roadAuthoritative").equalsIgnoreCase("false"))
+                     {
+                        if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadauthoritativeEmployee"))
+                        {
+                            if(roadSectionAttributes.get("roadauthoritativeEmployee").equalsIgnoreCase("false"))
+                            {
+                            return false;
+                            }
+                        }
+                     }
+                 }
+                 return true;
+                
+            ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+      <Script>
+        <Source><![CDATA[
+        if ( $(roadModel.authoritativeEmployee) == null) { return "false"; }
+      ]]></Source>
+      </Script>
+    </Field>
+    <Field columnSpan="3" displayName="aggregation_ROAD_configure_details_auth_contract" helpKey="Contractor Authoritative Application" name="authoritativeNonEmployee" type="string">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+            List list = new ArrayList();    
+            List displayList = new ArrayList();
+            displayList.add("true");
+            displayList.add("Yes");
+            list.add(displayList);
+            displayList = new ArrayList();
+            displayList.add("false");
+            displayList.add("No");
+            list.add(displayList);
+            return list;
+            ]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+                if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadAuthoritative"))
+                 {
+                     if(roadSectionAttributes.get("roadAuthoritative").equalsIgnoreCase("false"))
+                     {
+                        if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadauthoritativeNonEmployee"))
+                        {
+                            if(roadSectionAttributes.get("roadauthoritativeNonEmployee").equalsIgnoreCase("false"))
+                            {
+                            return false;
+                            }
+                        }
+                     }
+                 }
+                 return true;
+                
+            ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+      <Script>
+        <Source><![CDATA[
+        if ( $(roadModel.authoritativeNonEmployee) == null) { return "false"; }
+      ]]></Source>
+      </Script>
+    </Field>
+    <Field columnSpan="3" displayName="Service Account Repository" helpKey="Service Account Authoritative Application" name="authoritativeServiceAccount" type="string">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+            List list = new ArrayList();    
+            List displayList = new ArrayList();
+            displayList.add("true");
+            displayList.add("Yes");
+            list.add(displayList);
+            displayList = new ArrayList();
+            displayList.add("false");
+            displayList.add("No");
+            list.add(displayList);
+            return list;
+            ]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+                 if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadAuthoritative"))
+                 {
+                     if(roadSectionAttributes.get("roadAuthoritative").equalsIgnoreCase("false"))
+                     {
+                        if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadAuthServiceAccount"))
+                        {
+                            if(roadSectionAttributes.get("roadAuthServiceAccount").equalsIgnoreCase("false"))
+                            {
+                            return false;
+                            }
+                        }
+                     }
+                 }
+                 return true;
+                
+            ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+      <Script>
+        <Source><![CDATA[
+        if ( $(roadModel.authoritativeServiceAccount) == null) { return "false"; }
+      ]]></Source>
+      </Script>
+    </Field>
+    <Field columnSpan="1" displayName="Identity Attribute" displayType="combobox" helpKey="aggregation_ROAD_configure_details_correlate" name="IIQCorrelatedAttribute" type="string">
+      <AllowedValuesDefinition>
+        <RuleRef>
+          <Reference class="sailpoint.object.Rule" name="Rule-Self-Service-Identity-Attributes"/>
+        </RuleRef>
+      </AllowedValuesDefinition>
+    </Field>
+    <Field columnSpan="1" displayName="Account Operation" displayType="combobox" helpKey="aggregation_ROAD_configure_details_filter" name="IIQCorrelatedOperation" type="string">
+      <AllowedValuesDefinition>
+        <RuleRef>
+          <Reference class="sailpoint.object.Rule" name="Rule-Self-Service-Application-Identification-Operations"/>
+        </RuleRef>
+      </AllowedValuesDefinition>
+    </Field>
+    <Field columnSpan="1" displayName="Account Correlation Attribute" displayType="combobox" helpKey="aggregation_ROAD_configure_details_correlate_attr" name="IIQCorrelatedRegexExpression" type="string">
+      <AllowedValuesDefinition>
+        <RuleRef>
+          <Reference class="sailpoint.object.Rule" name="Rule-Self-Service-Application-Schema"/>
+        </RuleRef>
+      </AllowedValuesDefinition>
+      <ValidationScript>
+        <Source><![CDATA[
+                    // Correlation Attribute must be set for Simple (Default EQUALS) and Business Analyst Settings, only if Account Attribute is selected
+                     String javaRegex = $(roadModel.IIQCorrelatedJavaRegex);
+                     String iIQCorrelatedOperation = $(roadModel.IIQCorrelatedOperation);
+                     String iIQCorrelatedAttribute = $(roadModel.IIQCorrelatedAttribute);
+                     String iIQCorrelatedRegexExpression = $(roadModel.IIQCorrelatedRegexExpression);
+                     if(iIQCorrelatedAttribute!=void && iIQCorrelatedAttribute!=null)
+                     {
+                         if(iIQCorrelatedRegexExpression==void || iIQCorrelatedRegexExpression==null)
+                         {
+                            return "Invalid Correlation Settings.Please select value from Correlation Attribute drop-down field.";
+                         }
+                     }
+                ]]></Source>
+      </ValidationScript>
+    </Field>
+    <Field columnSpan="1" displayName="Disable Account Attribute" displayType="combobox" helpKey="aggregation_ROAD_configure_details_disabled_attr" name="IIQDisabledAttribute" type="string">
+      <AllowedValuesDefinition>
+        <RuleRef>
+          <Reference class="sailpoint.object.Rule" name="Rule-Self-Service-Application-Schema"/>
+        </RuleRef>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+                 if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadSupportedAggregationDisableConnectors")
+                 && roadSectionAttributes.containsKey("roadConnectorName"))
+                 {
+                     List list = roadSectionAttributes.get("roadSupportedAggregationDisableConnectors");
+                     String connectorName=roadSectionAttributes.get("roadConnectorName");
+                     if(list!=null && list.size()>0 && list.contains(connectorName))
+                     {
+                     return true;
+                     }
+                 }
+            ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="1" displayName="Disable Account Operation" displayType="combobox" helpKey="aggregation_ROAD_configure_details_disabled_op" name="IIQDisabledOperation" type="string">
+      <AllowedValuesDefinition>
+        <RuleRef>
+          <Reference class="sailpoint.object.Rule" name="Rule-Self-Service-Application-Identification-Operations"/>
+        </RuleRef>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+                 if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadSupportedAggregationDisableConnectors")
+                 && roadSectionAttributes.containsKey("roadConnectorName"))
+                 {
+                     List list = roadSectionAttributes.get("roadSupportedAggregationDisableConnectors");
+                     String connectorName=roadSectionAttributes.get("roadConnectorName");
+                     if(list!=null && list.size()>0 && list.contains(connectorName))
+                     {
+                     return true;
+                     }
+                 }
+            ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="1" displayName="Disable Account Value" helpKey="aggregation_ROAD_configure_details_disabled_attr_val" name="IIQDisabledRegexExpression" type="string">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+                 if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadSupportedAggregationDisableConnectors")
+                 && roadSectionAttributes.containsKey("roadConnectorName"))
+                 {
+                     List list = roadSectionAttributes.get("roadSupportedAggregationDisableConnectors");
+                     String connectorName=roadSectionAttributes.get("roadConnectorName");
+                     if(list!=null && list.size()>0 && list.contains(connectorName))
+                     {
+                     return true;
+                     }
+                 }
+            ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+      <ValidationScript>
+        <Source><![CDATA[
+                    // Account Value be set for Advanced (Java Regex) and Business Analyst Settings, only if Account Attribute is selected
+                    String javaRegex = $(roadModel.IIQDisabledJavaRegex);
+                    String iIQDisabledOperation = $(roadModel.IIQDisabledOperation);
+                    String iIQDisabledAttribute = $(roadModel.IIQDisabledAttribute);
+                    String iIQDisabledRegexExpression = $(roadModel.IIQDisabledRegexExpression);
+                     if(iIQDisabledAttribute!=void && iIQDisabledAttribute!=null)
+                     {
+                         if( iIQDisabledRegexExpression==void || iIQDisabledRegexExpression==null)
+                         {
+                            return "Invalid Disable Account Settings. Please enter value for Disable Account Value field.";
+                         }
+                     }
+                ]]></Source>
+      </ValidationScript>
+    </Field>
+    <Field columnSpan="1" displayName="Lock Account Attribute" displayType="combobox" helpKey="aggregation_ROAD_configure_details_locked_attr" name="IIQLockedAttribute" type="string">
+      <AllowedValuesDefinition>
+        <RuleRef>
+          <Reference class="sailpoint.object.Rule" name="Rule-Self-Service-Application-Schema"/>
+        </RuleRef>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+                 if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadSupportedAggregationLockConnectors")
+                 && roadSectionAttributes.containsKey("roadConnectorName"))
+                 {
+                     List list = roadSectionAttributes.get("roadSupportedAggregationLockConnectors");
+                     String connectorName=roadSectionAttributes.get("roadConnectorName");
+                     if(list!=null && list.size()>0 && list.contains(connectorName))
+                     {
+                     return true;
+                     }
+                 }
+            ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="1" displayName="Lock Account Operation" displayType="combobox" helpKey="aggregation_ROAD_configure_details_locked_attr_op" name="IIQLockedOperation" type="string">
+      <AllowedValuesDefinition>
+        <RuleRef>
+          <Reference class="sailpoint.object.Rule" name="Rule-Self-Service-Application-Identification-Operations"/>
+        </RuleRef>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+                 if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadSupportedAggregationLockConnectors")
+                 && roadSectionAttributes.containsKey("roadConnectorName"))
+                 {
+                     List list = roadSectionAttributes.get("roadSupportedAggregationLockConnectors");
+                     String connectorName=roadSectionAttributes.get("roadConnectorName");
+                     if(list!=null && list.size()>0 && list.contains(connectorName))
+                     {
+                     return true;
+                     }
+                 }
+            ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="1" displayName="Lock Account Value" helpKey="aggregation_ROAD_configure_details_locked_attr_val" name="IIQLockedRegexExpression" type="string">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+                 if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadSupportedAggregationLockConnectors")
+                 && roadSectionAttributes.containsKey("roadConnectorName"))
+                 {
+                     List list = roadSectionAttributes.get("roadSupportedAggregationLockConnectors");
+                     String connectorName=roadSectionAttributes.get("roadConnectorName");
+                     if(list!=null && list.size()>0 && list.contains(connectorName))
+                     {
+                     return true;
+                     }
+                 }
+            ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+      <ValidationScript>
+        <Source><![CDATA[
+                    // Account Value be set for Advanced (Java Regex) and Business Analyst Settings, only if Account Attribute is selected
+                     String javaRegex = $(roadModel.IIQLockedJavaRegex);
+                     String iIQLockedOperation = $(roadModel.IIQLockedOperation);
+                     String iIQLockedAttribute = $(roadModel.IIQLockedAttribute);
+                     String iIQLockedRegexExpression = $(roadModel.IIQLockedRegexExpression);
+                     if(iIQLockedAttribute!=void && iIQLockedAttribute!=null)
+                     {
+                         if( iIQLockedRegexExpression==void || iIQLockedRegexExpression==null)
+                         {
+                            return "Invalid Lock Account Settings. Please enter value for Lock Account Value field";
+                         }
+                     }
+                ]]></Source>
+      </ValidationScript>
+    </Field>
+    <Field columnSpan="1" displayName="Privileged Account Attribute" displayType="combobox" helpKey="aggregation_ROAD_configure_details_privileged_attr" name="IIQPrivilegedAttribute" type="string">
+      <AllowedValuesDefinition>
+        <RuleRef>
+          <Reference class="sailpoint.object.Rule" name="Rule-Self-Service-Application-Schema"/>
+        </RuleRef>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+                if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadprivilegedAccountAttrExpression"))
+                 {
+                 return roadSectionAttributes.get("roadprivilegedAccountAttrExpression");
+                 }
+                
+            ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="1" displayName="Privileged Account Operation" displayType="combobox" helpKey="aggregation_ROAD_configure_details_privileged_attr_op" name="IIQPrivilegedOperation" type="string">
+      <AllowedValuesDefinition>
+        <RuleRef>
+          <Reference class="sailpoint.object.Rule" name="Rule-Self-Service-Application-Identification-Operations"/>
+        </RuleRef>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+                if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadprivilegedAccountAttrExpression"))
+                 {
+                 return roadSectionAttributes.get("roadprivilegedAccountAttrExpression");
+                 }
+                
+            ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="1" displayName="Privileged Account Value" helpKey="aggregation_ROAD_configure_details_privilved_attr_val" name="IIQPrivilegedRegexExpression" type="string">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+                if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadprivilegedAccountAttrExpression"))
+                 {
+                 return roadSectionAttributes.get("roadprivilegedAccountAttrExpression");
+                 }
+                
+            ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+      <ValidationScript>
+        <Source><![CDATA[
+                    // Account Value be set for Advanced (Java Regex) and Business Analyst Settings, only if Account Attribute is selected
+                     String javaRegex = $(roadModel.IIQPrivilegedJavaRegex);
+                     String iIQPrivilegedOperation = $(roadModel.IIQPrivilegedOperation);
+                     String iIQPrivilegedAttribute = $(roadModel.IIQPrivilegedAttribute);
+                     String iIQPrivilegedRegexExpression = $(roadModel.IIQPrivilegedRegexExpression);
+                     if(iIQPrivilegedAttribute!=void && iIQPrivilegedAttribute!=null)
+                     {
+                         if( iIQPrivilegedRegexExpression==void || iIQPrivilegedRegexExpression==null)
+                         {
+                            return "Invalid Privileged Account Settings.Please enter value for Privileged Account Value field.";
+                         }
+                     }
+                ]]></Source>
+      </ValidationScript>
+    </Field>
+    <Field columnSpan="1" displayName="Privileged Entitlement Attribute" displayType="combobox" helpKey="aggregation_ROAD_configure_details_entitlement_privileged_attr" name="IIQEntitlementPrivilegedAttribute" type="string">
+      <AllowedValuesDefinition>
+        <RuleRef>
+          <Reference class="sailpoint.object.Rule" name="Rule-Self-Service-Application-ObjectTypes-Schema"/>
+        </RuleRef>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+                if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadprivilegedEntAttrExpression"))
+                 {
+                 return roadSectionAttributes.get("roadprivilegedEntAttrExpression");
+                 }
+                
+            ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="1" displayName="Privileged Entitlement Operation" displayType="combobox" helpKey="aggregation_ROAD_configure_details_entitlement_privileged_op" name="IIQEntitlementPrivilegedOperation" type="string">
+      <AllowedValuesDefinition>
+        <RuleRef>
+          <Reference class="sailpoint.object.Rule" name="Rule-Self-Service-Application-Identification-Operations"/>
+        </RuleRef>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+                if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadprivilegedEntAttrExpression"))
+                 {
+                 return roadSectionAttributes.get("roadprivilegedEntAttrExpression");
+                 }
+                
+            ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="1" displayName="Privileged Entitlement Value" helpKey="aggregation_ROAD_configure_details_entitlement_privileged_val" name="IIQEntitlementPrivilegedRegexExpression" type="string">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+                if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadprivilegedEntAttrExpression"))
+                 {
+                 return roadSectionAttributes.get("roadprivilegedEntAttrExpression");
+                 }
+                
+            ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+      <ValidationScript>
+        <Source><![CDATA[
+                    // Account Value be set for Advanced (Java Regex) and Business Analyst Settings, only if Account Attribute is selected
+                     String javaRegex = $(roadModel.IIQEntitlementPrivilegedJavaRegex);
+                     String iIQEntitlementPrivilegedOperation = $(roadModel.IIQEntitlementPrivilegedOperation);
+                     String iIQEntitlementPrivilegedAttribute = $(roadModel.IIQEntitlementPrivilegedAttribute);
+                     String iIQEntitlementPrivilegedRegexExpression = $(roadModel.IIQEntitlementPrivilegedRegexExpression);
+                     if(iIQEntitlementPrivilegedAttribute!=void && iIQEntitlementPrivilegedAttribute!=null)
+                     {
+                         if(iIQEntitlementPrivilegedRegexExpression==void || iIQEntitlementPrivilegedRegexExpression==null)
+                         {
+                            return "Invalid Privileged Entitlement Settings. Please enter value for Privileged Entitlement Value field";
+                         }
+                     }
+                ]]></Source>
+      </ValidationScript>
+    </Field>
+    <Field columnSpan="1" displayName="Birthright Entitlement Attribute" displayType="combobox" helpKey="aggregation_ROAD_configure_details_entitlement_birthright_attr" name="IIQEntitlementBirthrightAttribute" type="string">
+      <AllowedValuesDefinition>
+        <RuleRef>
+          <Reference class="sailpoint.object.Rule" name="Rule-Self-Service-Application-ObjectTypes-Schema"/>
+        </RuleRef>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+                    
+                    if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadisBirthright"))
+                    {
+                    return roadSectionAttributes.get("roadisBirthright");
+                    }
+                 
+                ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="1" displayName="Birthright Entitlement Operation" displayType="combobox" helpKey="aggregation_ROAD_configure_details_entitlement_birthright_op" name="IIQEntitlementBirthrightOperation" type="string">
+      <AllowedValuesDefinition>
+        <RuleRef>
+          <Reference class="sailpoint.object.Rule" name="Rule-Self-Service-Application-Identification-Operations"/>
+        </RuleRef>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+                    
+                    if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadisBirthright"))
+                    {
+                    return roadSectionAttributes.get("roadisBirthright");
+                    }
+                 
+                ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="1" displayName="Birthright Entitlement Value" helpKey="aggregation_ROAD_configure_details_entitlement_birthright_val" name="IIQEntitlementBirthrightRegexExpression" type="string">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+                    
+                    if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadisBirthright"))
+                    {
+                    return roadSectionAttributes.get("roadisBirthright");
+                    }
+                 
+                ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+      <ValidationScript>
+        <Source><![CDATA[
+                    // Account Value be set for Advanced (Java Regex) and Business Analyst Settings, only if Account Attribute is selected
+                     String javaRegex = $(roadModel.IIQEntitlementBirthrightJavaRegex);
+                     String iIQEntitlementBirthrightOperation = $(roadModel.IIQEntitlementBirthrightOperation);
+                     String iIQEntitlementBirthrightAttribute = $(roadModel.IIQEntitlementBirthrightAttribute);
+                     String iIQEntitlementBirthrightRegexExpression = $(roadModel.IIQEntitlementBirthrightRegexExpression);
+                     if(iIQEntitlementBirthrightAttribute!=void && iIQEntitlementBirthrightAttribute!=null)
+                     {
+                         if( iIQEntitlementBirthrightRegexExpression==void || iIQEntitlementBirthrightRegexExpression==null)
+                         {
+                            return "Invalid Birthright Entitlement Settings. Please enter value for Birthright Entitlement Value field";
+                         }
+                     }
+                ]]></Source>
+      </ValidationScript>
+    </Field>
+    <Field columnSpan="1" displayName="Service Account Attribute" displayType="combobox" helpKey="Service Account Correlation Attribute, if no value is selected, existing configuration will be cleared out" name="IIQServiceAttribute" type="string">
+      <AllowedValuesDefinition>
+        <RuleRef>
+          <Reference class="sailpoint.object.Rule" name="Rule-Self-Service-Application-Schema"/>
+        </RuleRef>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+                if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadserviceAccountAttrExpression"))
+                 {
+                 return roadSectionAttributes.get("roadserviceAccountAttrExpression");
+                 }  
+            ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="1" displayName="Service Account Operation" displayType="combobox" helpKey="Service Account Correlation Operation, if empty, Account Value is used as Java Regular Expression" name="IIQServiceOperation" type="string">
+      <AllowedValuesDefinition>
+        <RuleRef>
+          <Reference class="sailpoint.object.Rule" name="Rule-Self-Service-Application-Identification-Operations"/>
+        </RuleRef>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+                 if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadserviceAccountAttrExpression"))
+                 {
+                 return roadSectionAttributes.get("roadserviceAccountAttrExpression");
+                 }  
+            ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="1" displayName="Service Account Value" helpKey="Service Account Correlation Value or use Java Regular Expression" name="IIQServiceRegexExpression" type="string">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+                if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadserviceAccountAttrExpression"))
+                 {
+                 return roadSectionAttributes.get("roadserviceAccountAttrExpression");
+                 }  
+            ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+      <ValidationScript>
+        <Source><![CDATA[
+                    // Account Value be set for Advanced (Java Regex) and Business Analyst Settings, only if Account Attribute is selected
+                     String javaRegex = $(roadModel.IIQServiceJavaRegex);
+                     String iIQServiceOperation = $(roadModel.IIQServiceOperation);
+                     String iIQServiceAttribute = $(roadModel.IIQServiceAttribute);
+                     String iIQServiceRegexExpression = $(roadModel.IIQServiceRegexExpression);
+                     if(iIQServiceAttribute!=void && iIQServiceAttribute!=null)
+                     {
+                         if (iIQServiceRegexExpression==void || iIQServiceRegexExpression==null)
+                         {
+                            return "Invalid Service Account Settings. Please enter value for Service Account Value field";
+                         }
+                     }
+                ]]></Source>
+      </ValidationScript>
+    </Field>
+    <Field columnSpan="1" displayName="Service Account Name Generation" helpKey="Append Application Name to Service Account Cube Name" name="apAppendApplicationName" type="boolean">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+          if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadserviceAccountAppendAppName"))
+         {
+         return roadSectionAttributes.get("roadserviceAccountAppendAppName");
+         }  
+      ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="2" displayName="Service Account Name Generation Attribute Name" displayType="combobox" helpKey="Service Account Cube Name Generation Attribute" name="apServiceAccountUniqueName" type="string">
+      <AllowedValuesDefinition>
+        <RuleRef>
+          <Reference class="sailpoint.object.Rule" name="Rule-Self-Service-Application-Schema"/>
+        </RuleRef>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+          if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadserviceAccountCubeAttrName"))
+         {
+         return roadSectionAttributes.get("roadserviceAccountCubeAttrName");
+         }  
+      ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+  </Section>
+  <Section columns="2" label="Joiner" name="roadJoiner">
+    <Attributes>
+      <Map>
+        <entry key="hidden">
+          <value>
+            <Script>
+              <Source><![CDATA[
+             if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadJoiner"))
+             {
+             return roadSectionAttributes.get("roadJoiner");
+             }
+                            ]]></Source>
+            </Script>
+          </value>
+        </entry>
+        <entry key="readOnly">
+          <value>
+            <Script>
+              <Source><![CDATA[
+             if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadReadOnly"))
+             {
+             return roadSectionAttributes.get("roadReadOnly");
+             }
+                            ]]></Source>
+            </Script>
+          </value>
+        </entry>
+        <entry key="subtitle">
+          <value>
+            <Script>
+              <Source><![CDATA[
+        import sailpoint.tools.Internationalizer;
+        String message = Internationalizer.getMessage("joiner_ROAD_configure_workflow", Locale.US);
+        String subtitle = message.format(message, roadApplicationselect);
+        return subtitle;
+    ]]></Source>
+            </Script>
+          </value>
+        </entry>
+      </Map>
+    </Attributes>
+    <Field columnSpan="2" displayName="Activate Joiner" helpKey="joiner_ROAD_configure_app_include" name="joinerEnabled" type="boolean">
+      <Script>
+        <Source><![CDATA[
+             return $(roadModel.joinerEnabled); 
+            ]]></Source>
+      </Script>
+    </Field>
+    <Field columnSpan="2" displayName="Restore Only Primary Account on Rehire" helpKey="joiner_ROAD_configure_rehire_restore" name="rehirePrimaryaccount" type="boolean">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+                String disabledFeature="True";
+                if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadJoinerRehire"))
+                {
+                disabledFeature= roadSectionAttributes.get("roadJoinerRehire");
+                }
+                boolean enabled=true;
+                if(disabledFeature!=null && disabledFeature.length()>0 && disabledFeature.equalsIgnoreCase("TRUE"))
+                {
+                    enabled=false;
+                }
+                if(!enabled)
+                {
+                //Return Right Away Rehire is Disabled
+                return true;
+                }
+                if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadrehirePrimaryaccount"))
+                 {
+                 return roadSectionAttributes.get("roadrehirePrimaryaccount");
+                 }
+                
+            ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="1" displayName="Birthright Population" helpKey="joiner_ROAD_configure_birthright_pops" multi="true" name="joinerPopulationRegex" postBack="true" type="GroupDefinition">
+      <Attributes>
+        <Map>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="1" displayName="Birthright Roles" dynamic="true" helpKey="joiner_ROAD_configure_birthright_roles_included" multi="true" name="joinerRoles" readOnly="true" type="bundle">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+                    import sailpoint.tools.Util;
+                    import sailpoint.object.Filter;
+                    import org.apache.commons.logging.Log;
+                    import org.apache.commons.logging.LogFactory;
+                    import sailpoint.rapidapponboarding.logger.LogEnablement;
+                    Log logger = LogFactory.getLog("rapidapponboarding.rules");
+                    if(roadApplicationselect!=void && roadApplicationselect !=null)
+                    {
+                       Filter filter= Filter.and(Filter.eq("type", "birthright"),Filter.eq("disabled",false),Filter.ignoreCase(Filter.eq("isBirthright", "TRUE")), Filter.ignoreCase(Filter.in("profiles.application.name", Arrays.asList(roadApplicationselect)
+                       )));
+                       field.setFilterString(filter.toString());
+                    }
+                    else 
+                    {
+                     Filter filter= Filter.eq("type", "birthright");
+                     field.setFilterString(filter.toString());
+                    }
+                    return false;  
+                 ]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+      <RuleRef>
+        <Reference class="sailpoint.object.Rule" name="Rule-Self-Service-Birthright-Roles"/>
+      </RuleRef>
+    </Field>
+    <Field columnSpan="1" displayName="Rehire Options" displayType="combobox" helpKey="joiner_ROAD_configure_rehire_accounts" name="rehireProcess" type="string">
+      <AllowedValuesDefinition>
+        <RuleRef>
+          <Reference class="sailpoint.object.Rule" name="Rule-Self-Service-Onboard-ApplicationOptions"/>
+        </RuleRef>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+                // Value Disable
+                 if($(roadModel.rehireProcess)!=null && $(roadModel.rehireProcess).contains("Extended"))
+                 {
+                 return true;
+                 }
+                 //Functionality Disable
+                 if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadJoinerRehire"))
+                 {
+                 return roadSectionAttributes.get("roadJoinerRehire");
+                 }
+                
+            ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Process Attribute Synchronization After Rehire" helpKey="joiner_ROAD_configure_rehire_attribute_sync" name="apAfterRehireAttrSync" type="boolean">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadJoinerRehire"))
+             {
+                 if(roadSectionAttributes.get("roadJoinerRehire")!=null  && roadSectionAttributes.get("roadJoinerRehire").equalsIgnoreCase("FALSE") &&
+                 roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadAttrSync"))
+                 {
+                 return roadSectionAttributes.get("roadAttrSync");
+                 }
+             }
+            ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="1" displayName="Reverse Leaver Options" displayType="combobox" helpKey="joiner_ROAD_configure_reverse_leaver" name="reverseleaverProcess" type="string">
+      <AllowedValuesDefinition>
+        <RuleRef>
+          <Reference class="sailpoint.object.Rule" name="Rule-Self-Service-Onboard-ApplicationOptions"/>
+        </RuleRef>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+                // Value Disable
+                 if($(roadModel.reverseleaverProcess)!=null && $(roadModel.reverseleaverProcess).contains("Extended"))
+                 {
+                 return true;
+                 }
+                 //Functionality Disable
+                 if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadLeaverReverse"))
+                 {
+                 return roadSectionAttributes.get("roadLeaverReverse");
+                 }  
+             
+            ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="1" displayName="Options" displayType="combobox" helpKey="Return to Work Leave of Absence Options" name="rtwloaProcess" type="string">
+      <AllowedValuesDefinition>
+        <RuleRef>
+          <Reference class="sailpoint.object.Rule" name="Rule-Self-Service-Onboard-ApplicationOptions"/>
+        </RuleRef>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+                // Value Disable
+                 if($(roadModel.rtwloaProcess)!=null && $(roadModel.rtwloaProcess).contains("Extended"))
+                 {
+                 return true;
+                 }
+                 //Functionality Disable
+                 if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadJoinerLOA"))
+                 {
+                 return roadSectionAttributes.get("roadJoinerLOA");
+                 }
+                
+            ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="1" displayName="Options" displayType="combobox" helpKey="Return to Work Long Term Disability Options" name="rtwltdProcess" type="string">
+      <AllowedValuesDefinition>
+        <RuleRef>
+          <Reference class="sailpoint.object.Rule" name="Rule-Self-Service-Onboard-ApplicationOptions"/>
+        </RuleRef>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+                 // Value Disable
+                 if($(roadModel.rtwltdProcess)!=null && $(roadModel.rtwltdProcess).contains("Extended"))
+                 {
+                 return true;
+                 }
+                 //Functionality Disable
+                 if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadJoinerLTD"))
+                 {
+                 return roadSectionAttributes.get("roadJoinerLTD");
+                 }
+                
+            ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="1" displayName="Joiner Email Instructions" displayType="textarea" helpKey="joiner_ROAD_configure_email_instructions" name="joinerVelocityText" type="string"/>
+    <Field displayName="Joiner Email Password Instructions" displayType="textarea" helpKey="joiner_ROAD_configure_email_password_instructions" name="joinerPasswordVelocityText" type="string">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+                            
+                                 if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("additionalPasswordEmail"))
+                                 {
+                                    return roadSectionAttributes.get("additionalPasswordEmail");
+                                 }
+                         
+                        ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+      <ValidationScript>
+        <Source><![CDATA[
+                import sailpoint.rapidapponboarding.rule.SelfServiceRuleLibrary;
+                String text=$(roadModel.joinerPasswordVelocityText);
+                if(roadApplicationselect!=null && text!=null && text.length()>0)
+                {
+                  String validation=SelfServiceRuleLibrary.appendPasswordtoRehireJoinerEmails(context,text,roadApplicationselect);
+                  if(validation==null)
+                 {
+                  return "Create Provisioning Policy is defined without Password Field";
+                  }
+                }
+                ]]></Source>
+      </ValidationScript>
+    </Field>
+    <Field columnSpan="1" displayName="Rehire Email Instructions" displayType="textarea" helpKey="joiner_ROAD_configure_rehire_email_instructions" name="joinerRehireVelocityText" type="string">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+              if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadJoinerRehire"))
+             {
+             return roadSectionAttributes.get("roadJoinerRehire");
+             }
+                
+            ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="1" displayName="Rehire Email Password Instructions" displayType="textarea" helpKey="joiner_ROAD_configure_rehire_email_password_instructions" name="joinerRehirePasswordVelocityText" type="string">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+                            
+                                String disabledFeature="TRUE";
+                                if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadJoinerRehire"))
+                                {
+                                disabledFeature=roadSectionAttributes.get("roadJoinerRehire");
+                                }
+                                boolean enabled=true;
+                                if(disabledFeature!=null && disabledFeature.length()>0 && disabledFeature.equalsIgnoreCase("TRUE"))
+                                {
+                                    enabled=false;
+                                }
+                                if(!enabled)
+                                {
+                                //Return Right Away Rehire is Disabled
+                                return true;
+                                }
+                                if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("additionalPasswordEmail"))
+                                {
+                                    return roadSectionAttributes.get("additionalPasswordEmail");
+                                 }
+                         
+                        ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+      <ValidationScript>
+        <Source><![CDATA[
+                import sailpoint.rapidapponboarding.rule.SelfServiceRuleLibrary;
+                String text=$(roadModel.joinerRehirePasswordVelocityText);
+                if(roadApplicationselect!=null && text!=null && text.length()>0)
+                {
+                  String validation=SelfServiceRuleLibrary.appendPasswordtoRehireJoinerEmails(context,text,roadApplicationselect);
+                  if(validation==null)
+                 {
+                  return "Create Provisioning Policy is defined without Password Field";
+                  }
+                }
+                ]]></Source>
+      </ValidationScript>
+    </Field>
+  </Section>
+  <Section columns="3" label="Leaver" name="roadLeaver">
+    <Attributes>
+      <Map>
+        <entry key="hidden">
+          <value>
+            <Script>
+              <Source><![CDATA[
+             if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadLeaver"))
+             {
+             return roadSectionAttributes.get("roadLeaver");
+             }
+                            ]]></Source>
+            </Script>
+          </value>
+        </entry>
+        <entry key="readOnly">
+          <value>
+            <Script>
+              <Source><![CDATA[
+             if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadReadOnly"))
+             {
+             return roadSectionAttributes.get("roadReadOnly");
+             }
+                            ]]></Source>
+            </Script>
+          </value>
+        </entry>
+        <entry key="subtitle">
+          <value>
+            <Script>
+              <Source><![CDATA[
+        import sailpoint.tools.Internationalizer;
+        String message = Internationalizer.getMessage("leaver_ROAD_configure_workflow", Locale.US);
+        String subtitle = message.format(message, roadApplicationselect);
+        return subtitle;
+    ]]></Source>
+            </Script>
+          </value>
+        </entry>
+      </Map>
+    </Attributes>
+    <Field columnSpan="3" displayName="Move Account on Termination" helpKey="leaver_ROAD_configure_termination_ou" multi="true" name="moveAccountContainer" type="string"/>
+    <Field columnSpan="3" displayName="Leaver Options" displayType="combobox" helpKey="leaver_ROAD_configure_termination_process" name="terminationProcess" type="string">
+      <AllowedValuesDefinition>
+        <RuleRef>
+          <Reference class="sailpoint.object.Rule" name="Rule-Self-Service-Onboard-ApplicationLeaverOptions"/>
+        </RuleRef>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+                 //Hide Termination Options if we have Advanced Leaver Options/Population is Defined
+                 Object advancedLeaverOptions=$(roadModel.apPopulationLeaverOptions);
+                 if(advancedLeaverOptions!=null && advancedLeaverOptions instanceof List && advancedLeaverOptions.size()>0)
+                 {
+                    return true;
+                 }
+                 if($(roadModel.terminationProcess)!=null && ($(roadModel.terminationProcess).equalsIgnoreCase("Do Nothing")||$(roadModel.terminationProcess).contains("Delete")))
+                 {
+                    return false;
+                 }
+                 else if($(roadModel.terminationProcess)!=null && ($(roadModel.terminationProcess).contains("Extended")||!$(roadModel.terminationProcess).contains("Remove") ))
+                 {
+                    return true;
+                 }
+                ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+      <Script>
+        <Source><![CDATA[
+             return $(roadModel.terminationProcess);    
+            ]]></Source>
+      </Script>
+    </Field>
+    <Field columnSpan="3" displayName="Postpone By X Days" helpKey="leaver_ROAD_configure_termination_wait_days" name="xDays" type="string">
+      <ValidationScript>
+        <Source><![CDATA[
+            if( form.getField("terminationProcess")!=null && form.getField("terminationProcess").getValue()!=null &&
+            form.getField("terminationProcess").getValue().contains("X Days") && value==null)
+            {
+                return "Please Enter Defer Termination By X Days";
+             }
+                ]]></Source>
+      </ValidationScript>
+    </Field>
+    <Field columnSpan="3" displayName="Postpone Account Delete By X Days" helpKey="leaver_ROAD_configure_termination_account_wait_days" name="xDeleteDays" type="string"/>
+    <Field columnSpan="1" displayName="Scramble Password Attribute Name" helpKey="leaver_ROAD_configure_termination_password_attr" name="scramblePasswordAttr" type="string"/>
+    <Field columnSpan="1" displayName="Comment Attribute" helpKey="leaver_ROAD_configure_termination_comments_attr" name="commentsAttr" type="string"/>
+    <Field columnSpan="1" displayName="Comment Value" helpKey="leaver_ROAD_configure_termination_comments_val" name="commentsValue" type="string"/>
+    <Field columnSpan="1" displayName="Removal Exception Entitlement" displayType="combobox" helpKey="leaver_ROAD_configure_termination_entitlements_exceptions" name="IIQEntitlementLeaverExceptionAttribute" type="string">
+      <AllowedValuesDefinition>
+        <RuleRef>
+          <Reference class="sailpoint.object.Rule" name="Rule-Self-Service-Application-Schema"/>
+        </RuleRef>
+      </AllowedValuesDefinition>
+    </Field>
+    <Field columnSpan="1" displayName="Entitlement Operation" displayType="combobox" helpKey="leaver_ROAD_configure_termination_entitlements_opt" name="IIQEntitlementLeaverExceptionOperation" type="string">
+      <AllowedValuesDefinition>
+        <RuleRef>
+          <Reference class="sailpoint.object.Rule" name="Rule-Self-Service-Application-Identification-Operations"/>
+        </RuleRef>
+      </AllowedValuesDefinition>
+    </Field>
+    <Field columnSpan="1" displayName="Entitlement Value" helpKey="leaver_ROAD_configure_termination_entitlements_val" name="IIQEntitlementLeaverExceptionRegexExpression" type="string">
+      <ValidationScript>
+        <Source><![CDATA[
+                    // Account Value be set for Advanced (Java Regex) and Business Analyst Settings, only if Account Attribute is selected
+                    String javaRegex = $(roadModel.IIQEntitlementLeaverExceptionJavaRegex);
+                    String iIQEntitlementLeaverExceptionOperation = $(roadModel.IIQEntitlementLeaverExceptionOperation);
+                    String iIQEntitlementLeaverExceptionAttribute = $(roadModel.IIQEntitlementLeaverExceptionAttribute);
+                    String iIQEntitlementLeaverExceptionRegexExpression = $(roadModel.IIQEntitlementLeaverExceptionRegexExpression);
+                    if(iIQEntitlementLeaverExceptionAttribute!=void && iIQEntitlementLeaverExceptionAttribute!=null)
+                     {
+                         if( iIQEntitlementLeaverExceptionRegexExpression==void || iIQEntitlementLeaverExceptionRegexExpression==null)
+                         {
+                            return "Invalid Remove Entitlement Exception Settings. Please enter value for Account Value field";
+                         }
+                     }
+                ]]></Source>
+      </ValidationScript>
+    </Field>
+    <Field columnSpan="3" displayName="Leave of Absence Options" displayType="combobox" name="loaProcess" type="string">
+      <AllowedValuesDefinition>
+        <RuleRef>
+          <Reference class="sailpoint.object.Rule" name="Rule-Self-Service-Onboard-ApplicationOptions"/>
+        </RuleRef>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+                // Value Disable
+                 if($(roadModel.loaProcess)!=null && $(roadModel.loaProcess).contains("Extended"))
+                 {
+                 return true;
+                 }
+                 //Functionality Disable
+                if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadLeaverLOA"))
+                {
+                return roadSectionAttributes.get("roadLeaverLOA");
+                }
+                
+            ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+      <Script>
+        <Source><![CDATA[
+             return $(roadModel.loaProcess);    
+            ]]></Source>
+      </Script>
+    </Field>
+    <Field columnSpan="3" displayName="Long Term Disability Options" displayType="combobox" name="ltdProcess" type="string">
+      <AllowedValuesDefinition>
+        <RuleRef>
+          <Reference class="sailpoint.object.Rule" name="Rule-Self-Service-Onboard-ApplicationOptions"/>
+        </RuleRef>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+               // Value Disable
+                 if($(roadModel.ltdProcess)!=null && $(roadModel.ltdProcess).contains("Extended"))
+                 {
+                 return true;
+                 }
+                 //Functionality Disable
+                if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadLeaverLTD"))
+                {
+                return roadSectionAttributes.get("roadLeaverLTD");
+                }
+                
+            ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+      <Script>
+        <Source><![CDATA[
+             return $(roadModel.ltdProcess);    
+            ]]></Source>
+      </Script>
+    </Field>
+  </Section>
+  <Section columns="2" label="Mover" name="roadMover">
+    <Attributes>
+      <Map>
+        <entry key="hidden">
+          <value>
+            <Script>
+              <Source><![CDATA[
+            if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadMover"))
+             {
+             return roadSectionAttributes.get("roadMover");
+             }
+                            ]]></Source>
+            </Script>
+          </value>
+        </entry>
+        <entry key="readOnly">
+          <value>
+            <Script>
+              <Source><![CDATA[
+             if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadReadOnly"))
+             {
+             return roadSectionAttributes.get("roadReadOnly");
+             }
+                            ]]></Source>
+            </Script>
+          </value>
+        </entry>
+        <entry key="subtitle">
+          <value>
+            <Script>
+              <Source><![CDATA[
+        import sailpoint.tools.Internationalizer;
+        String message = Internationalizer.getMessage("mover_ROAD_configure_workflow", Locale.US);
+        String subtitle = message.format(message, roadApplicationselect);
+        return subtitle;
+    ]]></Source>
+            </Script>
+          </value>
+        </entry>
+      </Map>
+    </Attributes>
+    <Field displayName="Mover Options" displayType="combobox" helpKey="mover_ROAD_configure_manager_cert_gen" name="moverProcess" type="string">
+      <AllowedValuesDefinition>
+        <RuleRef>
+          <Reference class="sailpoint.object.Rule" name="Rule-Self-Service-Onboard-ApplicationOptions"/>
+        </RuleRef>
+      </AllowedValuesDefinition>
+      <Script>
+        <Source><![CDATA[
+             return $(roadModel.moverProcess);  
+            ]]></Source>
+      </Script>
+    </Field>
+    <Field displayName="Process Attribute Synchronization Before Mover Certification" helpKey="mover_ROAD_configure_manager_cert_attr_sync" name="apBeforeMoverAttrSync" type="boolean">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+             if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadMover"))
+             {
+                 if(roadSectionAttributes.get("roadMover")!=null  && roadSectionAttributes.get("roadMover").equalsIgnoreCase("FALSE") &&
+                 roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadAttrSync"))
+                 {
+                    return roadSectionAttributes.get("roadAttrSync");
+                 }
+             }
+            ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Process Joiner After Mover" helpKey="mover_ROAD_configure_joiner_opt" name="apAfterMoverJoiner" type="boolean">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+             if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadMover"))
+             {
+                 if(roadSectionAttributes.get("roadMover")!=null  && roadSectionAttributes.get("roadMover").equalsIgnoreCase("FALSE") &&
+                 roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadJoiner"))
+                 {
+                    return roadSectionAttributes.get("roadJoiner");
+                 }
+             }
+            ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Before Mover Options" displayType="combobox" helpKey="mover_ROAD_configure_prior_action" name="beforemoverAccount" type="string">
+      <AllowedValuesDefinition>
+        <RuleRef>
+          <Reference class="sailpoint.object.Rule" name="Rule-Self-Service-Onboard-ApplicationOptions"/>
+        </RuleRef>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+                 // Value Disable
+                 if($(roadModel.beforemoverAccount)!=null && $(roadModel.beforemoverAccount).contains("Extended"))
+                 {
+                 return true;
+                 }
+                
+            ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+      <Script>
+        <Source><![CDATA[
+             return $(roadModel.beforemoverAccount);    
+            ]]></Source>
+      </Script>
+    </Field>
+    <Field displayName="Automated Allow Exception Account Revocation Options" displayType="combobox" helpKey="mover_ROAD_configure_manager_cert_empty_account_opt" name="moverRevocation" type="string">
+      <AllowedValuesDefinition>
+        <RuleRef>
+          <Reference class="sailpoint.object.Rule" name="Rule-Self-Service-Onboard-ApplicationOptions"/>
+        </RuleRef>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+             if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadMitigation"))
+             {
+             return roadSectionAttributes.get("roadMitigation");
+             }
+                
+            ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Move Only Primary Account" helpKey="mover_ROAD_configure_move_only_primary" name="beforemoverPrimaryaccount" type="boolean">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+                 // Value Disable
+                 if($(roadModel.beforemoverAccount)!=null && $(roadModel.beforemoverAccount).contains("Extended"))
+                 {
+                 return true;
+                 }
+                 //Functionality Disable
+                if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadbeforemoverPrimaryaccount"))
+                 {
+                 return roadSectionAttributes.get("roadbeforemoverPrimaryaccount");
+                 }
+                
+            ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+      <Script>
+        <Source><![CDATA[
+             return $(roadModel.beforemoverPrimaryaccount); 
+            ]]></Source>
+      </Script>
+    </Field>
+  </Section>
+  <Section columns="2" label="Native Change" name="roadNativeChange">
+    <Attributes>
+      <Map>
+        <entry key="hidden">
+          <value>
+            <Script>
+              <Source><![CDATA[
+             if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadNativeChange"))
+             {
+             return roadSectionAttributes.get("roadNativeChange");
+             }
+                            ]]></Source>
+            </Script>
+          </value>
+        </entry>
+        <entry key="readOnly">
+          <value>
+            <Script>
+              <Source><![CDATA[
+             if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadReadOnly"))
+             {
+             return roadSectionAttributes.get("roadReadOnly");
+             }
+                            ]]></Source>
+            </Script>
+          </value>
+        </entry>
+        <entry key="subtitle">
+          <value>
+            <Script>
+              <Source><![CDATA[
+        String subtitle = "Please make sure Native Change Options are set up on Application "+roadApplicationselect+" using IdentityIQ Administrative Page. Application being onboarded is "+roadApplicationselect;
+        return subtitle;
+    ]]></Source>
+            </Script>
+          </value>
+        </entry>
+      </Map>
+    </Attributes>
+    <Field displayName="Native Change Options" displayType="combobox" name="nativeChangeProcess" type="string">
+      <AllowedValuesDefinition>
+        <RuleRef>
+          <Reference class="sailpoint.object.Rule" name="Rule-Self-Service-Onboard-ApplicationOptions"/>
+        </RuleRef>
+      </AllowedValuesDefinition>
+    </Field>
+  </Section>
+  <Section columns="2" label="Attribute Synchronization" name="roadAttrSync">
+    <Attributes>
+      <Map>
+        <entry key="hidden">
+          <value>
+            <Script>
+              <Source><![CDATA[
+             if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadAttrSync"))
+             {
+             return roadSectionAttributes.get("roadAttrSync");
+             }
+                            ]]></Source>
+            </Script>
+          </value>
+        </entry>
+        <entry key="readOnly">
+          <value>
+            <Script>
+              <Source><![CDATA[
+             if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadReadOnly"))
+             {
+             return roadSectionAttributes.get("roadReadOnly");
+             }
+                            ]]></Source>
+            </Script>
+          </value>
+        </entry>
+        <entry key="subtitle">
+          <value>
+            <Script>
+              <Source><![CDATA[
+        import sailpoint.tools.Internationalizer;
+        String message = Internationalizer.getMessage("attribute_sync_ROAD_configure", Locale.US);
+        String subtitle = message.format(message, roadApplicationselect);
+        return subtitle;
+    ]]></Source>
+            </Script>
+          </value>
+        </entry>
+      </Map>
+    </Attributes>
+    <Field displayName="Synchronize Only Primary Accounts" helpKey="attribute_sync_ROAD_primary_account_sync" name="primarySyncaccounts" type="boolean">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+                if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadprimarySyncaccounts"))
+                 {
+                 return roadSectionAttributes.get("roadprimarySyncaccounts");
+                 }
+                
+            ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Rename / Move LDAP Account" helpKey="attribute_sync_ROAD_ldap_rename" name="renameLDAPaccount" type="boolean"/>
+    <Field displayName="Evaluate Create Provisioning Policy for Synchronization" helpKey="attribute_sync_ROAD_apply_create_policy" name="evaluateCreateprovpolicy" type="string">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+            List list = new ArrayList();    
+            List displayList = new ArrayList();
+            displayList.add("True");
+            displayList.add("ON");
+            list.add(displayList);
+            displayList = new ArrayList();
+            displayList.add("False");
+            displayList.add("OFF");
+            list.add(displayList);
+            return list;
+            ]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+      <Script>
+        <Source><![CDATA[
+        if ( $(roadModel.evaluateCreateprovpolicy) == null) { return "False"; }
+      ]]></Source>
+      </Script>
+    </Field>
+    <Field columnSpan="2" displayName="Source Attributes" helpKey="attribute_sync_ROAD_source_attrs" multi="true" name="identityAttrSubscription" readOnly="true"/>
+    <Field columnSpan="2" displayName="Target Attributes" helpKey="attribute_sync_ROAD_target_attrs" multi="true" name="applicationAttrSubscription" readOnly="true"/>
+    <Field displayName="Source to Target Mappings" helpKey="attribute_sync_ROAD_mappings" multi="true" name="attrSyncSubscription" type="string">
+      <ValidationScript>
+        <Includes>
+          <Reference class="sailpoint.object.Rule" name="Rule-Self-Service-Onboard-RuleLibrary"/>
+        </Includes>
+        <Source><![CDATA[
+                
+                return validateAttributeSyncMappings( $(roadModel.attrSyncSubscription), roadApplicationselect,  $(roadModel.evaluateCreateprovpolicy));
+                
+              ]]></Source>
+      </ValidationScript>
+    </Field>
+  </Section>
+  <Section columns="2" label="Approval" name="roadCartRequest">
+    <Attributes>
+      <Map>
+        <entry key="hidden">
+          <value>
+            <Script>
+              <Source><![CDATA[
+             if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadCartRequest"))
+             {
+             return roadSectionAttributes.get("roadCartRequest");
+             }
+                            ]]></Source>
+            </Script>
+          </value>
+        </entry>
+        <entry key="readOnly">
+          <value>
+            <Script>
+              <Source><![CDATA[
+             if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadReadOnly"))
+             {
+             return roadSectionAttributes.get("roadReadOnly");
+             }
+                            ]]></Source>
+            </Script>
+          </value>
+        </entry>
+        <entry key="subtitle">
+          <value>
+            <Script>
+              <Source><![CDATA[
+        import sailpoint.tools.Internationalizer;
+        String message = Internationalizer.getMessage("approver_ROAD_configure", Locale.US);
+        String subtitle = message.format(message, roadApplicationselect);
+        return subtitle;
+    ]]></Source>
+            </Script>
+          </value>
+        </entry>
+      </Map>
+    </Attributes>
+    <Field displayName="1st Level Business Approvers" helpKey="approver_ROAD_first_approvers" multi="true" name="appBusApprovers" type="Identity">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+                     import sailpoint.object.Filter;
+                     if(roadApplicationselect!=void && roadApplicationselect!=null)
+                     {
+                     Filter filter=  Filter.and(Filter.ignoreCase(Filter.like("name", roadApplicationselect, Filter.MatchMode.START)),Filter.eq("workgroup",true));
+                     field.setFilterString(filter.toString());
+                     }
+                     return false;  
+                                ]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="2nd Level Business Approvers" helpKey="approver_ROAD_second_approvers" multi="true" name="additionalAppBusApprovers" type="Identity">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+                     import sailpoint.object.Filter;
+                     if(roadApplicationselect!=void && roadApplicationselect!=null)
+                     {
+                     Filter filter=  Filter.and(Filter.ignoreCase(Filter.like("name", roadApplicationselect, Filter.MatchMode.START)),Filter.eq("workgroup",true));
+                     field.setFilterString(filter.toString());
+                     }
+                     return false;  
+                                ]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Request Form" helpKey="approver_ROAD_form" name="displayFormRule" type="Form">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+                     import sailpoint.object.Filter;
+                     if(roadApplicationselect!=void && roadApplicationselect!=null)
+                     {
+                     Filter filter=  Filter.ignoreCase(Filter.like("name", roadApplicationselect, Filter.MatchMode.START));
+                     field.setFilterString(filter.toString());
+                     }
+                     return false;  
+                     ]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Request Form Role" helpKey="approver_ROAD_form_role" name="requestorFormRole" type="Bundle">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+                    import sailpoint.object.Filter;
+                     if(roadApplicationselect!=void && roadApplicationselect!=null)
+                     {
+                          Filter filter=  Filter.ignoreCase(Filter.like("name", roadApplicationselect, Filter.MatchMode.START));
+                          field.setFilterString(filter.toString());
+                     }
+                     return false; 
+                    ]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Omit Manager's Approval for Privileged Access" name="omitmanagerPrivgaccess" type="boolean">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+                if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadomitmanagerPrivgaccess"))
+                 {
+                 return roadSectionAttributes.get("roadomitmanagerPrivgaccess");
+                 }
+                
+            ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Validate Request for Privileged and Non-Privileged Access" name="enablepsaValidation" type="boolean">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+                if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadenablepsaValidation"))
+                 {
+                 return roadSectionAttributes.get("roadenablepsaValidation");
+                 }
+                
+            ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+  </Section>
+  <Section columns="2" label="Privileged Account" name="roadPSA">
+    <Attributes>
+      <Map>
+        <entry key="hidden">
+          <value>
+            <Script>
+              <Source><![CDATA[
+                String disabledFeature="True";
+                if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadPSA"))
+                {
+                 disabledFeature= roadSectionAttributes.get("roadPSA");
+                }
+                boolean enabled=true;
+                if(disabledFeature!=null && disabledFeature.length()>0 && disabledFeature.equalsIgnoreCase("TRUE"))
+                {
+                    enabled=false;
+                }
+                if(!enabled)
+                {
+                //Return Right Away Self Service Form is Disabled
+                return true;
+                }
+                if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadenablepswexpNotification"))
+                {
+                 return roadSectionAttributes.get("roadenablepswexpNotification");
+                }
+                ]]></Source>
+            </Script>
+          </value>
+        </entry>
+        <entry key="readOnly">
+          <value>
+            <Script>
+              <Source><![CDATA[
+             if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadReadOnly"))
+             {
+             return roadSectionAttributes.get("roadReadOnly");
+             }
+                            ]]></Source>
+            </Script>
+          </value>
+        </entry>
+        <entry key="subtitle">
+          <value>
+            <Script>
+              <Source><![CDATA[
+        String subtitle = "Please ensure password expiration task is scheduled in IdentityIQ after password expiration options are configured for this feature. Application being onboarded is "+roadApplicationselect;
+        return subtitle;
+    ]]></Source>
+            </Script>
+          </value>
+        </entry>
+      </Map>
+    </Attributes>
+    <Field displayName="Enable Password Expiration Notification" name="enablepswexpNotification" type="string"/>
+    <Field displayName="Password Reset After X Days" name="xdaysresetPwd" type="string"/>
+    <Field displayName="Password Expiration Application Attribute" name="pwdexpAttr" type="string"/>
+    <Field displayName="Password Before Expiration Days (Daily Notfications)" name="beforepwdexpAttr" type="string"/>
+    <Field displayName="Password After Expiration Days (Action on Account)" name="afterpwdexpAttr" type="string"/>
+    <Field displayName="After Password Expiration Options" displayType="combobox" name="afterPassExpProcess" type="string">
+      <AllowedValuesDefinition>
+        <RuleRef>
+          <Reference class="sailpoint.object.Rule" name="Rule-Self-Service-Onboard-ApplicationOptions"/>
+        </RuleRef>
+      </AllowedValuesDefinition>
+    </Field>
+    <Field displayName="Password Expiration Date Format Options" displayType="combobox" name="pwdexpAttrexpression" type="string">
+      <AllowedValuesDefinition>
+        <RuleRef>
+          <Reference class="sailpoint.object.Rule" name="Rule-Self-Service-Onboard-ApplicationOptions"/>
+        </RuleRef>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+                 // Value Disable
+                 if($(roadModel.pwdexpAttrexpression)!=null && $(roadModel.pwdexpAttrexpression).contains("Extended"))
+                 {
+                 return true;
+                 }
+                
+            ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Scramble Password Application Attribute" name="scramPwdattr" type="string"/>
+  </Section>
+  <Section columns="2" label="Password Synchronization" name="roadPassword">
+    <Attributes>
+      <Map>
+        <entry key="hidden">
+          <value>
+            <Script>
+              <Source><![CDATA[
+            if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadPassword"))
+             {
+             return roadSectionAttributes.get("roadPassword");
+             }
+                            ]]></Source>
+            </Script>
+          </value>
+        </entry>
+        <entry key="readOnly">
+          <value>
+            <Script>
+              <Source><![CDATA[
+             if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadReadOnly"))
+             {
+             return roadSectionAttributes.get("roadReadOnly");
+             }
+                            ]]></Source>
+            </Script>
+          </value>
+        </entry>
+        <entry key="subtitle">
+          <value>
+            <Script>
+              <Source><![CDATA[
+        String subtitle = "Please ensure password policy is configured in IdentityIQ on application "+roadApplicationselect+". Application being onboarded is "+roadApplicationselect;
+        return subtitle;
+    ]]></Source>
+            </Script>
+          </value>
+        </entry>
+      </Map>
+    </Attributes>
+    <Field displayName="Detect Change Password on Primary Account" name="primarypasswordSyncaccounts" type="boolean">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+                 if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadprimarypasswordSyncaccounts"))
+                 {
+                 return roadSectionAttributes.get("roadprimarypasswordSyncaccounts");
+                 }
+                
+            ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Target Applications Password Creation / Modification Synchronization" multi="true" name="targetpasswordSync" type="Application">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+                     import sailpoint.object.Filter;
+                     if(roadApplicationselect!=void && roadApplicationselect!=null)
+                     {
+                     Filter filter=  Filter.eq("authoritative", false);
+                     field.setFilterString(filter.toString());
+                     }
+                     return false;  
+                                ]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Is Enterprise Directory" helpKey="Directory used for Self Service Password Change" name="entDir" type="boolean"/>
+  </Section>
+  <Section columns="2" label="Policy Violation" name="roadPolicyViolation">
+    <Attributes>
+      <Map>
+        <entry key="hidden">
+          <value>
+            <Script>
+              <Source><![CDATA[
+            if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadPolicyViolation"))
+             {
+             return roadSectionAttributes.get("roadPolicyViolation");
+             }
+                            ]]></Source>
+            </Script>
+          </value>
+        </entry>
+        <entry key="readOnly">
+          <value>
+            <Script>
+              <Source><![CDATA[
+             if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadReadOnly"))
+             {
+             return roadSectionAttributes.get("roadReadOnly");
+             }
+                            ]]></Source>
+            </Script>
+          </value>
+        </entry>
+        <entry key="subtitle">
+          <value>
+            <Script>
+              <Source><![CDATA[
+        String subtitle = "Please configure application artifacts for toxic combinations, single entitlement option exceptions, and hard/soft stop. Application being onboarded is "+roadApplicationselect;
+        return subtitle;
+    ]]></Source>
+            </Script>
+          </value>
+        </entry>
+      </Map>
+    </Attributes>
+    <Field displayName="Allow Access Request Policy Names" multi="true" name="softPolicyviolations" type="Policy">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+                     import sailpoint.object.Filter;
+                     if(roadApplicationselect!=void && roadApplicationselect!=null)
+                     {
+                     Filter filter=  Filter.ignoreCase(Filter.like("name", roadApplicationselect, Filter.MatchMode.START));
+                     field.setFilterString(filter.toString());
+                     }
+                     return false;  
+                ]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Deny Access Request Policy Names" multi="true" name="hardPolicyviolations" type="Policy">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+                     import sailpoint.object.Filter;
+                     if(roadApplicationselect!=void && roadApplicationselect!=null)
+                     {
+                     Filter filter=  Filter.ignoreCase(Filter.like("name", roadApplicationselect, Filter.MatchMode.START));
+                     field.setFilterString(filter.toString());
+                     }
+                     return false;  
+                ]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Multiple Accounts Policy Type Options" displayType="combobox" name="policyType" type="string">
+      <AllowedValuesDefinition>
+        <RuleRef>
+          <Reference class="sailpoint.object.Rule" name="Rule-Self-Service-Onboard-ApplicationOptions"/>
+        </RuleRef>
+      </AllowedValuesDefinition>
+    </Field>
+    <Field displayName="Single Entitlement Exceptions Artifact Name" name="policytypeExceptions" type="Custom">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+                     import sailpoint.object.Filter;
+                     if(roadApplicationselect!=void && roadApplicationselect!=null)
+                     {
+                     Filter filter=  Filter.ignoreCase(Filter.like("name", roadApplicationselect, Filter.MatchMode.START));
+                     field.setFilterString(filter.toString());
+                     }
+                     return false;  
+             ]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Toxic Combinations Artifact Name" name="txCombinationName" type="Custom">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+                     import sailpoint.object.Filter;
+                     if(roadApplicationselect!=void && roadApplicationselect!=null)
+                     {
+                     Filter filter=  Filter.ignoreCase(Filter.like("name", roadApplicationselect, Filter.MatchMode.START));
+                     field.setFilterString(filter.toString());
+                     }
+                     return false;  
+                ]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Eligibility Policy Violation Population Identification" name="eligibilityExpression" type="GroupDefinition">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+                     return false;  
+                ]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+  </Section>
+  <Section columns="2" label="New Account Dependency Entitlements" name="roadSSO">
+    <Attributes>
+      <Map>
+        <entry key="hidden">
+          <value>
+            <Script>
+              <Source><![CDATA[
+            if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadSSO"))
+             {
+             return roadSectionAttributes.get("roadSSO");
+             }
+                            ]]></Source>
+            </Script>
+          </value>
+        </entry>
+        <entry key="readOnly">
+          <value>
+            <Script>
+              <Source><![CDATA[
+             if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadReadOnly"))
+             {
+             return roadSectionAttributes.get("roadReadOnly");
+             }
+                            ]]></Source>
+            </Script>
+          </value>
+        </entry>
+        <entry key="subtitle">
+          <value>
+            <Script>
+              <Source><![CDATA[
+            import sailpoint.tools.Internationalizer;
+            String message = Internationalizer.getMessage("new_account_ROAD_configure", Locale.US);
+            String subtitle = message.format(message, roadApplicationselect);
+            return subtitle;
+        ]]></Source>
+            </Script>
+          </value>
+        </entry>
+      </Map>
+    </Attributes>
+    <Field displayName="Dependency Application Entitlement Format" name="accountCreateEntitlements" readOnly="true" type="textarea">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+                    return true;
+                ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Dependency Application" helpKey="new_account_ROAD_apps" multi="true" name="ssoApp" postBack="true" type="Application">
+      <Attributes>
+        <Map>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Dependency Application Entitlements" dynamic="true" helpKey="new_account_ROAD_entitlements" multi="true" name="ssoAppEnt" type="ManagedAttribute">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+                    import sailpoint.tools.Util;
+                    import sailpoint.object.Filter;
+                    import org.apache.commons.logging.Log;
+                    import org.apache.commons.logging.LogFactory;
+                    import sailpoint.rapidapponboarding.logger.LogEnablement;
+                    Log logger = LogFactory.getLog("rapidapponboarding.rules");
+                    if(ssoApp !=null && ssoApp instanceof List)
+                    {
+                       Filter filter= Filter.ignoreCase(Filter.in("application.name", ssoApp) );
+                       field.setFilterString(filter.toString());
+                    }
+                    else if(ssoApp!=null && ssoApp.contains(","))
+                    {
+                        List ssoAppList=Util.csvToList(ssoApp);
+                        if(ssoAppList!=null && ssoAppList.size()>0)
+                        {
+                        Filter filter= Filter.ignoreCase(Filter.in("application.name", ssoAppList ) );
+                        field.setFilterString(filter.toString());
+                        }
+                    }
+                    else if(ssoApp!=null)
+                    {
+                        List ssoAppList = new ArrayList();
+                        ssoAppList.add(ssoApp);
+                        Filter filter= Filter.ignoreCase(Filter.in("application.name", ssoAppList ) );
+                        field.setFilterString(filter.toString());
+                    }
+                    return false;  
+                                ]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+      <Script>
+        <Source><![CDATA[
+            import org.apache.commons.logging.Log;
+            import org.apache.commons.logging.LogFactory;
+            import sailpoint.tools.Util;
+            Log logger = LogFactory.getLog("rapidapponboarding.rules");
+            import sailpoint.rapidapponboarding.logger.LogEnablement;
+             String dependencyEntitlements =  $(roadModel.accountCreateEntitlements);
+             Object selectedApps =  $(roadModel.ssoApp);
+             Object selectedEnts =  $(roadModel.ssoAppEnt);
+              String[] entitlementArray = null;
+              List masterList = new ArrayList();
+              List appList = new ArrayList();
+              List entList = new ArrayList();
+              List filterEntList = new ArrayList();
+              //LETS BUILD EXISTING APP LIST AND ENT LIST
+             if(dependencyEntitlements!=null)
+             {
+                  if(dependencyEntitlements.indexOf("|") > 0) 
+                    {
+                     entitlementArray = dependencyEntitlements.split("\\|");
+                    }
+                    else 
+                    {
+                        entitlementArray = new String[1];
+                        entitlementArray[0] = dependencyEntitlements;
+                    }
+                    if(entitlementArray != null && entitlementArray.length > 0) 
+                    {
+                                    for(String entString : entitlementArray) 
+                                    {
+                                         String[] entArr = entString.split("#");
+                                         if(entArr != null && entArr.length == 3 && Util.isNotNullOrEmpty(entArr[0]) && Util.isNotNullOrEmpty(entArr[1]) && Util.isNotNullOrEmpty(entArr[2])) 
+                                        {
+                                            String appName = entArr[0];
+                                            String entName = entArr[1];
+                                            String entValue = entArr[2];
+                                            if(appName!=null)
+                                            {
+                                                appList.add(appName);
+                                                if(entValue!=null )
+                                                {
+                                                filterEntList.add(appName+"#"+entValue);
+                                                }
+                                                if(entValue!=null && entName!=null)
+                                                {
+                                                masterList.add(appName+"#"+entName+"#"+entValue);
+                                                }
+                                                if(entValue!=null && entName!=null)
+                                                {
+                                                entList.add(entValue);
+                                                }
+                                            }
+                                        }
+                                    }
+                    }
+                }
+                List removedApps = new ArrayList();
+                List newApps = new ArrayList();
+                List newEnts = new ArrayList();
+                if(entList!=null  && entList.size()>0 && selectedEnts!=null && selectedEnts instanceof List)
+                {
+                    List selectedEntsList =(List)selectedEnts;
+                    for (String newEnt: selectedEntsList)
+                    {
+                        if(newEnt!=null  && !((List)entList).contains(newEnt))
+                        {
+                            //There could be an addition of new ent 
+                            newEnts.add(newEnt);
+                        }
+                    }
+                 }
+                if(appList!=null  && appList.size()>0 && selectedApps!=null && selectedApps instanceof List)
+                {
+                    List selectedAppsList =(List)selectedApps;
+                    for (String newApp: selectedAppsList)
+                    {
+                        if(newApp!=null  && !((List)appList).contains(newApp))
+                        {
+                            //There could be an addition of app 
+                            newApps.add(newApp);
+                        }
+                    }
+                 }
+                if(appList!=null  && appList.size()>0 && selectedApps!=null && selectedApps instanceof List && newApps!=null && newApps.size()>0)
+                {
+                    for (String existingApp:appList)
+                    {
+                        if(existingApp!=null  && !((List)selectedApps).contains(existingApp) && !((List)newApps).contains(selectedApps))
+                        {
+                            //There could be an addition of app and that would not match.
+                            removedApps.add(existingApp);
+                        }
+                    }
+                 }
+                else if(appList!=null  && appList.size()>0 && selectedApps!=null && selectedApps instanceof List)
+                {
+                    for (String existingApp:appList)
+                    {
+                        if(existingApp!=null  && !((List)selectedApps).contains(existingApp))
+                        {
+                            //There could be an addition of app and that would not match.
+                            removedApps.add(existingApp);
+                        }
+                    }
+                 }
+                 else if(appList!=null  && appList.size()>0 && selectedApps==null)
+                 {
+                  for (String existingApp:appList)
+                    {
+                        if(existingApp!=null)
+                        {
+                            removedApps.add(existingApp);
+                        }
+                    }
+                 }
+             List returnList = new ArrayList();
+             if(filterEntList!=null  && filterEntList.size()>0 && newApps!=null && newApps.size()>0 && removedApps!=null && removedApps.size()<=0)
+             {    
+                  //Only New Apps
+                  returnList=selectedEnts;
+             }
+             else if(filterEntList!=null  && filterEntList.size()>0 && removedApps!=null && removedApps.size()>0 && newApps!=null && newApps.size()<=0)
+             {    
+                    //Only Removed Apps
+                     for(String ent:filterEntList)
+                     {
+                                 if(ent!=null)
+                                 {
+                                     String[] entArr = ent.split("#");
+                                     if(entArr != null && entArr.length == 2 && Util.isNotNullOrEmpty(entArr[0]) && Util.isNotNullOrEmpty(entArr[1]) ) 
+                                     {
+                                          if(!removedApps.contains(entArr[0]))
+                                          {
+                                          returnList.add(entArr[1]);
+                                          }
+                                     }
+                                 }
+                    }
+                    // Add New Ents
+                  if(newEnts!=null)
+                  {
+                     for(String newEnt:newEnts)
+                     {
+                         if(!returnList.contains(newEnt))
+                         {
+                         returnList.add(newEnt);
+                         }
+                     }
+                 }
+             }
+             else if(filterEntList!=null  && filterEntList.size()>0 && removedApps!=null && removedApps.size()>0 && newApps!=null && newApps.size()>0)
+             {    
+                    // Removed and New Apps
+                     for(String ent:filterEntList)
+                     {
+                                 if(ent!=null)
+                                 {
+                                     String[] entArr = ent.split("#");
+                                     if(entArr != null && entArr.length == 2 && Util.isNotNullOrEmpty(entArr[0]) && Util.isNotNullOrEmpty(entArr[1]) ) 
+                                     {
+                                          if(!removedApps.contains(entArr[0]) )
+                                          {
+                                          returnList.add(entArr[1]);
+                                          }
+                                     }
+                                 }
+                    }
+                    // Add New Ents
+                  if(newEnts!=null)
+                  {
+                     for(String newEnt:newEnts)
+                     {
+                         if(!returnList.contains(newEnt))
+                         {
+                         returnList.add(newEnt);
+                         }
+                     }
+                 }
+             }
+             else
+             {
+             //Existing Apps
+             returnList=selectedEnts;
+             }
+              return returnList;    
+            ]]></Source>
+      </Script>
+    </Field>
+  </Section>
+  <Section columns="2" label="Ticket Integration" name="roadTicketintegration">
+    <Attributes>
+      <Map>
+        <entry key="hidden">
+          <value>
+            <Script>
+              <Source><![CDATA[
+            if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadTicketintegration"))
+             {
+             return roadSectionAttributes.get("roadTicketintegration");
+             }
+                            ]]></Source>
+            </Script>
+          </value>
+        </entry>
+        <entry key="readOnly">
+          <value>
+            <Script>
+              <Source><![CDATA[
+             if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadReadOnly"))
+             {
+             return roadSectionAttributes.get("roadReadOnly");
+             }
+                            ]]></Source>
+            </Script>
+          </value>
+        </entry>
+        <entry key="subtitle">
+          <value>
+            <Script>
+              <Source><![CDATA[
+            import sailpoint.tools.Internationalizer;
+            String message = Internationalizer.getMessage("ticket_integration_ROAD_configure", Locale.US);
+            String subtitle = message.format(message, roadApplicationselect);
+            return subtitle;
+        ]]></Source>
+            </Script>
+          </value>
+        </entry>
+      </Map>
+    </Attributes>
+    <Field displayName="Assignment Group Name" name="assignmentGroupname" type="string"/>
+    <Field displayName="Maximum Status Check on Ticket" name="provisioningMaxStatusChecks" type="string"/>
+    <Field displayName="Minutes Wait Between Status Checks" name="provisioningStatusCheckInterval" type="string"/>
+  </Section>
+  <Section columns="2" label="Provisioning" name="roadProvisioning">
+    <Attributes>
+      <Map>
+        <entry key="hidden">
+          <value>
+            <Script>
+              <Source><![CDATA[
+            if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadProvisioning"))
+             {
+             return roadSectionAttributes.get("roadProvisioning");
+             }
+                            ]]></Source>
+            </Script>
+          </value>
+        </entry>
+        <entry key="readOnly">
+          <value>
+            <Script>
+              <Source><![CDATA[
+             if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadReadOnly"))
+             {
+             return roadSectionAttributes.get("roadReadOnly");
+             }
+                            ]]></Source>
+            </Script>
+          </value>
+        </entry>
+        <entry key="subtitle">
+          <value>
+            <Script>
+              <Source><![CDATA[
+            import sailpoint.tools.Internationalizer;
+            String message = Internationalizer.getMessage("provisioning_ROAD_configure", Locale.US);
+            String subtitle = message.format(message, roadApplicationselect);
+            return subtitle;
+        ]]></Source>
+            </Script>
+          </value>
+        </entry>
+      </Map>
+    </Attributes>
+    <Field displayName="Soft Delete" helpKey="provisioning_ROAD_soft_delete" name="isDeleteToDisable" type="string">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+            List list = new ArrayList();    
+            List displayList = new ArrayList();
+            displayList.add("true");
+            displayList.add("ON");
+            list.add(displayList);
+            displayList = new ArrayList();
+            displayList.add("false");
+            displayList.add("OFF");
+            list.add(displayList);
+            return list;
+            ]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+      <Script>
+        <Source><![CDATA[
+        if ( $(roadModel.isDeleteToDisable) == null) { return "false"; }
+      ]]></Source>
+      </Script>
+    </Field>
+    <Field displayName="Maximum Retries" helpKey="provisioning_ROAD_retry_max" name="provisioningMaxRetries" type="string"/>
+    <Field displayName="Minutes Wait Between Retries" helpKey="provisioning_ROAD_retry_time" name="provisioningRetryThreshold" type="string"/>
+    <Field displayName="Retryable Errors" helpKey="provisioning_ROAD_retry_allowable_errors" multi="true" name="retryableErrors" type="string"/>
+    <Field displayName="LDAP Lock Attribute" displayType="combobox" helpKey="provisioning_ROAD_locked_attr" name="lockAttr" type="string">
+      <AllowedValuesDefinition>
+        <RuleRef>
+          <Reference class="sailpoint.object.Rule" name="Rule-Self-Service-Application-Schema"/>
+        </RuleRef>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+            if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadShowLDAPLockConnectorOptions") && 
+            roadSectionAttributes.get("roadShowLDAPLockConnectorOptions")!=null &&
+             roadSectionAttributes.get("roadShowLDAPLockConnectorOptions").equalsIgnoreCase("LDAPLockOptions"))
+             {
+             return false;
+             }
+             else
+             {
+             return true;
+             }
+            ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="2" displayName="LDAP Lock Value" helpKey="provisioning_ROAD_locked_val" name="lockVal" type="string">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+            if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadShowLDAPLockConnectorOptions") && 
+            roadSectionAttributes.get("roadShowLDAPLockConnectorOptions")!=null &&
+             roadSectionAttributes.get("roadShowLDAPLockConnectorOptions").equalsIgnoreCase("LDAPLockOptions"))
+             {
+             return false;
+             }
+             else
+             {
+             return true;
+             }
+            ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="LDAP Unlock Attribute" displayType="combobox" helpKey="provisioning_ROAD_unlocked_attr" name="unlockAttr" type="string">
+      <AllowedValuesDefinition>
+        <RuleRef>
+          <Reference class="sailpoint.object.Rule" name="Rule-Self-Service-Application-Schema"/>
+        </RuleRef>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+            if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadShowLDAPUnLockConnectorOptions") && 
+            roadSectionAttributes.get("roadShowLDAPUnLockConnectorOptions")!=null &&
+             roadSectionAttributes.get("roadShowLDAPUnLockConnectorOptions").equalsIgnoreCase("LDAPUnLockOptions"))
+             {
+             return false;
+             }
+             else
+             {
+             return true;
+             }
+                            ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="LDAP Unlock Value" helpKey="provisioning_ROAD_unlocked_val" name="unlockVal" type="string">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+            if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadShowLDAPUnLockConnectorOptions") && 
+            roadSectionAttributes.get("roadShowLDAPUnLockConnectorOptions")!=null &&
+             roadSectionAttributes.get("roadShowLDAPUnLockConnectorOptions").equalsIgnoreCase("LDAPUnLockOptions"))
+             {
+             return false;
+             }
+             else
+             {
+             return true;
+             }
+            ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="LDAP Unlock Action" displayType="combobox" name="unlockAction" type="string">
+      <AllowedValuesDefinition>
+        <RuleRef>
+          <Reference class="sailpoint.object.Rule" name="Rule-Self-Service-LDAP-Operations"/>
+        </RuleRef>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+            if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadShowLDAPUnLockConnectorOptions") && 
+            roadSectionAttributes.get("roadShowLDAPUnLockConnectorOptions")!=null &&
+             roadSectionAttributes.get("roadShowLDAPUnLockConnectorOptions").equalsIgnoreCase("LDAPUnLockOptions"))
+             {
+             return false;
+             }
+             else
+             {
+             return true;
+             }
+           ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="LDAP Disable Attribute" displayType="combobox" helpKey="provisioning_ROAD_disabled_attr" name="revokeAttr" type="string">
+      <AllowedValuesDefinition>
+        <RuleRef>
+          <Reference class="sailpoint.object.Rule" name="Rule-Self-Service-Application-Schema"/>
+        </RuleRef>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+            if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadShowLDAPDisableConnectorOptions") && 
+            roadSectionAttributes.get("roadShowLDAPDisableConnectorOptions")!=null &&
+             roadSectionAttributes.get("roadShowLDAPDisableConnectorOptions").equalsIgnoreCase("LDAPDisableOptions"))
+             {
+             return false;
+             }
+             else
+             {
+             return true;
+             }
+            ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="LDAP Disable Value" helpKey="provisioning_ROAD_disabled_val" name="revokeVal" type="string">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+            if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadShowLDAPDisableConnectorOptions") && 
+            roadSectionAttributes.get("roadShowLDAPDisableConnectorOptions")!=null &&
+             roadSectionAttributes.get("roadShowLDAPDisableConnectorOptions").equalsIgnoreCase("LDAPDisableOptions"))
+             {
+             return false;
+             }
+             else
+             {
+             return true;
+             }
+            ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="LDAP Disable Action" displayType="combobox" name="revokeAction" type="string">
+      <AllowedValuesDefinition>
+        <RuleRef>
+          <Reference class="sailpoint.object.Rule" name="Rule-Self-Service-LDAP-Operations"/>
+        </RuleRef>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+            if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadShowLDAPDisableConnectorOptions") && 
+            roadSectionAttributes.get("roadShowLDAPDisableConnectorOptions")!=null &&
+             roadSectionAttributes.get("roadShowLDAPDisableConnectorOptions").equalsIgnoreCase("LDAPDisableOptions"))
+             {
+             return false;
+             }
+             else
+             {
+             return true;
+             }
+            ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="LDAP Enable Attribute" displayType="combobox" helpKey="provisioning_ROAD_enabled_attr" name="restoreAttr" type="string">
+      <AllowedValuesDefinition>
+        <RuleRef>
+          <Reference class="sailpoint.object.Rule" name="Rule-Self-Service-Application-Schema"/>
+        </RuleRef>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+            if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadShowLDAPEnableConnectorOptions") && 
+            roadSectionAttributes.get("roadShowLDAPEnableConnectorOptions")!=null &&
+             roadSectionAttributes.get("roadShowLDAPEnableConnectorOptions").equalsIgnoreCase("LDAPEnableOptions"))
+             {
+             return false;
+             }
+             else
+             {
+             return true;
+             }
+             ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="LDAP Enable Value" helpKey="provisioning_ROAD_enabled_val" name="restoreVal" type="string">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+            if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadShowLDAPEnableConnectorOptions") && 
+            roadSectionAttributes.get("roadShowLDAPEnableConnectorOptions")!=null &&
+             roadSectionAttributes.get("roadShowLDAPEnableConnectorOptions").equalsIgnoreCase("LDAPEnableOptions"))
+             {
+             return false;
+             }
+             else
+             {
+             return true;
+             }
+            ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="LDAP Enable Action" displayType="combobox" name="restoreAction" type="string">
+      <AllowedValuesDefinition>
+        <RuleRef>
+          <Reference class="sailpoint.object.Rule" name="Rule-Self-Service-LDAP-Operations"/>
+        </RuleRef>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+            if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadShowLDAPEnableConnectorOptions") && 
+            roadSectionAttributes.get("roadShowLDAPEnableConnectorOptions")!=null &&
+             roadSectionAttributes.get("roadShowLDAPEnableConnectorOptions").equalsIgnoreCase("LDAPEnableOptions"))
+             {
+             return false;
+             }
+             else
+             {
+             return true;
+             }
+            ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="3" displayName="LDAP Password Attribute" helpKey="provisioning_ROAD_password_attr" name="passwordAttr" type="string">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+                if(roadSectionAttributes!=null && roadSectionAttributes.containsKey("roadShowLDAPPasswordConnectorOptions") && 
+                roadSectionAttributes.get("roadShowLDAPPasswordConnectorOptions")!=null &&
+                 roadSectionAttributes.get("roadShowLDAPPasswordConnectorOptions").equalsIgnoreCase("LDAPPasswordOptions"))
+                 {
+                 return false;
+                 }
+                 else
+                 {
+                 return true;
+                 }
+            ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+  </Section>
+  <Button action="cancel" label="Cancel"/>
+  <Button action="back" label="Change Application"/>
+  <Button action="next" label="Next"/>
+</Form>

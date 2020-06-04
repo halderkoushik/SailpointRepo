@@ -1,0 +1,182 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE EmailTemplate PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<EmailTemplate name="EmailTemplate-FrameworkRequestCompletion">
+  <Body>
+   		 
+		#set($ctx = $spTools.class.forName("sailpoint.api.SailPointFactory").getMethod("getFactory", null).invoke(null,null).getCurrentContext())
+		#set($requesteeIdentity = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Identity"),$identityName))
+		#set($launcherIdentity = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Identity"),$launcher))
+		#set($reqType = $workflow.requestType)
+		#set($accessReqNumber = $identityRequestId)
+  		#set($ruleObj = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Rule"), "Rule-Framework-Header-Footer-StyleSheet")) 
+		#set($ruleArgs = { 
+		    "keyEmailTemplate"  : "styleSheet"
+		}) 
+		#set($styleSheet = $ctx.runRule($ruleObj, $ruleArgs))
+		#if( $ruleObj )
+		$ctx.decache($ruleObj)
+		#end
+		#set($ruleObj = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Rule"), "Rule-Framework-Header-Footer-StyleSheet")) 
+		#set($ruleArgs = { 
+		    "keyEmailTemplate"  : "headerTemplate"
+		}) 
+		#set($headerTemplate = $ctx.runRule($ruleObj, $ruleArgs))
+		#if( $ruleObj )
+		$ctx.decache($ruleObj)
+		#end
+		#set($ruleObj = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Rule"), "Rule-Framework-Header-Footer-StyleSheet")) 
+		#set($ruleArgs = { 
+		    "keyEmailTemplate"  : "footerTemplate"
+		}) 
+		#set($footerTemplate = $ctx.runRule($ruleObj, $ruleArgs))
+		#if( $ruleObj )
+		$ctx.decache($ruleObj)
+		#end
+		<![CDATA[<html>
+		    <head>
+		<meta charset="UTF-8">	    
+		#if( $styleSheet )
+		$styleSheet
+		#end    
+		</head>	      
+	    	<body>
+	    	#if( $headerTemplate )
+			$headerTemplate
+			#end
+			<br/>    
+			#if ($approvalSet)
+			    Dear $recipientDisplayName,<br/>
+		      <p>This request has been completed.</p>
+          Request Number:  $accessReqNumber<br/>
+          Request For Identity Name:  <strong>$identityName</strong><br/>
+          Request For Identity Display Name:  <strong>$refIdentityDisplayName</strong><br/>
+          Request: <br/>
+			     	#foreach ($item in $approvalSet.approved)
+			     		#set($approverIdentity = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Identity"),$item.approver))
+			        	#if ($item.displayValue)
+							<strong>$!item.operation $item.displayValue #if($item.displayValue.contains("**")) on $item.application #end-- APPROVED</strong><br/>
+						#elseif ($item.value && $item.name && $item.application)
+							#set($ruleObj = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Rule"), "Rule-Framework-ManagedAttribute-GetDisplayValue")) 
+							#set($ruleArgs = { 
+							    "attrName"  : $item.name, 
+							    "attrValue" : $item.value,
+							    "attrApp"   : $item.application 
+							}) 
+							#set($attrDisplayValue = $ctx.runRule($ruleObj, $ruleArgs))
+							#if( $ruleObj )
+							$ctx.decache($ruleObj)
+							#end
+							<strong>$!item.operation $attrDisplayValue -- APPROVED</strong><br/>
+						#elseif ($item.value.class.name == "java.util.List" || $item.value.class.name == "java.util.ArrayList")
+							<strong>$!item.operation $item.value.get(0) -- APPROVED</strong><br/>
+						#elseif ($item.value)
+						  <strong>$!item.operation $item.value -- APPROVED</strong><br/>
+						#elseif ($item.application)
+						  <strong>$!item.operation Account on $item.application -- APPROVED</strong><br/>
+						#end
+                    #if ($approverIdentity && $approverIdentity.displayName) 
+             		      Reviewer: $approverIdentity.displayName
+                        <br/>
+             		    #end
+			        	#if ( $item.comments)
+			        		Reviewer Comment:<br/>
+			          		#foreach ($comment in $item.comments)
+			            		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$comment<br/>
+			          		#end
+			        	#end
+			        	<br/>
+			      	#end
+			      	#foreach ($item in $approvalSet.rejected)
+			     		#set($approverIdentity = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Identity"),$item.approver))
+			        	#if ($item.displayValue)
+							<strong>$!item.operation $item.displayValue #if($item.displayValue.contains("**")) on $item.application #end -- REJECTED</strong><br/>
+						#elseif ($item.value && $item.name && $item.application)
+							#set($ruleObj = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Rule"), "Rule-Framework-ManagedAttribute-GetDisplayValue")) 
+							#set($ruleArgs = { 
+							    "attrName"  : $item.name, 
+							    "attrValue" : $item.value,
+							    "attrApp"   : $item.application 
+							}) 
+							#set($attrDisplayValue = $ctx.runRule($ruleObj, $ruleArgs))
+							#if( $ruleObj )
+							$ctx.decache($ruleObj)
+							#end
+							<strong>$!item.operation $attrDisplayValue -- REJECTED</strong><br/>
+						#elseif ($item.value.class.name == "java.util.List" || $item.value.class.name == "java.util.ArrayList")
+							<strong>$!item.operation $item.value.get(0) -- REJECTED</strong><br/>
+						#elseif ($item.value)
+						  <strong>$!item.operation $item.value -- REJECTED</strong><br/>
+						#elseif ($item.application)
+						  <strong>$!item.operation Account on $item.application -- REJECTED</strong><br/>
+						#end
+                 #if ($approverIdentity && $approverIdentity.displayName) 
+             			Reviewer: $approverIdentity.displayName
+                        <br/>
+						     #end
+			        	#if ( $item.comments)
+			        		Reviewer Comment:<br/>
+			          		#foreach ($comment in $item.comments)
+			            		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$comment<br/>
+			          		#end
+			        	#end
+			        	<br/>
+			      	#end
+			#end
+		#if ($dynamicAppContent)
+			<table>
+			#foreach( $key in $dynamicAppContent.keySet() )
+			<tr><td>$key</td><td>$dynamicAppContent.get($key)</td></tr>
+			#end
+			</table>
+			#end	
+			#if ( $provisioningErrors )
+				The following errors occurred during provisioning:
+				<ul>
+				#foreach ($error in $provisioningErrors)
+				<li>$!error</li>
+				#end
+				</ul>
+			#end
+      	   #if( $footerTemplate )
+			$footerTemplate
+			#end
+			#if( $launcherIdentity )
+			$ctx.decache($launcherIdentity)
+			#end
+			#if( $requesteeIdentity )
+			$ctx.decache($requesteeIdentity)
+			#end
+			</body>
+		</html>]]>
+				
+    </Body>
+  <Description>
+      Email Template for notifying users when registration requests are completed.
+      Note that in addition to the declared arguments, all workflow variables,
+      Step arguments, and Approval arguments defined in the Workflow are
+      also available.
+    </Description>
+  <Signature>
+    <Inputs>
+      <Argument name="workflow" type="Workflow">
+        <Description>The Workflow object being executed.</Description>
+      </Argument>
+      <Argument name="approvalSet" type="ApprovalSet">
+        <Description>The ApprovalSet object contained in the workflow.</Description>
+      </Argument>
+      <Argument name="identityName" type="string">
+        <Description>The name of the Identity that is registering.</Description>
+      </Argument>
+      <Argument name="refIdentityDisplayName" type="string">
+        <Description>The display name of the Identity that is registering.</Description>
+      </Argument>
+      <Argument name="recipientDisplayName" type="string">
+        <Description>The display name of the Identity that is registering .</Description>
+      </Argument>
+      <Argument name="provisioningErrors" type="List">
+        <Description>Any provisioning errors that may have occurred.</Description>
+      </Argument>
+    </Inputs>
+  </Signature>
+  <Subject>#if($emailSubject) $emailSubject #else Access request Completed #end</Subject>
+</EmailTemplate>

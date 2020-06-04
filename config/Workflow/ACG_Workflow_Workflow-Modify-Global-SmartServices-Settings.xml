@@ -1,0 +1,134 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Workflow PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Workflow explicitTransitions="true" handler="sailpoint.api.StandardWorkflowHandler" name="Workflow-Modify-Global-SmartServices-Settings" type="LCMProvisioning">
+  <Variable initializer="true" name="transient"/>
+  <Variable name="confirmationForm">
+    <Description>
+      A form that gets displayed for confirming the registration.
+    </Description>
+  </Variable>
+  <Variable name="acceleratorPackSectionAttributes"/>
+  <Variable initializer="false" name="trace">
+    <Description>
+			Used for debugging this workflow and when set to true
+			trace
+			will be sent to stdout.
+		</Description>
+  </Variable>
+  <Variable initializer="ref:launcher" name="owner">
+    <Description>Name of the user that will recieve the forms.</Description>
+  </Variable>
+  <Variable name="gloablRoadForm">
+    <Script>
+      <Source><![CDATA[
+	     
+	     	return "Form-Global-SmartServices";
+				
+	      ]]></Source>
+    </Script>
+  </Variable>
+  <Variable name="globalRoadModel"/>
+  <Variable name="acceleratorPackIsWizard"/>
+  <Description>Accelerator Pack Workflow</Description>
+  <RuleLibraries>
+    <Reference class="sailpoint.object.Rule" name="Rule-Modify-Settings-RuleLibrary"/>
+  </RuleLibraries>
+  <Step icon="Start" name="Start" posX="28" posY="10">
+    <Transition to="Layout Selection Form"/>
+  </Step>
+  <Step name="Layout Selection Form">
+    <Approval name="Layout Approval" owner="ref:requester" return="acceleratorPackIsWizard">
+      <Form name="Layout Form" type="Workflow">
+        <Description>Layout</Description>
+        <Section label="Layout" name="apLayout">
+          <Field displayName="Select Global Definition Layout" name="acceleratorPackIsWizard" required="true">
+            <AllowedValuesDefinition>
+              <Script>
+                <Source><![CDATA[
+			List list = new ArrayList();	
+			List displayList = new ArrayList();
+			displayList.add("True");
+			displayList.add("Wizard");
+			list.add(displayList);
+			displayList = new ArrayList();
+			displayList.add("False");
+			displayList.add("One Page");
+			list.add(displayList);
+			return list;
+			]]></Source>
+              </Script>
+            </AllowedValuesDefinition>
+          </Field>
+        </Section>
+        <Button action="cancel" label="Cancel"/>
+        <Button action="next" label="Next"/>
+      </Form>
+    </Approval>
+    <Transition to="End" when="!approved"/>
+    <Transition to="Get Accelerator Pack Section Form Properties" when="approved"/>
+  </Step>
+  <Step name="Get Accelerator Pack Section Form Properties" resultVariable="acceleratorPackSectionAttributes">
+    <Script>
+      <Source><![CDATA[
+	     
+	       return initializeSectionAttributes(acceleratorPackIsWizard);
+	      	
+	      ]]></Source>
+    </Script>
+    <Transition to="Initialize"/>
+  </Step>
+  <Step name="Initialize">
+    <Script>
+      <Source><![CDATA[
+	     
+		initializeGlobalRoadModel(workflow);
+		
+	      ]]></Source>
+    </Script>
+    <Transition to="Show AcceleratorPack Global Form"/>
+  </Step>
+  <Step name="Show AcceleratorPack Global Form">
+    <Approval mode="serial" owner="ref:requester" return="globalRoadModel" send="acceleratorPackSectionAttributes,acceleratorPackIsWizard">
+      <Arg name="workItemFormBasePath" value="globalRoadModel"/>
+      <Arg name="workItemType" value="Form"/>
+      <Arg name="workItemDescription" value="AcceleratorPack Global Settings"/>
+      <Arg name="workItemForm" value="ref:gloablRoadForm"/>
+    </Approval>
+    <Transition to="Build Confirmation Form" when="approved"/>
+    <Transition to="End"/>
+  </Step>
+  <Step action="call:buildReadOnlyForm" name="Build Confirmation Form" resultVariable="confirmationForm">
+    <Arg name="form" value="ref:gloablRoadForm"/>
+    <Arg name="nextButtonLabel" value="Save Global Settings"/>
+    <Arg name="backButtonLabel" value="Back"/>
+    <Arg name="cancelButtonLabel" value="Cancel"/>
+    <Description>
+       Create the confirmation form to be displayed.
+    </Description>
+    <Transition to="Confirmation Form"/>
+  </Step>
+  <Step icon="Approval" name="Confirmation Form">
+    <Approval mode="serial" owner="ref:launcher" return="globalRoadModel" send="acceleratorPackSectionAttributes">
+      <Arg name="workItemType" value="Form"/>
+      <Arg name="workItemDescription" value="Confirmation form"/>
+      <Arg name="workItemForm" value="ref:confirmationForm"/>
+      <Arg name="workItemFormBasePath" value="globalRoadModel"/>
+    </Approval>
+    <Description>
+       Display the confirmation form.
+    </Description>
+    <Transition to="Show AcceleratorPack Global Form" when="!approved"/>
+    <Transition to="Save" when="approved"/>
+  </Step>
+  <Step name="Save">
+    <Script>
+      <Source><![CDATA[
+				 
+			saveAllCustomArtifacts( globalRoadModel);
+		    	
+			]]></Source>
+    </Script>
+    <Transition to="End"/>
+  </Step>
+  <Step icon="Stop" name="End"/>
+</Workflow>

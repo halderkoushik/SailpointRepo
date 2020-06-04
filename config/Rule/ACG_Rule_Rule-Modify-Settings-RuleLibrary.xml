@@ -1,0 +1,1401 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule-Modify-Settings-RuleLibrary">
+  <Source><![CDATA[
+	
+	import org.apache.commons.logging.Log;
+	import org.apache.commons.logging.LogFactory;
+	import sailpoint.object.Custom;
+	import sailpoint.object.Attributes;
+	import sailpoint.object.EmailTemplate;
+	import sailpoint.object.ObjectConfig;
+	import sailpoint.object.ObjectAttribute;
+	import sailpoint.object.Workflow;
+	import sailpoint.tools.Util;
+	import sailpoint.object.CustomGlobal;
+	import sailpoint.rapidapponboarding.rule.ROADUtil;
+	import sailpoint.rapidapponboarding.rule.WrapperRuleLibrary;
+	import sailpoint.rapidapponboarding.rule.ObjectConfigAttributesRuleLibrary;
+	import sailpoint.api.ObjectUtil;
+	import sailpoint.object.Configuration;
+	import sailpoint.rapidapponboarding.logger.LogEnablement;
+	Log logger = LogFactory.getLog("rapidapponboarding.rules");
+	/**
+	 * Initialize Section Attributes
+	 */
+	public Attributes initializeSectionAttributes(String acceleratorPackIsWizard)
+	{
+			LogEnablement.isLogDebugEnabled(logger,"Start initializeSectionAttributes");
+			LogEnablement.isLogDebugEnabled(logger,"acceleratorPackIsWizard.."+acceleratorPackIsWizard);
+			Attributes sectionAttrs = new Attributes();
+			if(acceleratorPackIsWizard!=null)
+			{
+				sectionAttrs.put("acceleratorPackIsWizard",acceleratorPackIsWizard);
+			}
+			Configuration sysConfig = context.getConfiguration();
+			Attributes sysConfigAttributes=null;
+			if(sysConfig!=null)
+			{
+			sysConfigAttributes=sysConfig.getAttributes();
+			}
+		    String joinDisabled=ROADUtil.roadFeatureDisabledString(context,"JOINER FEATURE");
+			if(joinDisabled!=null && joinDisabled.length()>0 && joinDisabled.equalsIgnoreCase("TRUE"))
+			{
+				 sectionAttrs.put("acceleratorPackJoiner","true");
+			}
+			else
+			{
+			     sectionAttrs.put("acceleratorPackJoiner","false");
+			}
+			String leaverDisabled=ROADUtil.roadFeatureDisabledString(context,"LEAVER FEATURE");
+			if(leaverDisabled!=null && leaverDisabled.length()>0 && leaverDisabled.equalsIgnoreCase("TRUE"))
+			{
+				 sectionAttrs.put("acceleratorPackLeaver","true");
+			}
+			else
+			{
+			     sectionAttrs.put("acceleratorPackLeaver","false");
+			}
+			String moverDisabled=ROADUtil.roadFeatureDisabledString(context,"MOVER FEATURE");
+			if(moverDisabled!=null && moverDisabled.length()>0 && moverDisabled.equalsIgnoreCase("TRUE"))
+			{
+				 sectionAttrs.put("acceleratorPackMover","true");
+			}
+			else
+			{
+			     sectionAttrs.put("acceleratorPackMover","false");
+			}
+			String ncDisabled=ROADUtil.roadFeatureDisabledString(context,"NATIVE CHANGE DETECTION FEATURE");
+			if(ncDisabled!=null && ncDisabled.length()>0 && ncDisabled.equalsIgnoreCase("TRUE"))
+			{
+				 sectionAttrs.put("acceleratorPackNativeChange","true");
+			}
+			else
+			{
+			     sectionAttrs.put("acceleratorPackNativeChange","false");
+			}
+			String asDisabled=ROADUtil.roadFeatureDisabledString(context,"ATTRIBUTE SYNCHRONIZATION FEATURE");
+			if(asDisabled!=null && asDisabled.length()>0 && asDisabled.equalsIgnoreCase("TRUE"))
+			{
+				 sectionAttrs.put("acceleratorPackAttrSync","true");
+			}
+			else
+			{
+			     sectionAttrs.put("acceleratorPackAttrSync","false");
+			}
+			String privNotEnabled=ObjectConfigAttributesRuleLibrary.extendedPrivPwdExpEnabled(context);
+			if(privNotEnabled==null || privNotEnabled.length()<=0 || privNotEnabled.equalsIgnoreCase("FALSE"))
+			{
+				 sectionAttrs.put("acceleratorPackPrivilegedNotifications","true");
+			}
+			else
+			{
+			     sectionAttrs.put("acceleratorPackPrivilegedNotifications","false");
+			}
+			String passwordSyncEnabled=ObjectConfigAttributesRuleLibrary.extendedAttrPasswordSyncEnabled(context);
+			if(passwordSyncEnabled==null || passwordSyncEnabled.length()<=0 || passwordSyncEnabled.equalsIgnoreCase("FALSE"))
+			{
+				 sectionAttrs.put("acceleratorPackPassword","true");
+			}
+			else
+			{
+			     sectionAttrs.put("acceleratorPackPassword","false");
+			}
+			String entDepEnabled=ObjectConfigAttributesRuleLibrary.extendedAttrEntitlementDependencyEnabled(context);
+			if(entDepEnabled==null || entDepEnabled.length()<=0 || entDepEnabled.equalsIgnoreCase("FALSE"))
+			{
+				 sectionAttrs.put("acceleratorPackEntDep","true");
+			}
+			else
+			{
+			     sectionAttrs.put("acceleratorPackEntDep","false");
+			}
+		    String aggEnabled=ObjectConfigAttributesRuleLibrary.extendedAttrAggregationEnabled(context);
+			if(aggEnabled==null || aggEnabled.length()<=0 || aggEnabled.equalsIgnoreCase("FALSE"))
+			{
+				 sectionAttrs.put("acceleratorPackAggregation","true");
+			}
+			else
+			{
+			     sectionAttrs.put("acceleratorPackAggregation","false");
+			}
+			String softPolicyEnabled=ObjectConfigAttributesRuleLibrary.extendedAttrSoftPolicyEnabled(context);
+			String hardPolicyEnabled=ObjectConfigAttributesRuleLibrary.extendedAttrSoftPolicyEnabled(context);
+			if(softPolicyEnabled==null || softPolicyEnabled.length()<=0 || softPolicyEnabled.equalsIgnoreCase("FALSE")
+			||hardPolicyEnabled==null || hardPolicyEnabled.length()<=0 || hardPolicyEnabled.equalsIgnoreCase("FALSE"))
+			{
+				 sectionAttrs.put("acceleratorPackPolicyViolation","true");
+			}
+			else
+			{
+			     sectionAttrs.put("acceleratorPackPolicyViolation","false");
+			}
+			String approverLevelOneDisabled=ROADUtil.roadAttributeDisabled(context, "Application", "appBusApprovers");
+			String approverLevelTwoDisabled=ROADUtil.roadAttributeDisabled(context, "Application", "additionalAppBusApprovers");
+			if(approverLevelOneDisabled==null || approverLevelOneDisabled.length()<=0 || approverLevelOneDisabled.equalsIgnoreCase("TRUE") || approverLevelTwoDisabled==null || 
+				approverLevelTwoDisabled.length()<=0 ||approverLevelTwoDisabled.equalsIgnoreCase("TRUE"))
+			{
+				 sectionAttrs.put("acceleratorPackCartRequest","true");
+			}
+			else
+			{
+			     sectionAttrs.put("acceleratorPackCartRequest","false");
+			}
+			String epicSERDisabled=ROADUtil.roadFeatureDisabledString(context,"SER LINK FEATURE");
+			if(epicSERDisabled!=null && epicSERDisabled.length()>0 && epicSERDisabled.equalsIgnoreCase("TRUE"))
+			{
+				 sectionAttrs.put("acceleratorPackEpicSER","true");
+			}
+			else
+			{
+			     sectionAttrs.put("acceleratorPackEpicSER","false");
+			}
+			String personaDisabled=ROADUtil.roadAttributeDisabled(context,"Identity","relationships");
+            if(personaDisabled==null || personaDisabled.length()<=0  || personaDisabled.equalsIgnoreCase("TRUE"))
+            {
+             sectionAttrs.put("acceleratorPackPersona","true");
+            }
+            else
+            {
+              sectionAttrs.put("acceleratorPackPersona","false");
+            }
+			String joinerRehireDisabled=ROADUtil.roadFeatureDisabledString(context,"JOINER REHIRE FEATURE");
+			if(joinerRehireDisabled!=null && joinerRehireDisabled.length()>0 && joinerRehireDisabled.equalsIgnoreCase("TRUE"))
+			{
+				 sectionAttrs.put("acceleratorPackJoinerRehire","true");
+			}
+			else
+			{
+			     sectionAttrs.put("acceleratorPackJoinerRehire","false");
+			}
+			String joinerLoaDisabled=ROADUtil.roadFeatureDisabledString(context,"JOINER LOA FEATURE");
+			if(joinerLoaDisabled!=null && joinerLoaDisabled.length()>0 && joinerLoaDisabled.equalsIgnoreCase("TRUE"))
+			{
+				 sectionAttrs.put("acceleratorPackJoinerLoa","true");
+			}
+			else
+			{
+			     sectionAttrs.put("acceleratorPackJoinerLoa","false");
+			}
+			String joinerLtdDisabled=ROADUtil.roadFeatureDisabledString(context,"JOINER LTD FEATURE");
+			if(joinerLtdDisabled!=null && joinerLtdDisabled.length()>0 && joinerLtdDisabled.equalsIgnoreCase("TRUE"))
+			{
+				 sectionAttrs.put("acceleratorPackJoinerLtd","true");
+			}
+			else
+			{
+			     sectionAttrs.put("acceleratorPackJoinerLtd","false");
+			}
+			String leaverLoaDisabled=ROADUtil.roadFeatureDisabledString(context,"LEAVER LOA FEATURE");
+			if(leaverLoaDisabled!=null && leaverLoaDisabled.length()>0 && leaverLoaDisabled.equalsIgnoreCase("TRUE"))
+			{
+				 sectionAttrs.put("acceleratorPackLeaverLoa","true");
+			}
+			else
+			{
+			     sectionAttrs.put("acceleratorPackLeaverLoa","false");
+			}
+			String leaverLtdDisabled=ROADUtil.roadFeatureDisabledString(context,"LEAVER LTD FEATURE");
+			if(leaverLtdDisabled!=null && leaverLtdDisabled.length()>0 && leaverLtdDisabled.equalsIgnoreCase("TRUE"))
+			{
+				 sectionAttrs.put("acceleratorPackLeaverLtd","true");
+			}
+			else
+			{
+			     sectionAttrs.put("acceleratorPackLeaverLtd","false");
+			}
+			String maanagerCertAutDisabled=ROADUtil.roadFeatureDisabledString(context,"MANAGER CERTIFICATION ALLOW EXCEPTION FEATURE");
+			if(maanagerCertAutDisabled!=null && maanagerCertAutDisabled.length()>0 && maanagerCertAutDisabled.equalsIgnoreCase("TRUE"))
+			{
+				 sectionAttrs.put("acceleratorPackManagerCertAut","true");
+			}
+			else
+			{
+			     sectionAttrs.put("acceleratorPackManagerCertAut","false");
+			}
+			String reverseLeaverDisabled=ROADUtil.roadFeatureDisabledString(context,"REVERSE LEAVER FEATURE");
+			if(reverseLeaverDisabled!=null && reverseLeaverDisabled.length()>0 && reverseLeaverDisabled.equalsIgnoreCase("TRUE"))
+			{
+				 sectionAttrs.put("acceleratorPackReverseLeaver","true");
+			}
+			else
+			{
+			     sectionAttrs.put("acceleratorPackReverseLeaver","false");
+			}
+			String worklfowNameCreate=ObjectUtil.getLCMWorkflowName(context,"IdentityCreateRequest");
+			if(worklfowNameCreate!=null && worklfowNameCreate.equalsIgnoreCase(ROADUtil.DEFAULTWORKFLOWCREATE))
+			{
+				 sectionAttrs.put("acceleratorPackCreate","false");
+			}
+			else
+			{
+			    sectionAttrs.put("acceleratorPackCreate","true");
+			}
+			String worklfowNameEdit=ObjectUtil.getLCMWorkflowName(context,"IdentityEditRequest");
+			if(worklfowNameEdit!=null && worklfowNameEdit.equalsIgnoreCase(ROADUtil.DEFAULTWORKFLOWEDIT))
+			{
+				 sectionAttrs.put("acceleratorPackEdit","false");
+			}
+			else
+			{
+			    sectionAttrs.put("acceleratorPackEdit","true");
+			}
+			String worklfowNameRegister=ObjectUtil.getLCMWorkflowName(context,"SelfServiceRegistrationRequest");
+			if(worklfowNameRegister!=null && worklfowNameRegister.equalsIgnoreCase("Workflow-FrameWork-Registration"))
+			{
+				 sectionAttrs.put("acceleratorPackRegister","false");
+			}
+			else
+			{
+			    sectionAttrs.put("acceleratorPackRegister","true");
+			}
+			if(sysConfigAttributes.containsKey("batchRequestAccessRequest") && sysConfigAttributes.containsKey("batchRequestAccountsRequest"))
+			{
+			    String accessWorklfowNameBatch=sysConfigAttributes.get("workflowLCMIdentityCreateRequest");
+				String accountsWorklfowNameBatch=sysConfigAttributes.get("batchRequestIdentityCreateRequest");
+				if(accessWorklfowNameBatch!=null && accessWorklfowNameBatch.equalsIgnoreCase(ROADUtil.DEFAULTWORKFLOW)
+				&& accountsWorklfowNameBatch!=null && accountsWorklfowNameBatch.equalsIgnoreCase(ROADUtil.DEFAULTWORKFLOW))
+				{
+					sectionAttrs.put("acceleratorPackBatchCompletion", "false");
+				}
+				else
+				{
+					sectionAttrs.put("acceleratorPackBatchCompletion", "true");
+				}
+			}
+			String worklfowNameAccesRequest=ObjectUtil.getLCMWorkflowName(context,"AccessRequest");
+			String worklfowNameAccountRequest=ObjectUtil.getLCMWorkflowName(context,"AccountsRequest");
+			if(worklfowNameAccesRequest!=null && worklfowNameAccesRequest.equalsIgnoreCase(ROADUtil.DEFAULTWORKFLOW)
+			&& worklfowNameAccountRequest!=null && worklfowNameAccountRequest.equalsIgnoreCase(ROADUtil.DEFAULTWORKFLOW))
+			{
+				 sectionAttrs.put("acceleratorPackAccessAccounts","false");
+			}
+			else
+			{
+			    sectionAttrs.put("acceleratorPackAccessAccounts","true");
+			}
+			LogEnablement.isLogDebugEnabled(logger,"Start initializeSectionAttributes "+sectionAttrs);
+       		return sectionAttrs;
+    }
+	/**
+	 * Initialize SmartServices Global Model
+	 * @param workflow
+	 */
+	public void initializeGlobalRoadModel(Workflow workflow)
+	{
+		LogEnablement.isLogDebugEnabled(logger,"Start initializeGlobalRoadModel");
+		HashMap globalRoadModelMap= new HashMap();
+    	globalRoadModelMap.put("transformerClass", "sailpoint.transformer.IdentityTransformer");
+		globalRoadModelMap.put("transformerOptions", null);
+	    Custom custom = context.getObjectByName(Custom.class, "Custom-Framework-Common-Settings");
+	    //Get Self Service - Start
+	    Custom customPasswordSyncVerification=null;
+	    String passwordSyncFeature = ObjectConfigAttributesRuleLibrary.extendedAttrPasswordSyncEnabled(context);
+		boolean passwordSyncEnabled=false;
+		if(passwordSyncFeature!=null && passwordSyncFeature.length()>0 && passwordSyncFeature.equalsIgnoreCase("TRUE"))
+		{
+			passwordSyncEnabled=true;
+		}
+		if(passwordSyncEnabled)
+		{
+		 customPasswordSyncVerification = context.getObjectByName(Custom.class, "Custom-Identity-Verification-Form-Settings");
+		}
+	    //Get Self Service - End
+	    //Get Epic - Start
+	    Custom customEpic=null;
+	    boolean epicSERDisab=ROADUtil.roadFeatureDisabled(context,"SER LINK FEATURE");
+		if(!epicSERDisab)
+		{
+		 customEpic = context.getObjectByName(Custom.class, "Custom-Epic-SER-Settings");
+		}
+	    //Get Epic - End
+	    //Get Password Synchronization - Start
+	    Custom customSelfService=null;
+	    String selfServiceFeature=ROADUtil.isFormEnabled(context,"ROAD-Self-Service");
+		boolean selfServiceEnab=false;
+		if(selfServiceFeature!=null && selfServiceFeature.length()>0 )
+		{
+			selfServiceEnab=true;
+		}
+		if(selfServiceEnab)
+		{
+		 customSelfService = context.getObjectByName(Custom.class, "Custom-ROAD-SelfService-Form-Settings");
+		}
+	    //Get Password Synchronization - End
+	    //Get Mover Custom Artifact - Start
+	    Custom customMover=null;
+	    String moverDisabledFeature=ROADUtil.roadFeatureDisabledString(context,"MOVER FEATURE");
+		boolean moverEnabled=true;
+		if(moverDisabledFeature!=null && moverDisabledFeature.length()>0 && moverDisabledFeature.equalsIgnoreCase("TRUE"))
+		{
+			moverEnabled=false;
+		}
+		if(moverEnabled)
+		{
+		 customMover = context.getObjectByName(Custom.class, "Custom-Mover-Settings");
+		}
+	    //Get Mover Custom Artifact - End
+	    //Get Native Change Custom Artifact - Start
+	    Custom customNativeChange = null;
+	    String nativeChangeDisabledFeature=ROADUtil.roadFeatureDisabledString(context,"NATIVE CHANGE DETECTION FEATURE");
+		boolean enabledNativeChange=true;
+		if(nativeChangeDisabledFeature!=null && nativeChangeDisabledFeature.length()>0 && nativeChangeDisabledFeature.equalsIgnoreCase("TRUE"))
+		{
+			enabledNativeChange=false;
+		}
+		if(enabledNativeChange)
+		{
+		  customNativeChange = context.getObjectByName(Custom.class, "Custom-Native-Change-Settings");
+		}
+		//Get Native Change Custom Artifact - End
+		//Get Ticket Custom Artifact - Start
+	    Custom customTicket = null;
+	   String ticketEnabled = ObjectConfigAttributesRuleLibrary.extendedAttrTicketEnabled(context);
+      	if(ticketEnabled!=null && ticketEnabled.length()>0 && ticketEnabled.equalsIgnoreCase("TRUE"))
+     	{
+     	  customTicket = context.getObjectByName(Custom.class, "Custom-Ticket-Settings");
+     	}
+     	//Get Ticket Custom Artifact - End
+     	//Get Logical Application Custom Artifact - Start
+     	Custom customCert=null;
+     	String logicalAppEnabled=ObjectConfigAttributesRuleLibrary.extendedAttrLogicalAppEnabled(context);
+		boolean logApp=false;
+		if(logicalAppEnabled!=null && logicalAppEnabled.length()>0 && logicalAppEnabled.equalsIgnoreCase("TRUE"))
+		{
+			logApp=true;
+		}
+		if(logApp)
+		{
+	     customCert = context.getObjectByName(Custom.class, "Custom-Framework-Exclusion-Logical-BusinessApplications-PrivilegedAccess");
+	    }
+	    //Get Logical Application Custom Artifact - End
+	    //Get Policy Custom Artifact - Start
+	    Custom customPolicy = null;
+	    String policyCheckHardEnabled=ObjectConfigAttributesRuleLibrary.extendedAttrHardPolicyEnabled(context);
+	     String policyCheckSoftEnabled=ObjectConfigAttributesRuleLibrary.extendedAttrHardPolicyEnabled(context);
+        if(policyCheckHardEnabled!=null && policyCheckHardEnabled.length()>0 && policyCheckSoftEnabled!=null && policyCheckSoftEnabled.length()>0
+        && policyCheckHardEnabled.equalsIgnoreCase("True") && policyCheckSoftEnabled.equalsIgnoreCase("True"))
+	    {
+	    	customPolicy = context.getObjectByName(Custom.class, "Custom-PolicyViolation-AllowDenyExceptions");
+	    }
+	    //Get Policy Custom Artifact - End
+	    //Get Approval Custom Artifact - Start
+	    Custom customApproval=null;
+	   String businessApproversEnabled=ObjectConfigAttributesRuleLibrary.extendedAttrBusApproverEnabled(context);
+		boolean busApprEnabled=false;
+		if(businessApproversEnabled!=null && businessApproversEnabled.length()>0 && businessApproversEnabled.equalsIgnoreCase("TRUE"))
+		{
+			busApprEnabled=true;
+		}
+		if(busApprEnabled)
+		{
+	     customApproval = context.getObjectByName(Custom.class, "Custom-ApprovalFrameWorkMappings");
+	    }
+	    //Get Approval Custom Artifact - End
+	    //Get Persona Custom Artifact - Start
+	    Custom customPersona = null;
+	   	String personaDisabled=ROADUtil.roadAttributeDisabled(context,"Identity","relationships");
+		if(personaDisabled!=null && personaDisabled.equalsIgnoreCase("False"))
+		{
+			customPersona=context.getObjectByName(Custom.class, "Custom-Persona-Settings");
+		}
+        //Get Persona Custom Artifact - End
+	    //Approval Configuration
+	     Attributes approvalMapAttr = new Attributes();
+	     HashMap splitMap = new HashMap();
+        if(customApproval!=null && customApproval.getAttributes()!=null)
+        {
+            if(customApproval.getAttributes()!=null && customApproval.getAttributes().containsKey("Default WorkItem Config"))
+            {
+	            approvalMapAttr = (Attributes) customApproval.getAttributes().get("Default WorkItem Config");
+	            if(approvalMapAttr!=null)
+	            {
+	               Map approvalMap=approvalMapAttr.getMap();
+			        if(approvalMap!=null)
+					{
+							for (Map.Entry entry : approvalMap.entrySet()) 
+							{
+							globalRoadModelMap.put( entry.getKey() ,entry.getValue());
+							}
+					}
+				}
+			}
+			if(customApproval.getAttributes()!=null && customApproval.getAttributes().containsKey("Split Eligibility"))
+            {
+				splitMap = (HashMap) customApproval.getAttributes().get("Split Eligibility");
+		        if(splitMap!=null )
+				{
+						for (Map.Entry entry : splitMap.entrySet()) 
+						{
+						globalRoadModelMap.put( entry.getKey() ,entry.getValue());
+						}
+				}
+			}
+			if(customApproval.getAttributes()!=null && customApproval.getAttributes().containsKey("Eligible Request Type Approvals"))
+            {
+				splitMap = (HashMap) customApproval.getAttributes().get("Eligible Request Type Approvals");
+		        if(splitMap!=null )
+				{
+						for (Map.Entry entry : splitMap.entrySet()) 
+						{
+							if(entry.getKey()!=null && ((String)entry.getKey()).contains(" ") )
+							{
+							 String key =entry.getKey();
+							 String keyRemoveSpaces=key.replaceAll(" ","GSPACEG");
+							 globalRoadModelMap.put( keyRemoveSpaces ,entry.getValue());
+							}
+						}
+				}
+			}
+		}
+	    //Common Configuration
+	     HashMap map = new HashMap();
+        if(custom!=null && custom.getAttributes()!=null)
+        {
+	         map = (HashMap) custom.getAttributes().get(WrapperRuleLibrary.ACCELERATORPACKGLOBALSETTINGS);
+	        if(map!=null )
+			{
+					for (Map.Entry entry : map.entrySet()) 
+					{
+					    String key=entry.getKey();
+					    Object value=entry.getValue();
+						if(value!=null && value instanceof String && ((String)value).contains(","))
+						{
+						 value=Util.csvToList((String)value);
+						}
+						globalRoadModelMap.put(key,value);
+					}
+			}
+		}
+		//Ticket Configuration
+        if(customTicket!=null && customTicket.getAttributes()!=null)
+        {
+	       HashMap ticketMap = (HashMap) customTicket.getAttributes().get("TICKET SETTINGS");
+	        if(ticketMap!=null )
+			{
+					for (Map.Entry entry : ticketMap.entrySet()) 
+					{
+					    String key=entry.getKey();
+					    Object value=entry.getValue();
+						if(value!=null && value instanceof String && ((String)value).contains(","))
+						{
+						 value=Util.csvToList((String)value);
+						}
+						globalRoadModelMap.put(key,value);
+					}
+			}
+		}
+		//Persona Configuration
+        if(customPersona!=null && customPersona.getAttributes()!=null)
+        {
+	        HashMap personaMap = (HashMap) customPersona.getAttributes().get("PERSONA SETTINGS");
+	        if(personaMap!=null )
+			{
+					for (Map.Entry entry : personaMap.entrySet()) 
+					{
+					    String key=entry.getKey();
+					    Object value=entry.getValue();
+						if(value!=null && value instanceof String && ((String)value).contains(","))
+						{
+						 value=Util.csvToList((String)value);
+						}
+						globalRoadModelMap.put(key,value);
+					}
+			}
+		}
+		//Self Service Configuration
+		if(customSelfService!=null && customSelfService.getAttributes()!=null)
+		{
+			Attributes selfServiceAttrs = customSelfService.getAttributes();
+			Map selfServiceMap=selfServiceAttrs.getMap();
+	        if(selfServiceMap!=null )
+			{
+					for (Map.Entry entry : selfServiceMap.entrySet()) 
+					{
+					    String key=entry.getKey();
+					    Object value=entry.getValue();
+						globalRoadModelMap.put(key,value);
+					}
+			}
+		}
+		//Epic Configuration
+		if(customEpic!=null && customEpic.getAttributes()!=null)
+		{
+			Attributes customEpicAttrs = customEpic.getAttributes();
+			Map customEpicMap=customEpicAttrs.getMap();
+	        if(customEpicMap!=null )
+			{
+					for (Map.Entry entry : customEpicMap.entrySet()) 
+					{
+					    String key=entry.getKey();
+					    Object value=entry.getValue();
+						globalRoadModelMap.put(key,value);
+					}
+			}
+		}
+		//Mover Configuration
+	    HashMap mapMover = new HashMap();
+        if(customMover!=null && customMover.getAttributes()!=null)
+        {
+	         mapMover = (HashMap) customMover.getAttributes().get("MOVER SETTINGS");
+	        if(mapMover!=null && mapMover.containsKey("certificationSettingsMappings"))
+			{
+					 Map objectMap= mapMover.get("certificationSettingsMappings");
+					 List objectList = null;
+					 if(objectMap!=null && objectMap instanceof Map && objectMap.containsKey("MOVER FEATURE"))
+					 {
+						 objectList= ((HashMap)(objectMap)).get("MOVER FEATURE");
+						 if(objectList!=null && objectList instanceof List )
+						 {
+						 	for(HashMap listMap:objectList)
+						 	{
+						 	   if(listMap!=null && listMap.containsKey("stagingEnabled"))
+						 	   {
+						 	    globalRoadModelMap.put("moverFeatureStaging",listMap.get("stagingEnabled"));
+						 	   }
+						 	}
+						 }
+					 }
+			}
+		}
+		//Native Change Configuration
+	    HashMap mapNativeChange = new HashMap();
+        if(customNativeChange!=null && customNativeChange.getAttributes()!=null)
+        {
+	         mapNativeChange = (HashMap) customNativeChange.getAttributes().get("NATIVE CHANGE SETTINGS");
+	       	if(mapNativeChange!=null && mapNativeChange.containsKey("certificationSettingsMappings"))
+			{
+				 Map objectMap= mapNativeChange.get("certificationSettingsMappings");
+				 if(objectMap!=null && objectMap instanceof Map && objectMap.containsKey("NATIVE CHANGE DETECTION FEATURE"))
+				 {
+					 List objectNativeList= ((HashMap)(objectMap)).get("NATIVE CHANGE DETECTION FEATURE");
+					 if(objectNativeList!=null && objectNativeList instanceof List )
+					 {
+					 	for(HashMap listMap:objectNativeList)
+					 	{
+					 	   if(listMap!=null && listMap.containsKey("stagingEnabled"))
+					 	   {
+					 	   globalRoadModelMap.put("nativeChangeFeatureStaging",listMap.get("stagingEnabled"));
+					 	   }
+					 	   if(listMap!=null && listMap.containsKey("securityGroupName"))
+					 	   {
+					 	   globalRoadModelMap.put("securityGroupName",listMap.get("securityGroupName"));
+					 	   }
+					 	}
+					 }
+				 }
+			}
+		}
+		//Certification Configuration
+		if(customCert!=null && customCert.getAttributes()!=null)
+		{
+			    Map certMap = ((Attributes)customCert.getAttributes()).getMap();
+		        if(certMap!=null )
+				{
+						for (Map.Entry entry : certMap.entrySet()) 
+						{
+						globalRoadModelMap.put( entry.getKey() ,entry.getValue());
+						}
+				}
+		}
+		//Password Sync Verification Configuration
+		if(customPasswordSyncVerification!=null && customPasswordSyncVerification.getAttributes()!=null)
+		{
+			    Map certPasswordVer = ((Attributes)customPasswordSyncVerification.getAttributes()).getMap();
+			    List passwordVerificationAttrs = new ArrayList();
+		        if(certPasswordVer!=null )
+				{
+						for (Map.Entry entry : certPasswordVer.entrySet()) 
+						{
+							if(entry.getValue()!=null && ((String)entry.getValue()).equalsIgnoreCase("TRUE"))
+							{
+								passwordVerificationAttrs.add(entry.getKey());
+							}
+						}
+				}
+				globalRoadModelMap.put( "verificationAttrsExclude" ,passwordVerificationAttrs);
+		}
+		//Policy Configuration
+		if(customPolicy!=null && customPolicy.getAttributes()!=null)
+		{
+			    Map policyMap = ((Attributes)customPolicy.getAttributes()).getMap();
+		        if(policyMap!=null )
+				{       List allowExceptionList = new ArrayList();
+				 		List denyExceptionList = new ArrayList();
+						for (Map.Entry entry : policyMap.entrySet()) 
+						{
+							if(entry.getValue()!=null && ((String)entry.getValue()).equalsIgnoreCase("Allow Exception"))
+							{
+							LogEnablement.isLogDebugEnabled(logger,"Add Allow..");
+							allowExceptionList.add(entry.getKey());
+							}
+							else if(entry.getValue()!=null && ((String)entry.getValue()).equalsIgnoreCase("Deny Exception"))
+							{
+							LogEnablement.isLogDebugEnabled(logger,"Add Deny..");
+							denyExceptionList.add(entry.getKey());
+							}
+						}
+						globalRoadModelMap.put("allowExceptions" ,allowExceptionList);
+						globalRoadModelMap.put("denyExceptions" ,denyExceptionList);
+				}
+		}
+		if(custom!=null)
+	    {
+       	context.decache(custom);
+       	}
+       	if(customCert!=null)
+	    {
+       	context.decache(customCert);
+       	}
+       	if(customPolicy!=null)
+	    {
+       	context.decache(customPolicy);
+       	}
+       	if(customApproval!=null)
+	    {
+       	context.decache(customApproval);
+       	}
+       	if(customPersona!=null)
+	    {
+       	context.decache(customPersona);
+       	}
+       	if(customTicket!=null)
+       	{
+       	context.decache(customTicket);
+       	}
+       	if(customMover!=null)
+	    {
+       	context.decache(customMover);
+       	}
+       	if(customNativeChange!=null)
+       	{
+       	context.decache(customNativeChange);
+       	}
+       	if(customPasswordSyncVerification!=null)
+       	{
+       	 context.decache(customPasswordSyncVerification);
+       	}
+       	if(customSelfService!=null)
+       	{
+       	 context.decache(customSelfService);
+       	}
+       	workflow.put("globalRoadModel",globalRoadModelMap);
+	}	
+	/**
+	 * Save Native Change Settings
+	 * @param globalRoadModel
+	 */
+	public void saveNativeChangeSettings(HashMap globalRoadModel)
+	{
+		LogEnablement.isLogDebugEnabled(logger,"Start saveNativeChangeSettings");
+		Custom custom = ObjectUtil.transactionLock(context,Custom.class, "Custom-Native-Change-Settings");
+        Map mapFromCustom = new HashMap();
+        mapFromCustom = (HashMap) custom.getAttributes().get("NATIVE CHANGE SETTINGS");
+        String nativeChangeStaged=null;
+        String securityGroupName=null;
+        if(globalRoadModel!=null )
+		{
+				for (Map.Entry entry : globalRoadModel.entrySet()) 
+				{
+				    if(mapFromCustom!=null &&  ((String)entry.getKey()).equalsIgnoreCase("nativeChangeFeatureStaging"))
+					{
+						 nativeChangeStaged=entry.getValue();
+						 LogEnablement.isLogDebugEnabled(logger,"MODIFY NATIVE STAGING..."+nativeChangeStaged);
+					}
+					if(mapFromCustom!=null &&  ((String)entry.getKey()).equalsIgnoreCase("securityGroupName"))
+					{
+						 securityGroupName=entry.getValue();
+						 LogEnablement.isLogDebugEnabled(logger,"MODIFY SECURITY GROUP NAME..."+securityGroupName);
+					}
+				}
+		}
+		if(mapFromCustom!=null && mapFromCustom.containsKey("certificationSettingsMappings"))
+        {
+	         Object objectMap=mapFromCustom.get("certificationSettingsMappings");
+			 if(objectMap!=null && objectMap instanceof Map && ((HashMap)objectMap).containsKey("NATIVE CHANGE DETECTION FEATURE"))
+			 {
+				 Object objectListNative= ((HashMap)(objectMap)).get("NATIVE CHANGE DETECTION FEATURE");
+				 if(objectListNative!=null && objectListNative instanceof List )
+				 {
+				 	List objectListListNative = (List)objectListNative;
+				 	for(HashMap listMapNative:objectListListNative)
+				 	{
+				 	   LogEnablement.isLogDebugEnabled(logger,"listMapNative..."+listMapNative);
+				 	   if(listMapNative!=null && listMapNative.containsKey("stagingEnabled") && nativeChangeStaged!=null)
+				 	   {
+				 	     	listMapNative.put("stagingEnabled",nativeChangeStaged);
+				 	    	LogEnablement.isLogDebugEnabled(logger,"SAVING NATIVE STAGING..."+nativeChangeStaged);
+				 	   }
+				 	   if(listMapNative!=null && listMapNative.containsKey("securityGroupName") )
+				 	   {
+				 	     	listMapNative.put("securityGroupName",securityGroupName);
+				 	    	LogEnablement.isLogDebugEnabled(logger,"SAVING NATIVE STAGING SECURITY GROUP..."+securityGroupName);
+				 	   }
+				 	}
+				 }
+			 }
+		 }
+		if(custom!=null && mapFromCustom!=null && !mapFromCustom.isEmpty())
+	    {
+	    context.saveObject(custom);
+       	}
+		LogEnablement.isLogDebugEnabled(logger,"End saveNativeChangeSettings");
+	}
+    /**
+	 * Save Mover Settings
+	 * @param globalRoadModel
+	 */
+	public void saveMoverSettings(HashMap globalRoadModel)
+	{
+		LogEnablement.isLogDebugEnabled(logger,"Start saveMoverSettings");
+		Custom custom = ObjectUtil.transactionLock(context,Custom.class, "Custom-Mover-Settings");
+        Map mapFromCustom = new HashMap();
+        mapFromCustom = (HashMap) custom.getAttributes().get("MOVER SETTINGS");
+        String moverStaged=null;
+        if(globalRoadModel!=null )
+		{
+				for (Map.Entry entry : globalRoadModel.entrySet()) 
+				{
+				  if(mapFromCustom!=null && ((String)entry.getKey()).equalsIgnoreCase("moverFeatureStaging"))
+					{
+						 //Override Here
+						  moverStaged=entry.getValue();
+						  LogEnablement.isLogDebugEnabled(logger,"MODIFY MOVER STAGING..."+moverStaged);
+					}
+				}
+		}
+		if(mapFromCustom!=null && mapFromCustom.containsKey("certificationSettingsMappings"))
+        {
+	         Object objectMap=mapFromCustom.get("certificationSettingsMappings");
+			 if(objectMap!=null && objectMap instanceof Map && ((HashMap)objectMap).containsKey("MOVER FEATURE"))
+			 {
+				 Object objectList= ((HashMap)(objectMap)).get("MOVER FEATURE");
+				 if(objectList!=null && objectList instanceof List )
+				 {
+				    List objectListList = (List)objectList;
+				 	for(HashMap listMap:objectListList)
+				 	{
+				 	   if(listMap!=null && listMap.containsKey("stagingEnabled") && moverStaged!=null)
+				 	   {
+				 	   listMap.put("stagingEnabled",moverStaged);
+				 	   LogEnablement.isLogDebugEnabled(logger,"SAVING MOVER STAGING..."+moverStaged);
+				 	   break;
+				 	   }
+				 	}
+				 }
+			 }
+		 }
+		if(custom!=null && mapFromCustom!=null && !mapFromCustom.isEmpty())
+	    {
+	    context.saveObject(custom);
+       	}
+	}
+	/**
+	 * Save Global Settings
+	 * @param globalRoadModel
+	 */
+	public void saveGlogalSettings(HashMap globalRoadModel)
+	{
+		LogEnablement.isLogDebugEnabled(logger,"Start saveGlogalSettings");
+		LogEnablement.isLogDebugEnabled(logger,"Start lock global settings");
+		Custom custom =ObjectUtil.transactionLock(context,Custom.class, "Custom-Framework-Common-Settings");
+		LogEnablement.isLogDebugEnabled(logger,"Start get lock global settings");
+        Map mapFromCustom = new HashMap();
+        List commaSeparatedKeys = new ArrayList();
+        List integerKeys = new ArrayList();
+        integerKeys.add("provisioningMaxRetries");
+        integerKeys.add("provisioningRetryThreshold");
+        integerKeys.add("globalWait");
+		commaSeparatedKeys.add("serviceAccountOwnerAttrs");
+        mapFromCustom = (HashMap) custom.getAttributes().get(WrapperRuleLibrary.ACCELERATORPACKGLOBALSETTINGS);
+        if(globalRoadModel!=null )
+		{
+				for (Map.Entry entry : globalRoadModel.entrySet()) 
+				{
+					if(mapFromCustom!=null && mapFromCustom.containsKey(entry.getKey()))
+					{
+						//Override Here
+						String key = entry.getKey();
+						Object value = entry.getValue();
+						if(key!=null && integerKeys.contains(key) && value!=null && value instanceof String)
+						{
+							 Integer integerValue=Integer.valueOf((String)value);  
+							 mapFromCustom.put( key ,integerValue);
+						}
+						else if(key!=null && integerKeys.contains(key) && value!=null && value instanceof Integer)
+						{
+							 mapFromCustom.put( key ,value);
+						}
+						else if(key!=null && commaSeparatedKeys.contains(key) && value!=null && value instanceof List && ((List)value).size()>0)
+						{
+							 List valueList=(List)value;
+							 value=Util.listToCsv(valueList);
+							 mapFromCustom.put( key ,value);
+						}
+						else if(key!=null && commaSeparatedKeys.contains(key) && value!=null && value instanceof List && ((List)value).size()<=0)
+						{
+							     value=null;
+							     mapFromCustom.put( key ,value);
+						}
+						else
+						{
+						 mapFromCustom.put( key ,value);
+						}
+					}
+				}
+		}
+		if(custom!=null && mapFromCustom!=null && !mapFromCustom.isEmpty())
+	    {
+	   	context.saveObject(custom);
+       	}
+		LogEnablement.isLogDebugEnabled(logger,"End saveGlogalSettings");
+	}
+	/**
+	 * Save Password Verification Settings
+	 * @param globalRoadModel
+	 */
+	public void savePasswordVerificationSettings(HashMap globalRoadModel)
+	{
+		LogEnablement.isLogDebugEnabled(logger,"Start savePasswordVerificationSettings");
+		Custom custom = ObjectUtil.transactionLock(context,Custom.class, "Custom-Identity-Verification-Form-Settings");
+		Attributes newAttributes = new Attributes();
+        Map mapFromCustom = new HashMap();
+        if(custom!=null && custom.getAttributes()==null)
+        {
+        	custom.setAttributes(newAttributes);
+        }
+        if(custom!=null)
+        {
+	        mapFromCustom = (HashMap) custom.getAttributes();
+	        if(globalRoadModel!=null )
+			{
+					for (Map.Entry entry : globalRoadModel.entrySet()) 
+					{
+						if(entry.getKey()!=null && ((String)entry.getKey()).equalsIgnoreCase("verificationAttrsExclude"))
+						{
+							//Override Here
+							String key = entry.getKey();
+							Object value = entry.getValue();
+							if(value!=null && value instanceof List)
+							{
+								List valuelist =(List)value;
+								mapFromCustom.clear();
+								for (String str:valuelist)
+								{
+								 	mapFromCustom.put( str ,"TRUE");
+								}
+								break;
+							}
+							else if(value!=null && value instanceof String)
+							{
+								mapFromCustom.put( value ,"TRUE");
+								break;
+							}
+							else if(value==null)
+							{
+								mapFromCustom.clear();
+								break;
+							}
+						}
+					}
+			}
+			if(custom!=null && mapFromCustom!=null )
+		    {
+		    context.saveObject(custom);
+	       	}
+       	}
+	}
+	/**
+	 * Save EPIC SER Settings
+	 * @param globalRoadModel
+	 */
+	public void saveEpicSERSettings(HashMap globalRoadModel)
+	{
+		LogEnablement.isLogDebugEnabled(logger,"Start saveEpicSERSettings");
+		Custom custom = ObjectUtil.transactionLock(context,Custom.class, "Custom-Epic-SER-Settings");
+		Attributes newAttributes = new Attributes();
+        Map mapFromCustom = new HashMap();
+        if(custom!=null && custom.getAttributes()==null)
+        {
+        	custom.setAttributes(newAttributes);
+        }
+        if(custom!=null)
+        {
+	        mapFromCustom = (HashMap) custom.getAttributes();
+	        if(globalRoadModel!=null )
+			{
+					for (Map.Entry entry : globalRoadModel.entrySet()) 
+					{
+						 if(mapFromCustom!=null && mapFromCustom.containsKey(entry.getKey()))
+						{
+							//Override Here
+							String key = entry.getKey();
+							Object value = entry.getValue();
+						    mapFromCustom.put( key ,value);
+						}
+					}
+			}
+			if(custom!=null && mapFromCustom!=null )
+		    {
+		   	context.saveObject(custom);
+	       	}
+       	}
+		LogEnablement.isLogDebugEnabled(logger,"End saveEpicSERSettings");
+	}
+	/**
+	 * Save Self Service Settings
+	 * @param globalRoadModel
+	 */
+	public void saveSelfServiceSettings(HashMap globalRoadModel)
+	{
+		LogEnablement.isLogDebugEnabled(logger,"Start saveSelfServiceSettings");
+		Custom custom =ObjectUtil.transactionLock(context,Custom.class, "Custom-ROAD-SelfService-Form-Settings");
+		Attributes newAttributes = new Attributes();
+        Map mapFromCustom = new HashMap();
+        if(custom!=null && custom.getAttributes()==null)
+        {
+        	custom.setAttributes(newAttributes);
+        }
+        if(custom!=null)
+        {
+	        mapFromCustom = (HashMap) custom.getAttributes();
+	        if(globalRoadModel!=null )
+			{
+					for (Map.Entry entry : globalRoadModel.entrySet()) 
+					{
+						 if(mapFromCustom!=null && mapFromCustom.containsKey(entry.getKey()))
+						{
+							//Override Here
+							String key = entry.getKey();
+							Object value = entry.getValue();
+						    mapFromCustom.put( key ,value);
+						}
+					}
+			}
+			if(custom!=null && mapFromCustom!=null )
+		    {
+		   	context.saveObject(custom);
+	       	}
+       	}
+		LogEnablement.isLogDebugEnabled(logger,"End saveSelfServiceSettings");
+	}
+	/**
+	 * Save Persona Settings
+	 * @param globalRoadModel
+	 */
+	public void savePersonaSettings(HashMap globalRoadModel)
+	{
+		LogEnablement.isLogDebugEnabled(logger,"Start savePersonaSettings");
+		Custom custom = ObjectUtil.transactionLock(context,Custom.class, "Custom-Persona-Settings");
+        Map mapFromCustom = new HashMap();
+        mapFromCustom = (HashMap) custom.getAttributes().get("PERSONA SETTINGS");
+        if(globalRoadModel!=null )
+		{
+				for (Map.Entry entry : globalRoadModel.entrySet()) 
+				{
+					if(mapFromCustom!=null && mapFromCustom.containsKey(entry.getKey()))
+					{
+						//Override Here
+						String key = entry.getKey();
+						Object value = entry.getValue();
+					    mapFromCustom.put( key ,value);
+					}
+				}
+		}
+		if(custom!=null && mapFromCustom!=null && !mapFromCustom.isEmpty())
+	    {
+	   	context.saveObject(custom);
+       	}
+		LogEnablement.isLogDebugEnabled(logger,"End savePersonaSettings");
+	}
+	/**
+	 * Save Global Ticket Settings
+	 * @param globalRoadModel
+	 */
+	public void saveTicketSettings(HashMap globalRoadModel)
+	{
+		LogEnablement.isLogDebugEnabled(logger,"Start saveTicketSettings");
+		List integerKeys = new ArrayList();
+        integerKeys.add("provisioningMaxStatusChecks");
+        integerKeys.add("provisioningStatusCheckInterval");
+		Custom customTicket =ObjectUtil.transactionLock(context,Custom.class, "Custom-Ticket-Settings");
+        Map mapFromCustom = new HashMap();
+        mapFromCustom = (HashMap) customTicket.getAttributes().get("TICKET SETTINGS");
+        if(globalRoadModel!=null )
+		{
+				for (Map.Entry entry : globalRoadModel.entrySet()) 
+				{
+					if(mapFromCustom!=null && mapFromCustom.containsKey(entry.getKey()))
+					{
+						//Override Here
+						String key = entry.getKey();
+						Object value = entry.getValue();
+						if(key!=null && integerKeys.contains(key) && value!=null && value instanceof String)
+						{
+							 Integer integerValue=Integer.valueOf((String)value);  
+							 mapFromCustom.put( key ,integerValue);
+						}
+						else if(key!=null && integerKeys.contains(key) && value!=null && value instanceof Integer)
+						{
+							 mapFromCustom.put( key ,value);
+						}
+						else
+						{
+					    mapFromCustom.put( key ,value);
+					    }
+					}
+				}
+		}
+		if(customTicket!=null && mapFromCustom!=null && !mapFromCustom.isEmpty())
+	    {
+	    context.saveObject(customTicket);
+       	}
+		LogEnablement.isLogDebugEnabled(logger,"End saveTicketSettings");
+	}
+	/**
+	 * Save Global Approval Settings
+	 * @param globalRoadModel
+	 */
+	public void saveApprovalsConfig(HashMap globalRoadModel)
+	{
+		LogEnablement.isLogDebugEnabled(logger,"Start saveApprovalsConfig");
+		Custom customApprovals = ObjectUtil.transactionLock(context,Custom.class, "Custom-ApprovalFrameWorkMappings");
+       	Attributes attr = ((Attributes)customApprovals.getAttributes());
+       	HashMap mapSplit = new HashMap();
+       	Attributes workItemConfig = new Attributes();
+       	HashMap mapApprovals = new HashMap();
+       	if(customApprovals!=null && customApprovals.getAttributes()!=null )
+       	{
+	        if(globalRoadModel!=null && attr!=null && attr.containsKey("Split Eligibility") )
+			{
+			        mapSplit=attr.get("Split Eligibility");
+					for (Map.Entry entry : globalRoadModel.entrySet()) 
+					{
+						if(mapSplit!=null && mapSplit.containsKey(entry.getKey()))
+						{
+						//Override Here
+						mapSplit.put( entry.getKey() ,entry.getValue());
+						}
+					}
+			}
+			if(globalRoadModel!=null && attr!=null && attr.containsKey("Eligible Request Type Approvals") )
+			{
+			        mapApprovals=attr.get("Eligible Request Type Approvals");
+					for (Map.Entry entry : globalRoadModel.entrySet()) 
+					{
+					    String key =entry.getKey();
+					    String keyRemoveSpaces =entry.getKey();
+					    if(key.contains("GSPACEG"))
+						{
+						 	keyRemoveSpaces=key.replaceAll("GSPACEG"," ");
+						}
+						if(mapApprovals!=null && mapApprovals.containsKey(keyRemoveSpaces))
+						{
+						        //Override Here
+							     mapApprovals.put( keyRemoveSpaces ,entry.getValue());
+						}
+					}
+			}
+			if(globalRoadModel!=null && attr!=null && attr.containsKey("Default WorkItem Config") )
+			{
+			        workItemConfig=attr.get("Default WorkItem Config");
+					for (Map.Entry entry : globalRoadModel.entrySet()) 
+					{
+						if(workItemConfig!=null && workItemConfig.containsKey(entry.getKey()))
+						{
+						//Override Here
+						workItemConfig.put( entry.getKey() ,entry.getValue());
+						}
+					}
+			}
+		}
+		if(customApprovals!=null && attr!=null && !attr.isEmpty())
+	    {
+		   	context.saveObject(customApprovals);
+       	}
+		LogEnablement.isLogDebugEnabled(logger,"End saveApprovalsConfig");
+	}
+	/**
+	 * Save Global Certification Settings
+	 * @param globalRoadModel
+	 */
+	public void saveCert(HashMap globalRoadModel)
+	{
+		LogEnablement.isLogDebugEnabled(logger,"Start saveCert");
+		Custom customCert = ObjectUtil.transactionLock(context,Custom.class, "Custom-Framework-Exclusion-Logical-BusinessApplications-PrivilegedAccess");
+       	Attributes attr = ((Attributes)customCert.getAttributes());
+       	if(customCert!=null && customCert.getAttributes()!=null )
+       	{
+	        if(globalRoadModel!=null )
+			{
+					for (Map.Entry entry : globalRoadModel.entrySet()) 
+					{
+						if(attr!=null && attr.containsKey(entry.getKey()))
+						{
+						//Override Here
+						attr.put( entry.getKey() ,entry.getValue());
+						}
+					}
+			}
+		}
+		if(customCert!=null && attr!=null && !attr.isEmpty())
+	    {
+	    context.saveObject(customCert);
+       	}
+       	LogEnablement.isLogDebugEnabled(logger,"CustomGlobal..Cleared");
+        CustomGlobal.clear();
+        LogEnablement.isLogDebugEnabled(logger,"End saveCert");
+	}
+	/**
+	 * Save Global Policy Settins
+	 * @param globalRoadModel
+	 */
+	public void savePolicy(HashMap globalRoadModel)
+	{
+        LogEnablement.isLogDebugEnabled(logger,"Start savePolicy");
+        //POLICY LOGIC
+        Custom customPolicy = null;
+        try {
+           LogEnablement.isLogDebugEnabled(logger,"Start lock");
+           customPolicy = ObjectUtil.transactionLock(context,Custom.class, "Custom-PolicyViolation-AllowDenyExceptions");
+        }
+        catch (Exception e ) {
+           LogEnablement.isLogDebugEnabled(logger,"Exception when loading \"Custom-PolicyViolation-AllowDenyExceptions\" (this is something expected until BETA features are installed) ");
+           //IIQTC-347
+           //do nothing
+           //we are expecting an exception if AP BETA features are not installed
+        }
+        Attributes policyAttr = null;
+        if (customPolicy != null) {
+            policyAttr = ((Attributes)customPolicy.getAttributes());
+            LogEnablement.isLogDebugEnabled(logger,"customPolicy.."+customPolicy);
+            LogEnablement.isLogDebugEnabled(logger,"policyAttr.."+policyAttr);
+        }
+        List existingAllowExceptionList = new ArrayList();
+		List existingDenyExceptionList = new ArrayList();
+		List policiesToRemoveAllow = new ArrayList();
+		List policiesToRemoveDeny = new ArrayList();
+		if(customPolicy!=null && customPolicy.getAttributes()!=null)
+		{
+	        Map map = ((Attributes)customPolicy.getAttributes()).getMap();
+	        if(map!=null )
+			{      
+					for (Map.Entry entry : map.entrySet()) 
+					{
+						if(entry.getValue()!=null && ((String)entry.getValue()).equalsIgnoreCase("Allow Exception"))
+						{
+						existingAllowExceptionList.add(entry.getKey());
+						}
+						else if(entry.getValue()!=null && ((String)entry.getValue()).equalsIgnoreCase("Deny Exception"))
+						{
+						existingDenyExceptionList.add(entry.getKey());
+						}
+					}
+			}
+		}
+		else if(customPolicy!=null)
+		{
+		policyAttr= new Attributes();
+		customPolicy.setAttributes(policyAttr);
+		}
+		if(globalRoadModel!=null )
+		{
+				for (Map.Entry entry : globalRoadModel.entrySet()) 
+				{
+				    //Global New Form Value is List and Not Empty
+					if(entry.getValue()!=null && entry.getKey()!=null && ((String)entry.getKey()).equalsIgnoreCase("allowExceptions") && entry.getValue() instanceof List)
+					{
+					    //Get New Form Value
+						List allowExceptionsList = entry.getValue();
+						if(allowExceptionsList!=null)
+						{
+							for(String policyName:allowExceptionsList)
+							{
+							 	//Add Form Value to Existing Custom Artifact Attributes, Addition of Policy
+							 	policyAttr.put( policyName ,"Allow Exception");
+							}
+						}
+						//Iterate through Existing List and see if existing policy doesnt exist in Global form policy, then remove
+						if(existingAllowExceptionList!=null && allowExceptionsList!=null)
+						{
+							for(String policyName:existingAllowExceptionList)
+							{
+							    if(policyName!=null && !allowExceptionsList.contains(policyName))
+							    {
+							 	//Remove Form Value from Existing Custom Artifact Attributes, Removal of Policy
+							 	policyAttr.remove( policyName);
+							 	}
+							}
+						}
+					}
+					//Global New Form Value is Null
+					else if(entry.getValue()==null && entry.getKey()!=null && ((String)entry.getKey()).equalsIgnoreCase("allowExceptions"))
+					{
+						//Remove All Policies
+						if(existingAllowExceptionList!=null)
+						{
+							for (String policyName:existingAllowExceptionList)
+							{
+								if(policyName!=null && policyAttr.containsKey(policyName))
+								{
+								policyAttr.remove(policyName);
+								}
+							}
+						}
+					}
+					else if(entry.getValue()!=null && entry.getKey()!=null && ((String)entry.getKey()).equalsIgnoreCase("denyExceptions") && entry.getValue() instanceof List)
+					{
+						List denyExceptionsList = entry.getValue();
+						if(denyExceptionsList!=null)
+						{
+							for(String policyName:denyExceptionsList)
+							{
+								//Add Form Value to Existing Custom Artifact Attributes, Addition of Policy
+								policyAttr.put( policyName ,"Deny Exception");
+							}
+						}
+						//Iterate through Existing List and see if existing policy doesnt exist in Global form policy, then remove
+						if(existingDenyExceptionList!=null && denyExceptionsList!=null)
+						{
+							for(String policyName:existingDenyExceptionList)
+							{
+							    if(policyName!=null && !denyExceptionsList.contains(policyName))
+							    {
+							 	//Remove Form Value from Existing Custom Artifact Attributes, Removal of Policy
+							 	policyAttr.remove( policyName);
+							 	}
+							}
+						}
+					}
+					else if(entry.getValue()==null && entry.getKey()!=null && ((String)entry.getKey()).equalsIgnoreCase("denyExceptions"))
+					{
+						//Remove ALL Policies
+						if(existingDenyExceptionList!=null)
+						{
+							for (String policyName:existingDenyExceptionList)
+							{
+							   if(policyName!=null && policyAttr.containsKey(policyName))
+								{
+								policyAttr.remove(policyName);
+								}
+							}
+						}
+					}
+				}
+		}
+		if(customPolicy!=null && policyAttr!=null && !policyAttr.isEmpty())
+	    {
+	   	context.saveObject(customPolicy);
+       	}
+	    LogEnablement.isLogDebugEnabled(logger,"End savePolicy");
+	}
+    /**
+	 * Save All Custom Artifacts 
+	 * @return
+	 * @throws Exception
+	 */
+    public void saveAllCustomArtifacts(HashMap globalRoadModel) throws Exception 
+    {
+     			LogEnablement.isLogDebugEnabled(logger,"Start saveAllCustomArtifacts ");
+     			try
+     			{
+	     			saveGlogalSettings( globalRoadModel);
+					String logicalAppEnabled=ObjectConfigAttributesRuleLibrary.extendedAttrLogicalAppEnabled(context);
+					boolean logApp=false;
+					if(logicalAppEnabled!=null && logicalAppEnabled.length()>0 && logicalAppEnabled.equalsIgnoreCase("TRUE"))
+					{
+						logApp=true;
+					}
+					if(logApp)
+					{
+		        		saveCert( globalRoadModel);
+		        	}
+		        	String isPolicySchemNone = (String)ROADUtil.getGlobalDefinitionAttribute(context,"policyScheme");
+		        	String policyCheckHardEnabled=ObjectConfigAttributesRuleLibrary.extendedAttrHardPolicyEnabled(context);
+				    String policyCheckSoftEnabled=ObjectConfigAttributesRuleLibrary.extendedAttrHardPolicyEnabled(context);
+			        if(policyCheckHardEnabled!=null && policyCheckHardEnabled.length()>0 && policyCheckSoftEnabled!=null && policyCheckSoftEnabled.length()>0
+			        && policyCheckHardEnabled.equalsIgnoreCase("True") && policyCheckSoftEnabled.equalsIgnoreCase("True"))
+				    {
+						        if(isPolicySchemNone!=null && isPolicySchemNone.length()>0 && !isPolicySchemNone.equalsIgnoreCase("None"))
+							    {
+					        		savePolicy(globalRoadModel);
+					        	}
+					}
+		            String businessApproversEnabled=ObjectConfigAttributesRuleLibrary.extendedAttrBusApproverEnabled(context);
+					boolean busApprEnabled=false;
+					if(businessApproversEnabled!=null && businessApproversEnabled.length()>0 && businessApproversEnabled.equalsIgnoreCase("TRUE"))
+					{
+						busApprEnabled=true;
+					}
+					if(busApprEnabled)
+					{
+		        		saveApprovalsConfig(globalRoadModel);
+		        	}
+		        	String personaDisabled=ROADUtil.roadAttributeDisabled(context,"Identity","relationships");
+					if(personaDisabled!=null && personaDisabled.equalsIgnoreCase("False"))
+					{
+			        	savePersonaSettings(globalRoadModel);
+		        	}
+		        	String ticketEnabled = ObjectConfigAttributesRuleLibrary.extendedAttrTicketEnabled(context);
+		        	if(ticketEnabled!=null && ticketEnabled.length()>0 && ticketEnabled.equalsIgnoreCase("TRUE"))
+		       		{
+		        		saveTicketSettings(globalRoadModel);
+		        	}
+		        	String moverDisabledFeature=ROADUtil.roadFeatureDisabledString(context,"MOVER FEATURE");
+					boolean moverEnabled=true;
+					if(moverDisabledFeature!=null && moverDisabledFeature.length()>0 && moverDisabledFeature.equalsIgnoreCase("TRUE"))
+					{
+						moverEnabled=false;
+					}
+					if(moverEnabled)
+					{
+						saveMoverSettings( globalRoadModel);
+					}
+					String nativeChangeDisabledFeature=ROADUtil.roadFeatureDisabledString(context,"NATIVE CHANGE DETECTION FEATURE");
+					boolean enabledNativeChange=true;
+					if(nativeChangeDisabledFeature!=null && nativeChangeDisabledFeature.length()>0 && nativeChangeDisabledFeature.equalsIgnoreCase("TRUE"))
+					{
+						enabledNativeChange=false;
+					}
+					if(enabledNativeChange)
+					{
+						saveNativeChangeSettings( globalRoadModel);
+					}
+					  String passwordSyncFeature = ObjectConfigAttributesRuleLibrary.extendedAttrPasswordSyncEnabled(context);
+					boolean passwordSyncEnabled=false;
+					if(passwordSyncFeature!=null && passwordSyncFeature.length()>0 && passwordSyncFeature.equalsIgnoreCase("TRUE"))
+					{
+						passwordSyncEnabled=true;
+					}
+					if(passwordSyncEnabled)
+					{
+						savePasswordVerificationSettings(globalRoadModel);
+					}
+					 String selfServiceFeature=ROADUtil.isFormEnabled(context,"ROAD-Self-Service");
+					boolean selfServiceEnab=false;
+					if(selfServiceFeature!=null && selfServiceFeature.length()>0)
+					{
+						selfServiceEnab=true;
+					}
+					if(selfServiceEnab)
+					{
+						saveSelfServiceSettings(globalRoadModel);
+					}
+					boolean epicSERDisab=ROADUtil.roadFeatureDisabled(context,"SER LINK FEATURE");
+					if(!epicSERDisab)
+					{
+					 saveEpicSERSettings(globalRoadModel);
+					}
+				}
+				finally
+				{
+		        	//Final Commit
+		        	context.commitTransaction();
+		        	//Force Load All Custom Artifacts
+		        	ROADUtil.forceLoad(context);
+	        	}
+     			LogEnablement.isLogDebugEnabled(logger,"End saveAllCustomArtifacts ");
+    }
+	
+	]]></Source>
+</Rule>

@@ -1,0 +1,1451 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Workflow PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Workflow handler="sailpoint.api.StandardWorkflowHandler" libraries="Identity,Role,PolicyViolation,LCM,BatchRequest" name="Workflow-FrameWork-Wrapper" taskType="LCM" type="LCMProvisioning">
+  <Variable input="true" name="trigger">
+    <Description>The IdentityTrigger</Description>
+  </Variable>
+  <Variable editable="true" initializer="false" input="true" name="doModifyProject"/>
+  <Variable name="endDate" output="true">
+    <Description>End date of the role assignment.</Description>
+  </Variable>
+  <Variable name="startDate" output="true">
+    <Description>Start date of the role assignment.</Description>
+  </Variable>
+  <Variable initializer="Success" name="validateMultipleForms"/>
+  <Variable input="true" name="event">
+    <Description>The IdentityChangeEvent</Description>
+  </Variable>
+  <Variable input="true" name="interceptedNativeId"/>
+  <Variable name="isEligibleForSplit"/>
+  <Variable name="interceptorErrorMessage"/>
+  <Variable name="isNoSplitManagerApprovalRequired"/>
+  <Variable initializer="false" input="true" name="trace">
+    <Description>Used for debugging this workflow and when set to true
+			trace
+			will be sent to stdout.</Description>
+  </Variable>
+  <Variable initializer="false" input="true" name="isProvisioningFailed" output="true">
+    <Description>
+      This variable will keep track of provisioning errors reported
+      in the Identity Request Items within the Identity Request object,
+      so that we can prevent from notifying the user about provisioning
+      actions status on failure.
+    </Description>
+  </Variable>
+  <Variable initializer="true" name="validatePSA"/>
+  <Variable name="enablePSA">
+    <Script>
+      <Source><![CDATA[
+	         
+			import sailpoint.rapidapponboarding.rule.ObjectConfigAttributesRuleLibrary;
+			String enablePSA=ObjectConfigAttributesRuleLibrary.extendedAttrPrivAccValEnabled(context);
+			return enablePSA;
+	      	
+	     ]]></Source>
+    </Script>
+  </Variable>
+  <Variable input="true" name="identityName">
+    <Description>The name of the identity.</Description>
+  </Variable>
+  <Variable input="true" name="launcher">
+    <Description>The name of the identity.</Description>
+  </Variable>
+  <Variable name="forceClassicApprovalUI"/>
+  <Variable input="true" name="flow">
+    <Description>The name of the identity.</Description>
+  </Variable>
+  <Variable name="source">
+    <Description>The name of the identity.</Description>
+  </Variable>
+  <Variable initializer="script:resolveDisplayName(identityName)" input="true" name="identityDisplayName">
+    <Description>The displayName of the identity being updated.
+			Query for this using a projection query and fall back to the name.</Description>
+  </Variable>
+  <Variable initializer="script:getIdentityProperty(identityName, &quot;email&quot;)" name="identityEmail">
+    <Description>
+			The requestee's email
+		</Description>
+  </Variable>
+  <Variable initializer="Normal" input="true" name="workItemPriority">
+    <Description>
+	     The String version of a WorkItem.Priority. This variable is
+	     used to set the priority on all of the workitems generated
+	     as part of this workflow and also set on the IdentityRequest
+	     object.
+	  </Description>
+  </Variable>
+  <Variable editable="true" input="true" name="requestType"/>
+  <Variable input="true" name="requestor">
+    <Description>The name of the requestor.</Description>
+  </Variable>
+  <Variable input="true" name="splitProvisioning">
+    <Description>
+			True to denote this is a partial of the full ProvisioningPlan. This
+			should be true in the case of LCM Provisioning
+			splits.
+		</Description>
+  </Variable>
+  <Variable name="approvalSet">
+    <Description>
+			Approval Set.
+		</Description>
+  </Variable>
+  <Variable input="true" name="plan"/>
+  <Variable name="project"/>
+  <Variable name="spExtAttrs" output="true"/>
+  <Variable name="formAttrs"/>
+  <Variable editable="true" name="requestedAppName"/>
+  <Variable name="identityRequestId" output="true"/>
+  <Variable initializer="spadmin" input="true" name="fallbackApprover"/>
+  <Variable initializer="false" input="true" name="autoVerifyIdentityRequest">
+    <Description>Auto Verify Identity Request.</Description>
+  </Variable>
+  <Variable editable="true" initializer="true" input="true" name="doRefresh"/>
+  <Variable editable="true" initializer="false" input="true" name="doTargetAggregate"/>
+  <Variable editable="true" initializer="false" input="true" name="doRefreshLogicalApps"/>
+  <Variable editable="true" initializer="false" input="true" name="noApplicationTemplates"/>
+  <Variable editable="true" initializer="false" input="true" name="suppressNotifications"/>
+  <Variable editable="true" initializer="false" name="optimisticProvisioning"/>
+  <Variable editable="true" initializer="false" input="true" name="foregroundProvisioning"/>
+  <Variable initializer="false" input="true" name="endOnManualWorkItems">
+    <Description>Option to skip requests with manual work items.</Description>
+  </Variable>
+  <Variable initializer="false" input="true" name="endOnProvisioningForms">
+    <Description>Option to skip requests with provisioning forms.</Description>
+  </Variable>
+  <Variable input="true" name="batchRequestItemId">
+    <Description>
+			Used by the batch interface to record back individual request item
+			status. The specific item id for the individual request in the batch
+			file.
+		</Description>
+  </Variable>
+  <Variable initializer="false" input="true" name="enableRetryRequest">
+    <Description>
+			When set to true it will disable the workflow retry loop and let the
+			Provision step launch requests to handle the retries. Enabling
+			this flag will enable some older functionality.
+		</Description>
+  </Variable>
+  <Variable name="allowRequestsWithViolations">
+    <Description>
+			If this variable is set to true, requesters will be able to proceed
+			past
+			the Policy Violation Review form without taking any action on
+			policy violations resulting from the request. This is only relevant
+			if policyScheme=interactive.
+		</Description>
+    <Script>
+      <Source><![CDATA[
+	         
+	           import sailpoint.rapidapponboarding.rule.ROADUtil;
+	           String defaultAllowRequest = (String)ROADUtil.getGlobalDefinitionAttribute(context,"defaultAllowRequest");
+	           if(defaultAllowRequest!=null && defaultAllowRequest.length()>0 )
+		       {
+		        return defaultAllowRequest;
+               }
+	      	
+	     ]]></Source>
+    </Script>
+  </Variable>
+  <Variable name="requireViolationReviewComments">
+    <Description>
+			If true, requesters will be required to enter in comments if they
+			proceed with a request that will result in policy violations. This
+			is only relevant if policyScheme=interactive.
+		</Description>
+    <Script>
+      <Source><![CDATA[
+	         
+	          import sailpoint.rapidapponboarding.rule.ROADUtil;
+	           String defaultAllowRequestCommentsRequired = (String)ROADUtil.getGlobalDefinitionAttribute(context,"defaultAllowRequestCommentsRequired");
+	           if(defaultAllowRequestCommentsRequired!=null && defaultAllowRequestCommentsRequired.length()>0 )
+		       {
+		        return defaultAllowRequestCommentsRequired;
+               }
+	      	
+	     ]]></Source>
+    </Script>
+  </Variable>
+  <Variable name="policyViolations" output="true">
+    <Description>
+			List of policy violations that were found during our initial policy scan.
+			This list is passed into each work item so the approvers can see
+			pending violations.
+		</Description>
+  </Variable>
+  <Variable name="violationReviewDecision">
+    <Description>
+			Decision made by the user in the Policy Violation Review step.
+			This may be one of three choices:
+			-ignore: User is ignoring the violations and letting the request continue. If
+			requireViolationReviewComments=true the user will be required to
+			enter
+			comments indicating why they are allowing the violations.
+			-remediate: Indicates that the user removed the request items that were causing
+			the
+			violations
+			-cancel: Indicates that the user decided to abandon the request, terminating
+			the workflow.
+		</Description>
+  </Variable>
+  <Variable input="true" name="workItemComments">
+    <Description>
+			Global comments accumulated during the workflow which should be shared
+			with other approvals. When a new approval is created, the comments in
+			this
+			list will be added to the work item.
+		</Description>
+  </Variable>
+  <Variable input="true" name="ticketManagementApplication">
+    <Description>
+			Name of the application that can handle ticket requests.
+			When non-null the Manage Ticket Steps will be visited to open
+			tickets during the workflow lifecycle.
+		</Description>
+  </Variable>
+  <Variable name="ticketId">
+    <Description>
+			The id of the ticket that is generated by the
+			ticketingManagementApplication.
+			This is typically generated on the "open" call, and then used in
+			subsequent
+			calls. It is also stored on the IdentityRequest object under the
+			externalTicketId variable.
+		</Description>
+  </Variable>
+  <Variable initializer="true" input="true" name="filterRejects">
+    <Description>True to filter rejected items when running in
+			Serial/SerialPoll mode.</Description>
+  </Variable>
+  <Variable initializer="false" input="true" name="noFiltering"/>
+  <Variable initializer="false" input="true" name="setPreviousApprovalDecisions">
+    <Description>True to pre-populate approval decisions from previous
+			approvals.</Description>
+  </Variable>
+  <Variable name="splitPlans">
+    <Description>
+			List of ProvisioningPlan that is generated from the splitPlans step if
+			approvalSplitPoint is set.
+		</Description>
+  </Variable>
+  <Variable name="splitProjects">
+    <Description>
+			Variable to store the returns if approvalSplitPoint is set. This will contain
+			a List&lt;ProvisioningProject&gt;
+		</Description>
+  </Variable>
+  <Variable name="splitApprovalSet">
+    <Description>
+			Variable to store the list of approvalSets returned from the split subprocess
+			if approvalSplitPoint is set.
+		</Description>
+  </Variable>
+  <Variable name="splitWorkItemComments">
+    <Description>
+			Variable to store the list of WorkItem comments returned from the split
+			subprocess if approvalSplitPoint is set.
+		</Description>
+  </Variable>
+  <Variable input="true" name="disableIdentityRequests"/>
+  <Variable input="true" name="asyncCacheRefresh">
+    <Description>
+			Set to true to enable asynchronous refresh of the policy and role
+			caches. This speeds up response time for the LCM user, but you
+			may want to disable this during demonstrations after editing
+			the role or policy models. This may also be enabled globally
+			in the system configuration. This variable overrides the
+			system configuration if it has a value.
+		</Description>
+  </Variable>
+  <Variable name="noTriggers">
+    <Description>
+			Used for debugging this subprocess and when set to true trace
+			statements will be sent to stdout.
+		</Description>
+    <Script>
+      <Source><![CDATA[
+	       import sailpoint.rapidapponboarding.rule.WrapperRuleLibrary;
+	       return WrapperRuleLibrary.turnOffIdentityLCETriggers(flow);
+	     ]]></Source>
+    </Script>
+  </Variable>
+  <Variable editable="true" name="requiredApprovalTypes">
+    <Description>
+			A List of required approval type strings for the cuurent requestType
+		</Description>
+  </Variable>
+  <Variable initializer="false" input="true" name="sendRequestNotifications">
+    <Description>		
+			If Workflow was invoked by a User in IdentityIQ we don't want to skip Submission and Confirmation Emails		
+		</Description>
+  </Variable>
+  <Variable initializer="false" input="true" name="fireFighterAccess"/>
+  <Variable initializer="false" input="true" name="bypassApprovals"/>
+  <Variable initializer="false" input="true" name="emergReq"/>
+  <Variable input="true" name="extSendRequestorNotifications">
+    <Description>		
+			External SCIM/REST Api Varaible	
+		</Description>
+  </Variable>
+  <Variable name="provisioningErrors"/>
+  <Variable initializer="false" name="isValidBatchRequest"/>
+  <Variable name="batchValidationError"/>
+  <Variable name="psaValidationError"/>
+  <Variable initializer="false" input="true" name="postProvisioningRule"/>
+  <Variable input="true" name="extPolicyScheme">
+    <Description>		
+			External SCIM/REST Api Varaible	
+	</Description>
+  </Variable>
+  <Variable input="true" name="policyScheme">
+    <Script>
+      <Source><![CDATA[
+	         
+	        import sailpoint.rapidapponboarding.rule.WrapperRuleLibrary;
+			return WrapperRuleLibrary.getPolicyScheme(context,flow, requestType,source,launcher,extPolicyScheme);
+	      	
+	     ]]></Source>
+    </Script>
+  </Variable>
+  <Variable input="true" name="policiesToCheck">
+    <Description>
+			A List of policies that should be checked. If this list is
+			empty all violations will be checked. Used in combination
+			with policyScheme.
+		</Description>
+  </Variable>
+  <Variable name="subflowName"/>
+  <Variable name="validationStringLeftRightError"/>
+  <Variable name="validationFireFighter"/>
+  <Description>Accelerator Pack Workflow</Description>
+  <RuleLibraries>
+    <Reference class="sailpoint.object.Rule" name="Rule-Framework-AfterBeforeProvisionRuleLibrary"/>
+    <Reference class="sailpoint.object.Rule" name="Rule-Framework-NotificationRuleLibrary"/>
+  </RuleLibraries>
+  <Step icon="Start" name="Start" posX="28" posY="10" resultVariable="sendRequestNotifications">
+    <Script>
+      <Source><![CDATA[
+			  	
+			  	import sailpoint.object.Application;
+				import sailpoint.object.Workflow.Step;
+				import sailpoint.object.Workflow;
+				import org.apache.commons.logging.Log;
+	   			import org.apache.commons.logging.LogFactory;
+	   			import sailpoint.rapidapponboarding.logger.LogEnablement;
+	   			import sailpoint.rapidapponboarding.rule.ROADUtil;
+	   			import sailpoint.rapidapponboarding.rule.WrapperRuleLibrary;
+       			WrapperRuleLibrary.redirectAcceleratorPackEnabled(context, plan, workflow, flow, source, requestType);
+				return sendRequestorNotifications(launcher, source,requestType,extSendRequestorNotifications);	  
+			  	
+		  ]]></Source>
+    </Script>
+    <Transition to="Launch Existing Workflow" when="script:subflowName != null &amp;&amp; !subflowName.equalsIgnoreCase(&quot;Normal Processing&quot;)"/>
+    <Transition to="Exit On Accelartor Pack Enablement Validation" when="validationStringLeftRightError!=void &amp;&amp; validationStringLeftRightError!=null"/>
+    <Transition to="Fire Fighter Access"/>
+  </Step>
+  <Step name="Fire Fighter Access" resultVariable="fireFighterAccess">
+    <Script>
+      <Source><![CDATA[
+			  	
+			  	import sailpoint.rapidapponboarding.rule.WrapperRuleLibrary;
+			  	//This will check if we need Firefighter Access Form step
+			  	//If yes, Perform validations
+			  	//Sunset Date and Launcher is not Requestee
+			  	return WrapperRuleLibrary.fireFighterAccessEnabled(context, plan, workflow, flow, source, identityName, launcher, requestType);
+     			
+		  ]]></Source>
+    </Script>
+    <Transition to="Exit On FireFighter Enablement Validation" when="validationFireFighter!=void &amp;&amp; validationFireFighter!=null"/>
+    <Transition to="Emergency Access Form" when="fireFighterAccess!=void &amp;&amp; fireFighterAccess!=null &amp;&amp; fireFighterAccess.equalsIgnoreCase(&quot;True&quot;) "/>
+    <Transition to="Validate Batch Request" when="script:source != null &amp;&amp; source.equalsIgnoreCase(&quot;Batch&quot;) &amp;&amp; batchRequestItemId != null"/>
+    <Transition to="Get Request Type"/>
+  </Step>
+  <Step icon="Message" name="Emergency Access Form">
+    <Approval name="Emergency Access" owner="ref:launcher" return="bypassApprovals,emergReq">
+      <Form name="Emergency Access">
+        <Attributes>
+          <Map>
+            <entry key="pageTitle" value="Emergency Access Form"/>
+          </Map>
+        </Attributes>
+        <Section label="Emergency Identity Access Form">
+          <Field displayName="Request Type" displayType="combo" name="emergReq" postBack="true" required="true" value="TRUE">
+            <AllowedValuesDefinition>
+              <Script>
+                <Source><![CDATA[
+			List list = new ArrayList();	
+			List displayList = new ArrayList();
+			displayList.add("TRUE");
+			displayList.add("THIS IS AN EMERGENCY REQUEST");
+			list.add(displayList);
+			displayList = new ArrayList();
+			displayList.add("FALSE");
+			displayList.add("THIS IS A NORMAL ACCESS REQUEST");
+			list.add(displayList);
+			return list;
+			]]></Source>
+              </Script>
+            </AllowedValuesDefinition>
+          </Field>
+          <Field displayName="Accept Approval Exception" dynamic="true" helpKey="By Accepting Exception, you are Acknowldging that this Request is not subject for any Approvals" name="bypassApprovals" required="true" type="boolean">
+            <Attributes>
+              <Map>
+                <entry key="hidden">
+                  <value>
+                    <Script>
+                      <Source><![CDATA[
+               	 boolean hidden=false;
+           		 if (null != emergReq && emergReq.equalsIgnoreCase("FALSE")) 
+				 {   
+					hidden=true;
+				 }
+				  return hidden;
+				]]></Source>
+                    </Script>
+                  </value>
+                </entry>
+              </Map>
+            </Attributes>
+            <Script>
+              <Source><![CDATA[
+			
+					if (null != emergReq && emergReq.equalsIgnoreCase("FALSE")) 
+					{   
+					    return false;
+					}
+					else if (null != emergReq && emergReq.equalsIgnoreCase("TRUE")) 
+					{   
+					 	return true;
+					}
+					else
+					{   
+					 	return true;
+					}
+			]]></Source>
+            </Script>
+          </Field>
+        </Section>
+        <Button action="back" label="Abort"/>
+        <Button action="next" label="Submit"/>
+        <Button action="cancel" label="Postpone Decision"/>
+      </Form>
+    </Approval>
+    <Arg name="launcher" value="ref:launcher"/>
+    <Transition to="Exit on Emergency Form" when="!approved"/>
+    <Transition to="Validate Batch Request" when="script:approved &amp;&amp; source != null &amp;&amp; source.equalsIgnoreCase(&quot;Batch&quot;) &amp;&amp; batchRequestItemId != null"/>
+    <Transition to="Get Request Type" when="script:approved"/>
+  </Step>
+  <Step name="Launch Existing Workflow">
+    <Arg name="launcher" value="ref:launcher"/>
+    <Arg name="requestor" value="ref:requestor"/>
+    <Arg name="source" value="ref:source"/>
+    <Arg name="identityName" value="ref:identityName"/>
+    <Arg name="identityDisplayName" value="ref:identityDisplayName"/>
+    <Arg name="plan" value="ref:plan"/>
+    <Arg name="flow" value="ref:flow"/>
+    <Arg name="endOnManualWorkItems" value="ref:endOnManualWorkItems"/>
+    <Arg name="endOnProvisioningForms" value="ref:endOnProvisioningForms"/>
+    <Arg name="workItemPriority" value="ref:workItemPriority"/>
+    <Arg name="policyScheme" value="ref:policyScheme"/>
+    <Arg name="approvalScheme" value="ref:approvalScheme"/>
+    <Arg name="workItemComments" value="ref:workItemComments"/>
+    <Arg name="asyncCacheRefresh" value="ref:asyncCacheRefresh"/>
+    <Arg name="batchRequestItemId" value="ref:batchRequestItemId"/>
+    <Arg name="ticketManagementApplication" value="ref:ticketManagementApplication"/>
+    <Arg name="ticketId" value="ref:ticketId"/>
+    <Arg name="disableIdentityRequests" value="ref:disableIdentityRequests"/>
+    <Return name="policyViolations" to="policyViolations"/>
+    <Return name="identityRequestId" to="identityRequestId"/>
+    <WorkflowRef>
+      <Reference class="sailpoint.object.Workflow" name="Dynamic Workflow Reference"/>
+    </WorkflowRef>
+    <Transition to="end"/>
+  </Step>
+  <Step name="Validate Batch Request" resultVariable="isValidBatchRequest">
+    <Script>
+      <Source><![CDATA[
+				
+					import sailpoint.object.ApprovalSet;
+					import sailpoint.object.ApprovalItem;
+					import sailpoint.tools.GeneralException;
+					import sailpoint.rapidapponboarding.rule.WrapperRuleLibrary;
+					import sailpoint.rapidapponboarding.rule.ApprovalRuleLibrary;
+					boolean isValidBatchRequest = true;
+					isValidBatchRequest = WrapperRuleLibrary.validateBatchRequest(context,identityName, batchRequestItemId);
+					if (!isValidBatchRequest) 
+					{
+						workflow.put("batchValidationError", "Accelerator Pack Batch Validation Error");
+					}
+					if (policyScheme==null || policyScheme.equalsIgnoreCase("none")) 
+					{
+							workflow.put("batchValidationError", "Please check Fail on any policy violation");
+							isValidBatchRequest=false;
+					}
+					if (disableIdentityRequests!=null && disableIdentityRequests) 
+					{
+							workflow.put("batchValidationError", "Please check Generate identity requests");
+							isValidBatchRequest=false;
+					}
+					if (endOnManualWorkItems!=null && endOnManualWorkItems) 
+					{
+							workflow.put("batchValidationError", "Please check Create work items");
+							isValidBatchRequest=false;
+					}
+					if (endOnProvisioningForms!=null && endOnProvisioningForms) 
+					{
+							workflow.put("batchValidationError", "Please check Create provisioning forms");
+							isValidBatchRequest=false;
+					}
+					//If the batch request is valid, and no approvals required, then set foregroundProvisioning=true
+					if(isValidBatchRequest && ApprovalRuleLibrary.skipBatchApprovals(context, workflow,"Operations")) 
+					{
+						workflow.put("foregroundProvisioning", true);
+					}
+					return isValidBatchRequest;
+	 			
+			]]></Source>
+    </Script>
+    <Transition to="Exit On Invalid Batch Request" when="script:!isTrue(isValidBatchRequest)"/>
+    <Transition to="Get Request Type"/>
+  </Step>
+  <Step name="Get Request Type" posX="98" posY="10" resultVariable="requestType">
+    <Script>
+      <Source><![CDATA[
+				
+				import sailpoint.rapidapponboarding.rule.WrapperRuleLibrary;
+   				return WrapperRuleLibrary.getRequestType(context,requestType,flow,identityName,workflow,plan,bypassApprovals,emergReq,fireFighterAccess);
+	 			
+   			]]></Source>
+    </Script>
+    <Transition to="Exit On Invalid Request Type" when="requestType == null"/>
+    <Transition to="Validate PSA" when="requestType != null"/>
+  </Step>
+  <Step condition="script:isTrue(enablePSA) &amp;&amp; (( requestType != null &amp;&amp; (requestType.equalsIgnoreCase(&quot;CART REQUEST FEATURE&quot;)||requestType.contains(&quot;JOINER&quot;)) || (source != null &amp;&amp; source.equalsIgnoreCase(&quot;Batch&quot;))))" name="Validate PSA" resultVariable="validatePSA">
+    <Script>
+      <Source><![CDATA[
+				
+					import sailpoint.rapidapponboarding.rule.WrapperRuleLibrary;
+					boolean validatePSA = true;
+					validatePSA=WrapperRuleLibrary.interrogateEligibilityForPrivilegedAccess(context,requestType, source, plan,null,identityName);
+					if (!validatePSA) 
+					{
+					workflow.put("psaValidationError", "Privileged access or access type must match with privileged account or account type and primary account must exist");
+					}
+					return validatePSA;
+				
+			]]></Source>
+    </Script>
+    <Transition to="Exit On Invalid Privileged Access" when="script:!isTrue(validatePSA)"/>
+    <Transition to="Execute Plan Interceptor Rule"/>
+  </Step>
+  <Step name="Execute Plan Interceptor Rule" resultVariable="plan">
+    <Script>
+      <Source><![CDATA[
+	
+	import sailpoint.rapidapponboarding.rule.ROADUtil;
+	return ROADUtil.interceptorPlanRule(context,workflow,plan,null,identityName,requestType,launcher,source,flow);
+	
+	]]></Source>
+    </Script>
+    <Transition to="Build Interceptor Error Message" when="plan == null || plan.getAccountRequests() == null || plan.getAccountRequests().size() &lt; 1"/>
+    <Transition to="Create Identity Snapshot"/>
+  </Step>
+  <Step name="Build Interceptor Error Message" resultVariable="interceptorErrorMessage">
+    <Script>
+      <Source><![CDATA[
+        
+          import sailpoint.object.Attributes;
+          String errorMessage = "System Error";
+          if(plan != null)
+          {
+            Attributes errorAttributes = plan.getArguments();
+            if(errorAttributes != null)
+            {
+              Map errorMap = errorAttributes.getMap();
+              if(errorMap != null)
+              {
+                if(errorMap.get("errorMessages") != null)
+                {
+                  errorMessage = errorMap.get("errorMessages");
+                }
+              }
+            }
+          }
+          return errorMessage;
+        
+      ]]></Source>
+    </Script>
+    <Transition to="Exit On Interceptor Error"/>
+  </Step>
+  <Step icon="Task" name="Create Identity Snapshot">
+    <Arg name="identityName" value="ref:identityName"/>
+    <Arg name="requestType" value="ref:requestType"/>
+    <Arg name="trace" value="ref:trace"/>
+    <Description>
+	            Creates a new snapshot of the identity that is going to be modified.
+	    </Description>
+    <Script>
+      <Source><![CDATA[
+			
+				import sailpoint.rapidapponboarding.rule.ROADUtil;															
+				ROADUtil.createIdentitySnapshot(context,identityName,requestType);				
+			
+			]]></Source>
+    </Script>
+    <Transition to="Show Requestor Form"/>
+  </Step>
+  <Step condition="script:requestType.equalsIgnoreCase(&quot;CART REQUEST FEATURE&quot;) &amp;&amp; isTrue(goToFormStep(workflow,plan) &amp;&amp; workflow.get(&quot;validateMultipleForms&quot;) !=null &amp;&amp; workflow.get(&quot;validateMultipleForms&quot;).equalsIgnoreCase(&quot;Success&quot;))" icon="Default" name="Show Requestor Form" posX="41" posY="148">
+    <Approval name="Requestor Form" owner="ref:launcher" return="workItemComments" send="workItemForm,workItemComments">
+      <AfterScript>
+        <Source><![CDATA[
+        		
+        		import sailpoint.rapidapponboarding.rule.WrapperRuleLibrary;
+				WrapperRuleLibrary.buildWorkItemCommentsAndFormAttributes(workflow, item, workItemComments,"formAttrs","doModifyProject");
+ 				
+				]]></Source>
+      </AfterScript>
+      <Arg name="workItemType" value="Form"/>
+      <Arg name="workItemForm" value="script:getDynamicForm(requestedAppName)"/>
+      <Arg name="workItemDescription" value="Please complete this form"/>
+    </Approval>
+    <Transition to="Exit on Invalid Multiple Forms" when="script:validateMultipleForms.equalsIgnoreCase(&quot;Fail&quot;)"/>
+    <Transition to="end" when="script:approved != void &amp;&amp; approved != null &amp;&amp; !approved"/>
+    <Transition to="Password Sync Plan"/>
+  </Step>
+  <Step condition="script:flow != void &amp;&amp; flow != null &amp;&amp; flow.contains(&quot;Password&quot;)" name="Password Sync Plan" resultVariable="plan">
+    <Script>
+      <Source><![CDATA[
+				
+				import sailpoint.rapidapponboarding.rule.WrapperRuleLibrary;
+				import sailpoint.object.ProvisioningPlan;
+				ProvisioningPlan plan=WrapperRuleLibrary.syncTargetApplicationsPasswordPlan(context, flow, plan, workflow,  identityName,null);
+				return plan;
+	 			
+   			]]></Source>
+    </Script>
+    <Transition to="Before Plan"/>
+  </Step>
+  <Step name="Before Plan" resultVariable="spExtAttrs">
+    <Script>
+      <Source><![CDATA[
+	  		 
+	  		import sailpoint.rapidapponboarding.rule.WrapperRuleLibrary;
+			return WrapperRuleLibrary.setPlanAndExternalAttributes(context,plan,requestType,workflow,flow,launcher);
+		    
+			]]></Source>
+    </Script>
+    <Transition to="end" when="plan == null || plan.getAccountRequests() == null || plan.getAccountRequests().size() &lt; 1"/>
+    <Transition to="Build Create Identity Approval Set">
+      <Script>
+        <Source><![CDATA[
+										
+					Boolean result=false;				   	
+				  	if(flow!=null && flow.equalsIgnoreCase("IdentityCreateRequest"))
+					{
+				 		result=true;
+					}				   	
+					return result;
+					
+					]]></Source>
+      </Script>
+    </Transition>
+    <Transition to="Initialize"/>
+  </Step>
+  <Step action="call:addMessage" name="No Request Failure" posX="201" posY="253">
+    <Arg name="message" value="Failed due to no provisioning plan"/>
+    <Arg name="type" value="Error"/>
+    <Transition to="end"/>
+  </Step>
+  <Step action="rule:LCM Build Identity ApprovalSet" icon="Task" name="Build Create Identity Approval Set" resultVariable="approvalSet">
+    <Description>
+       The rule will go through the plan and build an approvalItem for each AccountRequest,
+       typically there is just one for the IdentityIQ application requests.
+       The rule will also annotate the plan with the previousValues so that they
+       can be assimilated onto the Form that is build, which is used during the approval
+       process for edits.
+       Because this has some special handling keep it here in the workflow
+       and pass the approval set into the initialization process.
+    </Description>
+    <Transition to="Initialize"/>
+  </Step>
+  <Step icon="Task" name="Initialize">
+    <Arg name="flow" value="ref:flow"/>
+    <Arg name="formTemplate" value="Form-Framework-IdentityUpdate"/>
+    <Arg name="enablePSA" value="ref:enablePSA"/>
+    <Arg name="identityName" value="ref:identityName"/>
+    <Arg name="identityDisplayName" value="ref:identityDisplayName"/>
+    <Arg name="launcher" value="ref:launcher"/>
+    <Arg name="optimisticProvisioning" value="ref:optimisticProvisioning"/>
+    <Arg name="plan" value="ref:plan"/>
+    <Arg name="priority" value="ref:workItemPriority"/>
+    <Arg name="policiesToCheck" value="ref:policiesToCheck"/>
+    <Arg name="policyScheme" value="ref:policyScheme"/>
+    <Arg name="source" value="ref:source"/>
+    <Arg name="trace" value="ref:trace"/>
+    <Arg name="approvalSet" value="ref:approvalSet"/>
+    <Arg name="requireViolationReviewComments" value="ref:requireViolationReviewComments"/>
+    <Arg name="allowRequestsWithViolations" value="ref:allowRequestsWithViolations"/>
+    <Arg name="enableRetryRequest" value="ref:enableRetryRequest"/>
+    <Arg name="endOnProvisioningForms" value="ref:endOnProvisioningForms"/>
+    <Arg name="endOnManualWorkItems" value="ref:endOnManualWorkItems"/>
+    <Arg name="batchRequestItemId" value="ref:batchRequestItemId"/>
+    <Arg name="asyncCacheRefresh" value="ref:asyncCacheRefresh"/>
+    <Arg name="noApplicationTemplates" value="ref:noApplicationTemplates"/>
+    <Arg name="noFiltering" value="ref:noFiltering"/>
+    <Arg name="spExtAttrs" value="ref:spExtAttrs"/>
+    <Arg name="splitProvisioning" value="ref:splitProvisioning"/>
+    <Arg name="priority" value="ref:workItemPriority"/>
+    <Arg name="requestType" value="ref:requestType"/>
+    <Arg name="extSendRequestorNotifications" value="ref:extSendRequestorNotifications"/>
+    <Arg name="skipBatchApprovals">
+      <Script>
+        <Source><![CDATA[
+					
+					import sailpoint.rapidapponboarding.rule.ApprovalRuleLibrary;
+					ApprovalRuleLibrary.skipBatchApprovals(context, workflow,"Operations");
+					
+				]]></Source>
+      </Script>
+    </Arg>
+    <Return name="project" to="project"/>
+    <Return name="approvalSet" to="approvalSet"/>
+    <Return name="policyViolations" to="policyViolations"/>
+    <Return name="identityRequestId" to="identityRequestId"/>
+    <Return name="violationReviewDecision" to="violationReviewDecision"/>
+    <Return name="psaValidationError" to="psaValidationError"/>
+    <Return merge="true" name="workItemComments" to="workItemComments"/>
+    <WorkflowRef>
+      <Reference class="sailpoint.object.Workflow" name="Interactive Request Identity Request Initialize"/>
+    </WorkflowRef>
+    <Transition to="Exit On Manual Work Items" when="script:(isTrue(endOnManualWorkItems) &amp;&amp; (project.getUnmanagedPlan() != null))"/>
+    <Transition to="Exit On Provisioning Form" when="script:(isTrue(endOnProvisioningForms) &amp;&amp; (project.hasQuestions()))"/>
+    <Transition to="Exit On Policy Violation" when="script:(&quot;cancel&quot;.equals(violationReviewDecision) || ((size(policyViolations) > 0 ) &amp;&amp; (policyScheme.equals(&quot;fail&quot;))))"/>
+    <Transition to="Exit On Invalid Privileged Access" when="psaValidationError!=null"/>
+    <Transition to="Update Ext Attributes With Request Id"/>
+  </Step>
+  <Step name="Update Ext Attributes With Request Id">
+    <Script>
+      <Source><![CDATA[
+	  			
+	  		import sailpoint.rapidapponboarding.rule.WrapperRuleLibrary;
+	  		workflow.put("spExtAttrs", WrapperRuleLibrary.updateExtAttrs(spExtAttrs, "identityRequestId", identityRequestId));
+		    
+			]]></Source>
+    </Script>
+    <Transition to="Create Ticket" when="script:(ticketManagementApplication != null)"/>
+    <Transition to="Notify on Request Submission" when="script:isTrue(sendRequestNotifications)"/>
+    <Transition to="Persist Identity Request Id"/>
+  </Step>
+  <Step icon="Task" name="Create Ticket" posX="381" posY="6">
+    <Arg name="action" value="open"/>
+    <Arg name="source" value="ref:source"/>
+    <Arg name="priority" value="ref:workItemPriority"/>
+    <Arg name="project" value="ref:project"/>
+    <Arg name="ticketManagementApplication" value="ref:ticketManagementApplication"/>
+    <Arg name="identityRequestId" value="ref:identityRequestId"/>
+    <Arg name="ticketDataGenerationRule" value=""/>
+    <Arg name="ticketId" value="ref:ticketId"/>
+    <Arg name="trace" value="ref:trace"/>
+    <Description>
+			Call a subprocess to create a ticket in the ticketManagementApplication
+			is non-null.
+			You can specify a specific 'ticketDataGenerationRule' here or you can
+			also specify
+			it on the application. It'll be read from the argument first and fall
+			back to the '
+			application config.
+		</Description>
+    <Return name="ticketId" to="externalTicketId"/>
+    <WorkflowRef>
+      <Reference class="sailpoint.object.Workflow" name="Manage Ticket"/>
+    </WorkflowRef>
+    <Transition to="Notify on Request Submission" when="script:isTrue(sendRequestNotifications)"/>
+    <Transition to="Persist Identity Request Id"/>
+  </Step>
+  <Step action="call:sendEmail" icon="Email" name="Notify on Request Submission">
+    <Arg name="template">
+      <Script>
+        <Source><![CDATA[
+				
+					getWrapperEmailTemplateName(context, null, "RequestSubmission");
+					
+		  		]]></Source>
+      </Script>
+    </Arg>
+    <Arg name="to">
+      <Script>
+        <Source><![CDATA[
+				
+					getIdentityNameForNotification(workflow,launcher, null, false);
+					
+		  		]]></Source>
+      </Script>
+    </Arg>
+    <Arg name="cc">
+      <Script>
+        <Source><![CDATA[
+				
+					if(requestType != null && !requestType.equalsIgnoreCase("IMMEDIATE TERMINATION FEATURE")) 
+					{
+					    if(identityEmail!=null && identityEmail.length()>0)
+					    {
+						return identityEmail;
+						}
+						else
+						{
+						return "";
+						}
+					}
+					else 
+					{
+						return "";
+					}
+					
+				]]></Source>
+      </Script>
+    </Arg>
+    <Arg name="recipientDisplayName">
+      <Script>
+        <Source><![CDATA[
+		        
+		        	getIdentityDisplayName(workflow,launcher, null, false);
+		        	
+		        ]]></Source>
+      </Script>
+    </Arg>
+    <Arg name="approvalSet" value="ref:approvalSet"/>
+    <Arg name="identityName" value="ref:identityName"/>
+    <Arg name="refIdentityDisplayName">
+      <Script>
+        <Source><![CDATA[
+		        
+		        	getIdentityDisplayName(workflow,identityName, null, false);
+		        	
+		        ]]></Source>
+      </Script>
+    </Arg>
+    <Arg name="requestId">
+      <Script>
+        <Source><![CDATA[
+				
+					getRequestId(plan);
+					
+		  		]]></Source>
+      </Script>
+    </Arg>
+    <Arg name="dynamicAppContent">
+      <Script>
+        <Source><![CDATA[
+			
+				getDynamicTextEmailTemplate( project,"RequestSubmission", requestType);
+				
+	  		]]></Source>
+      </Script>
+    </Arg>
+    <Arg name="emailSubject">
+      <Script>
+        <Source><![CDATA[
+			
+			import sailpoint.rapidapponboarding.rule.WrapperRuleLibrary;
+			WrapperRuleLibrary.getEmailSubjectSubmissionCompletion(requestType,"Submitted");
+			
+			]]></Source>
+      </Script>
+    </Arg>
+    <Arg name="priority" value="ref:workItemPriority"/>
+    <Transition to="Persist Identity Request Id"/>
+  </Step>
+  <Step name="Persist Identity Request Id">
+    <Script>
+      <Source><![CDATA[
+			
+			   import sailpoint.rapidapponboarding.rule.WrapperRuleLibrary;
+				WrapperRuleLibrary.storeIdentityRequestIdOnWfCaseVariable(context, wfcontext, identityRequestId);
+				
+			]]></Source>
+    </Script>
+    <Transition to="Check Project"/>
+  </Step>
+  <Step name="Check Project" resultVariable="doProcessProject">
+    <Script>
+      <Source><![CDATA[
+			
+			 import sailpoint.rapidapponboarding.rule.WrapperRuleLibrary;
+			 return WrapperRuleLibrary.ensureProjectHasWellConstructedPlans(context, project);
+			
+			]]></Source>
+    </Script>
+    <Transition to="Calculate Required ApprovalTypes" when="script:doProcessProject == true"/>
+    <Transition to="end"/>
+  </Step>
+  <Step name="Calculate Required ApprovalTypes" resultVariable="requiredApprovalTypes">
+    <Script>
+      <Source><![CDATA[
+			
+			    import sailpoint.rapidapponboarding.rule.WrapperRuleLibrary;
+			    import sailpoint.rapidapponboarding.rule.ApprovalRuleLibrary;
+  			 	List requiredApprovalTypes = ApprovalRuleLibrary.getPossibleApprovalTypes(context, workflow);
+			    boolean isEligibleForSplit = WrapperRuleLibrary.isEligibleForSplit(context, requiredApprovalTypes,approvalSet);
+			    boolean isNoSplitManagerApprovalRequired = WrapperRuleLibrary.isNoSplitManagerApprovalRequired(requiredApprovalTypes);
+			    workflow.put("isEligibleForSplit",isEligibleForSplit);
+			    workflow.put("isNoSplitManagerApprovalRequired",isNoSplitManagerApprovalRequired);
+				return requiredApprovalTypes;
+				
+			]]></Source>
+    </Script>
+    <Transition to="No Split Manager Approval" when="script:isTrue(isNoSplitManagerApprovalRequired)"/>
+    <Transition to="Split Plan" when="script:isTrue(isEligibleForSplit)"/>
+    <Transition to="No Split Approval and Provision"/>
+  </Step>
+  <Step icon="Task" name="No Split Manager Approval">
+    <Arg name="approvalSet" value="ref:approvalSet"/>
+    <Arg name="fallbackApprover" value="spadmin"/>
+    <Arg name="flow" value="ref:flow"/>
+    <Arg name="identityName" value="ref:identityName"/>
+    <Arg name="identityDisplayName" value="ref:identityDisplayName"/>
+    <Arg name="identityEmail" value="ref:identityEmail"/>
+    <Arg name="launcher" value="ref:launcher"/>
+    <Arg name="plan" value="ref:plan"/>
+    <Arg name="policyScheme" value="ref:policyScheme"/>
+    <Arg name="policyViolations" value="ref:policyViolations"/>
+    <Arg name="trace" value="ref:trace"/>
+    <Arg name="workItemComments" value="ref:workItemComments"/>
+    <Arg name="requestType" value="ref:requestType"/>
+    <Arg name="requestor" value="ref:requestor"/>
+    <Arg name="project" value="ref:project"/>
+    <Arg name="processManagerApproval" value="true"/>
+    <Arg name="spExtAttrs" value="ref:spExtAttrs"/>
+    <Arg name="filterRejects" value="ref:filterRejects"/>
+    <Arg name="setPreviousApprovalDecisions" value="ref:setPreviousApprovalDecisions"/>
+    <Arg name="identityRequestId" value="ref:identityRequestId"/>
+    <Arg name="priority" value="ref:workItemPriority"/>
+    <Arg name="approvalTypes" value="ref:requiredApprovalTypes"/>
+    <Arg name="forceClassicApprovalUI" value="ref:forceClassicApprovalUI"/>
+    <Arg name="requestedAppName" value="ref:requestedAppName"/>
+    <Arg name="source" value="ref:source"/>
+    <Arg name="batchRequestItemId" value="ref:batchRequestItemId"/>
+    <Description>
+		   Call the standard subprocess that will handle the built-in
+		   owner, manager and security officer approval schemes.
+		 </Description>
+    <Return name="approvalSet"/>
+    <Return name="workItemComments"/>
+    <Return name="project"/>
+    <Return name="endDate" to="endDate"/>
+    <Return name="startDate" to="startDate"/>
+    <WorkflowRef>
+      <Reference class="sailpoint.object.Workflow" name="Interactive Request Dynamic Approval"/>
+    </WorkflowRef>
+    <Transition to="Split Plan">
+      <Script>
+        <Source><![CDATA[
+			  		
+					import sailpoint.object.ApprovalSet;
+					Boolean result = true;
+					if(approvalSet!=null && requiredApprovalTypes!=null && (approvalSet.isAllRejected() || (requiredApprovalTypes.size() == 1 && requiredApprovalTypes.contains("ManagerOrServiceAccountOwner")) || !isEligibleForSplit)) {
+				    	result = false;
+				    }
+				    return result;
+					
+				]]></Source>
+      </Script>
+    </Transition>
+    <Transition to="No Split Approval and Provision">
+      <Script>
+        <Source><![CDATA[
+			  		
+					Boolean result = false;
+					if(!isEligibleForSplit && !approvalSet.isAllRejected() && requiredApprovalTypes.size() > 1) {
+				    	result = true;
+				    }
+				   return result;
+					
+				]]></Source>
+      </Script>
+    </Transition>
+    <Transition to="Update Ticket Post Approval"/>
+  </Step>
+  <Step icon="Task" name="No Split Approval and Provision">
+    <Arg name="approvalSet" value="ref:approvalSet"/>
+    <Arg name="fallbackApprover" value="spadmin"/>
+    <Arg name="flow" value="ref:flow"/>
+    <Arg name="identityName" value="ref:identityName"/>
+    <Arg name="identityDisplayName" value="ref:identityDisplayName"/>
+    <Arg name="identityEmail" value="ref:identityEmail"/>
+    <Arg name="launcher" value="ref:launcher"/>
+    <Arg name="plan" value="ref:plan"/>
+    <Arg name="policyScheme" value="ref:policyScheme"/>
+    <Arg name="policyViolations" value="ref:policyViolations"/>
+    <Arg name="trace" value="ref:trace"/>
+    <Arg name="workItemComments" value="ref:workItemComments"/>
+    <Arg name="requestType" value="ref:requestType"/>
+    <Arg name="requestor" value="ref:requestor"/>
+    <Arg name="project" value="ref:project"/>
+    <Arg name="spExtAttrs" value="ref:spExtAttrs"/>
+    <Arg name="filterRejects" value="ref:filterRejects"/>
+    <Arg name="processManagerApproval" value="false"/>
+    <Arg name="setPreviousApprovalDecisions" value="ref:setPreviousApprovalDecisions"/>
+    <Arg name="identityRequestId" value="ref:identityRequestId"/>
+    <Arg name="priority" value="ref:workItemPriority"/>
+    <Arg name="approvalTypes" value="ref:requiredApprovalTypes"/>
+    <Arg name="forceClassicApprovalUI" value="ref:forceClassicApprovalUI"/>
+    <Arg name="requestedAppName" value="ref:requestedAppName"/>
+    <Arg name="source" value="ref:source"/>
+    <Arg name="batchRequestItemId" value="ref:batchRequestItemId"/>
+    <Description>
+		   Call the standard subprocess that will handle the built-in
+		   owner, manager and security officer approval schemes.
+		 </Description>
+    <Return name="approvalSet"/>
+    <Return name="workItemComments"/>
+    <Return name="project"/>
+    <Return name="endDate" to="endDate"/>
+    <Return name="startDate" to="startDate"/>
+    <WorkflowRef>
+      <Reference class="sailpoint.object.Workflow" name="Interactive Request Dynamic Approval"/>
+    </WorkflowRef>
+    <Transition to="Update Ticket Post Approval"/>
+  </Step>
+  <Step action="call:splitProvisioningPlan" icon="Task" name="Split Plan" resultVariable="splitPlans">
+    <Arg name="project" value="ref:project"/>
+    <Description>
+			Step to split the provisioning project into individual projects for each
+			item requested.
+			This will only run if the approvalSplitPoint is configured.
+		</Description>
+    <Transition to="Split Approval and Provision Subprocess"/>
+  </Step>
+  <Step icon="Task" name="Split Approval and Provision Subprocess">
+    <Arg name="fallbackApprover" value="ref:fallbackApprover"/>
+    <Arg name="successTemplate" value="ref:successTemplate"/>
+    <Arg name="source" value="ref:source"/>
+    <Arg name="approvedTemplate" value="ref:approvedTemplate"/>
+    <Arg name="identityDisplayName" value="ref:identityDisplayName"/>
+    <Arg name="failureTemplate" value="ref:failureTemplate"/>
+    <Arg name="noTriggers" value="ref:noTriggers"/>
+    <Arg name="trace" value="ref:trace"/>
+    <Arg name="failureTo" value="ref:failureTo"/>
+    <Arg name="suppressNotifications" value="ref:suppressNotifications"/>
+    <Arg name="doTargetAggregate" value="ref:doTargetAggregate"/>
+    <Arg name="doRefreshLogicalApps" value="ref:doRefreshLogicalApps"/>
+    <Arg name="doRefresh" value="ref:doRefresh"/>
+    <Arg name="optimisticProvisioning" value="ref:optimisticProvisioning"/>
+    <Arg name="foregroundProvisioning" value="ref:foregroundProvisioning"/>
+    <Arg name="spExtAttrs" value="ref:spExtAttrs"/>
+    <Arg name="formAttrs" value="ref:formAttrs"/>
+    <Arg name="noApplicationTemplates" value="ref:noApplicationTemplates"/>
+    <Arg name="event" value="ref:event"/>
+    <Arg name="plan" value="ref:plan"/>
+    <Arg name="flow" value="ref:flow"/>
+    <Arg name="rejectedTo" value="ref:failureTo"/>
+    <Arg name="identityName" value="ref:identityName"/>
+    <Arg name="requestType" value="ref:requestType"/>
+    <Arg name="enablePSA" value="ref:enablePSA"/>
+    <Arg name="trigger" value="ref:trigger"/>
+    <Arg name="policyScheme" value="ref:policyScheme"/>
+    <Arg name="policyViolations" value="ref:policyViolations"/>
+    <Arg name="requestor" value="ref:requestor"/>
+    <Arg name="rejectedTemplate" value="ref:rejectedTemplate"/>
+    <Arg name="approvedTo" value="ref:successTo"/>
+    <Arg name="optimisticProvisioning" value="ref:optimisticProvisioning"/>
+    <Arg name="successTo" value="ref:successTo"/>
+    <Arg name="launcher" value="ref:launcher"/>
+    <Arg name="autoVerifyIdentityRequest" value="ref:autoVerifyIdentityRequest"/>
+    <Arg name="identityDisplayName" value="ref:identityDisplayName"/>
+    <Arg name="endOnManualWorkItems" value="ref:endOnManualWorkItems"/>
+    <Arg name="endOnProvisioningForms" value="ref:endOnProvisioningForms"/>
+    <Arg name="batchRequestItemId" value="ref:batchRequestItemId"/>
+    <Arg name="enableRetryRequest" value="ref:enableRetryRequest"/>
+    <Arg name="policiesToCheck" value="ref:policiesToCheck"/>
+    <Arg name="allowRequestsWithViolations" value="ref:allowRequestsWithViolations"/>
+    <Arg name="requireViolationReviewComments" value="ref:requireViolationReviewComments"/>
+    <Arg name="violationReviewDecision" value="ref:violationReviewDecision"/>
+    <Arg name="workItemComments" value="ref:workItemComments"/>
+    <Arg name="ticketManagementApplication" value="ref:ticketManagementApplication"/>
+    <Arg name="ticketId" value="ref:ticketId"/>
+    <Arg name="filterRejects" value="ref:filterRejects"/>
+    <Arg name="setPreviousApprovalDecisions" value="ref:setPreviousApprovalDecisions"/>
+    <Arg name="splitPlans" value="ref:splitPlans"/>
+    <Arg name="splitProjects" value="ref:splitProjects"/>
+    <Arg name="approvalSet" value="ref:approvalSet"/>
+    <Arg name="splitWorkItemComments" value="ref:splitWorkItemComments"/>
+    <Arg name="asyncCacheRefresh" value="ref:asyncCacheRefresh"/>
+    <Arg name="noFiltering" value="ref:noFiltering"/>
+    <Arg name="splitProvisioning" value="true"/>
+    <Arg name="clearApprovalDecisions" value="true"/>
+    <Arg name="processManagerApproval" value="false"/>
+    <Arg name="identityRequestId" value="ref:identityRequestId"/>
+    <Arg name="priority" value="ref:workItemPriority"/>
+    <Arg name="doModifyProject" value="ref:doModifyProject"/>
+    <Arg name="launcher" value="ref:launcher"/>
+    <Replicator arg="plan" items="splitPlans"/>
+    <Return name="project" to="splitProjects"/>
+    <Return name="workItemComments" to="splitWorkItemComments"/>
+    <Return name="approvalSet" to="splitApprovalSet"/>
+    <Return name="policyViolations" to="policyViolations"/>
+    <Return name="psaValidationError" to="psaValidationError"/>
+    <Return name="endDate" to="endDate"/>
+    <Return name="startDate" to="startDate"/>
+    <WorkflowRef>
+      <Reference class="sailpoint.object.Workflow" name="Interactive Request Split Approval Provision Processor"/>
+    </WorkflowRef>
+    <Transition to="Assimilate Splits"/>
+  </Step>
+  <Step action="call:joinLCMProvWorkflowSplits" icon="Task" name="Assimilate Splits">
+    <Arg name="splitProjects" value="ref:splitProjects"/>
+    <Arg name="splitWorkItemComments" value="ref:splitWorkItemComments"/>
+    <Arg name="splitApprovalSet" value="ref:splitApprovalSet"/>
+    <Description>
+			Assimilate all projects returned from the split into the global project.
+		</Description>
+    <Transition to="Refresh Identity"/>
+  </Step>
+  <Step condition="script:(ticketManagementApplication != null)" icon="Task" name="Update Ticket Post Approval" posX="470" posY="20">
+    <Arg name="action" value="postApproval"/>
+    <Arg name="priority" value="ref:workItemPriority"/>
+    <Arg name="project" value="ref:project"/>
+    <Arg name="source" value="ref:source"/>
+    <Arg name="ticketManagementApplication" value="ref:ticketManagementApplication"/>
+    <Arg name="identityRequestId" value="ref:identityRequestId"/>
+    <Arg name="ticketDataGenerationRule" value=""/>
+    <Arg name="ticketId" value="ref:ticketId"/>
+    <Arg name="trace" value="ref:trace"/>
+    <WorkflowRef>
+      <Reference class="sailpoint.object.Workflow" name="Manage Ticket"/>
+    </WorkflowRef>
+    <Transition to="Provision"/>
+  </Step>
+  <Step icon="Task" name="Provision">
+    <Arg name="approvalSet" value="ref:approvalSet"/>
+    <Arg name="fallbackApprover" value="ref:fallbackApprover"/>
+    <Arg name="foregroundProvisioning" value="ref:foregroundProvisioning"/>
+    <Arg name="formTemplate" value="Form-Framework-IdentityUpdate"/>
+    <Arg name="flow" value="ref:flow"/>
+    <Arg name="priority" value="ref:workItemPriority"/>
+    <Arg name="identityDisplayName" value="ref:identityDisplayName"/>
+    <Arg name="identityName" value="ref:identityName"/>
+    <Arg name="launcher" value="ref:launcher"/>
+    <Arg name="manualActionsEmailTemplate" value="Pending Manual Changes"/>
+    <Arg name="optimisticProvisioning" value="ref:optimisticProvisioning"/>
+    <Arg name="policyViolations" value="ref:policyViolations"/>
+    <Arg name="project" value="ref:project"/>
+    <Arg name="policyScheme" value="ref:policyScheme"/>
+    <Arg name="plan" value="ref:plan"/>
+    <Arg name="trace" value="ref:trace"/>
+    <Arg name="doRefresh" value="ref:doRefresh"/>
+    <Arg name="enablePSA" value="ref:enablePSA"/>
+    <Arg name="source" value="ref:source"/>
+    <Arg name="requestType" value="ref:requestType"/>
+    <Arg name="spExtAttrs" value="ref:spExtAttrs"/>
+    <Arg name="formAttrs" value="ref:formAttrs"/>
+    <Arg name="noTriggers" value="ref:noTriggers"/>
+    <Arg name="noFiltering" value="ref:noFiltering"/>
+    <Arg name="workItemComments" value="ref:workItemComments"/>
+    <Arg name="splitProvisioning" value="false"/>
+    <Arg name="clearApprovalDecisions" value="false"/>
+    <Arg name="doModifyProject" value="ref:doModifyProject"/>
+    <Arg name="launcher" value="ref:launcher"/>
+    <Arg name="endDate" value="ref:endDate"/>
+    <Arg name="startDate" value="ref:startDate"/>
+    <Description>
+      Call the standard subprocess that will process the 
+      approval decisisions and do provisioning.  This 
+      includes calling any configured provisioning 
+      connectors and building manual actions.
+    </Description>
+    <Return name="project" to="project"/>
+    <Return name="psaValidationError" to="psaValidationError"/>
+    <WorkflowRef>
+      <Reference class="sailpoint.object.Workflow" name="Interactive Request Identity Request Provision"/>
+    </WorkflowRef>
+    <Transition to="Exit On Invalid Privileged Access" when="psaValidationError!=null"/>
+    <Transition to="Post Password Provision" when="script:flow != void &amp;&amp; flow != null &amp;&amp; flow.contains(&quot;Password&quot;) "/>
+    <Transition to="Update Ticket Post Provision"/>
+  </Step>
+  <Step icon="Task" name="Post Password Provision" posX="472" posY="8" resultVariable="isProvisioningFailed">
+    <Script>
+      <Source><![CDATA[
+      
+        import sailpoint.api.ObjectUtil;
+        import sailpoint.tools.Util;
+        import sailpoint.object.WorkflowCase;
+        import sailpoint.object.TaskResult;
+        import sailpoint.object.IdentityRequest;
+        import sailpoint.object.IdentityRequestItem;
+        import sailpoint.object.ApprovalSet;
+        import sailpoint.object.ApprovalItem;
+        import sailpoint.object.ProvisioningProject;
+        if ( null != identityRequestId ) {
+            IdentityRequest ir = wfcontext.getSailPointContext().getObject(IdentityRequest.class, identityRequestId);
+            if ( null != ir ) 
+            {
+                List requestItems = ir.getItems();
+                if ( Util.size(requestItems) > 0 ) {
+                    for ( IdentityRequestItem item : requestItems ) {
+                        if ( item.isProvisioningFailed() ) {
+                            isProvisioningFailed = true;
+                            return isProvisioningFailed;
+                        }
+                    }
+                }
+                context.decache(ir);
+            }
+        }
+        if ( approvalSet != null ) {
+            // Set state to provisioned and also mark them all approved
+            approvalSet.setAllProvisioned();
+            List items = approvalSet.getItems();
+            if ( Util.size(items) > 0 ) {
+                for ( ApprovalItem item : items ) {
+                    item.approve();
+                }
+            }
+        }
+        // mark this verified to prevent the scanner from processing it
+        TaskResult result = wfcontext.getTaskResult();
+        if ( result != null ) {
+            result.setVerified(new Date());
+        }
+        if ( project != null ) {
+            if ( Util.otob(trace) ) {
+                // clone and scrub the project so passwords are not visible
+                ProvisioningProject clonedProject = project.deepCopy(wfcontext.getSailPointContext());
+                ObjectUtil.scrubPasswords(clonedProject);
+            }
+        }
+        
+      ]]></Source>
+    </Script>
+    <Transition to="Update Ticket Post Provision"/>
+  </Step>
+  <Step condition="script:(ticketManagementApplication != null)" icon="Task" name="Update Ticket Post Provision" posX="700" posY="20">
+    <Arg name="action" value="postProvisioning"/>
+    <Arg name="source" value="ref:source"/>
+    <Arg name="priority" value="ref:workItemPriority"/>
+    <Arg name="project" value="ref:project"/>
+    <Arg name="ticketManagementApplication" value="ref:ticketManagementApplication"/>
+    <Arg name="identityRequestId" value="ref:identityRequestId"/>
+    <Arg name="ticketDataGenerationRule" value=""/>
+    <Arg name="ticketId" value="ref:ticketId"/>
+    <Arg name="trace" value="ref:trace"/>
+    <WorkflowRef>
+      <Reference class="sailpoint.object.Workflow" name="Manage Ticket"/>
+    </WorkflowRef>
+    <Transition to="Refresh Identity"/>
+  </Step>
+  <Step action="call:refreshIdentity" condition="ref:doRefresh" icon="Default" name="Refresh Identity">
+    <Arg name="identityName" value="ref:identityName"/>
+    <Arg name="correlateEntitlements" value="true"/>
+    <Transition to="After Refresh"/>
+  </Step>
+  <Step catches="complete" icon="Task" name="Finalize">
+    <Arg name="approvalSet" value="ref:approvalSet"/>
+    <Arg name="batchRequestItemId" value="ref:batchRequestItemId"/>
+    <Arg name="identityRequestId" value="ref:identityRequestId"/>
+    <Arg name="project" value="ref:project"/>
+    <Arg name="spExtAttrs" value="ref:spExtAttrs"/>
+    <Arg name="priority" value="ref:workItemPriority"/>
+    <Arg name="ticketManagementApplication" value="ref:ticketManagementApplication"/>
+    <Arg name="trace" value="ref:trace"/>
+    <Arg name="autoVerifyIdentityRequest" value="ref:autoVerifyIdentityRequest"/>
+    <Description>
+			Call the standard subprocess that can audit/finalize the request.
+		</Description>
+    <WorkflowRef>
+      <Reference class="sailpoint.object.Workflow" name="Identity Request Finalize"/>
+    </WorkflowRef>
+  </Step>
+  <Step name="After Refresh" posX="768" posY="10">
+    <Script>
+      <Source><![CDATA[
+			
+		    	afterProvisionRule(context, workflow,identityName,project,approvalSet);
+		    	
+			]]></Source>
+    </Script>
+    <Transition to="Notify on Request Completion" when="script:isTrue(sendRequestNotifications) || sendRequestManagerFeatureErrorNotifications(project, flow, requestType)"/>
+    <Transition to="Target Aggregation"/>
+  </Step>
+  <Step action="call:sendEmail" icon="Email" name="Notify on Request Completion">
+    <Arg name="template">
+      <Script>
+        <Source><![CDATA[
+				
+					getWrapperEmailTemplateName(workflow, project, "RequestCompletion");
+					
+		  		]]></Source>
+      </Script>
+    </Arg>
+    <Arg name="to">
+      <Script>
+        <Source><![CDATA[
+				
+					getIdentityNameForNotification(workflow,launcher, project, false);
+					
+		  		]]></Source>
+      </Script>
+    </Arg>
+    <Arg name="cc">
+      <Script>
+        <Source><![CDATA[
+				
+					if(requestType != null && !requestType.equalsIgnoreCase("IMMEDIATE TERMINATION FEATURE")) 
+					{
+						if(identityEmail!=null && identityEmail.length()>0)
+						{
+						return identityEmail;
+						}
+						else
+						{
+						return "";
+						}
+					}
+					else 
+					{
+						return "";
+					}
+					
+				]]></Source>
+      </Script>
+    </Arg>
+    <Arg name="recipientDisplayName">
+      <Script>
+        <Source><![CDATA[
+		        
+		        	getIdentityDisplayName(workflow,launcher, project, false);
+		        	
+		        ]]></Source>
+      </Script>
+    </Arg>
+    <Arg name="dynamicAppContent">
+      <Script>
+        <Source><![CDATA[
+			
+				getDynamicTextEmailTemplate( project,"RequestCompletion", requestType);
+				
+	  		]]></Source>
+      </Script>
+    </Arg>
+    <Arg name="emailSubject">
+      <Script>
+        <Source><![CDATA[
+			
+			import sailpoint.rapidapponboarding.rule.WrapperRuleLibrary;
+			WrapperRuleLibrary.getEmailSubjectSubmissionCompletion(requestType,"Completed");
+			
+			]]></Source>
+      </Script>
+    </Arg>
+    <Arg name="approvalSet" value="ref:approvalSet"/>
+    <Arg name="identityName" value="ref:identityName"/>
+    <Arg name="refIdentityDisplayName">
+      <Script>
+        <Source><![CDATA[
+       		 
+       		 	getIdentityDisplayName(workflow,identityName, null, false);
+       		 	
+   		    ]]></Source>
+      </Script>
+    </Arg>
+    <Arg name="requestId">
+      <Script>
+        <Source><![CDATA[
+				
+					getRequestId(plan);
+					
+		  		]]></Source>
+      </Script>
+    </Arg>
+    <Arg name="priority" value="ref:workItemPriority"/>
+    <Arg name="provisioningErrors" value="ref:provisioningErrors"/>
+    <Transition to="Target Aggregation"/>
+  </Step>
+  <Step condition="script:( requestType != null &amp;&amp; (requestType.equalsIgnoreCase(&quot;RECOVERY TOOL FEATURE&quot;)  ||requestType.equalsIgnoreCase(&quot;REQUEST MANAGER FEATURE&quot;)|| requestType.equalsIgnoreCase(&quot;ATTRIBUTE SYNCHRONIZATION FEATURE&quot;)))" name="Target Aggregation">
+    <Script>
+      <Source><![CDATA[
+      
+       import sailpoint.rapidapponboarding.rule.WrapperRuleLibrary;
+       import org.apache.commons.logging.Log;
+	   import org.apache.commons.logging.LogFactory;
+	   import sailpoint.rapidapponboarding.logger.LogEnablement;
+       Log loggerTarget = LogFactory.getLog("rapidapponboarding.rules");
+       try
+	    {
+			WrapperRuleLibrary.targetAggregateApplicationNativeIdOnIdentity( context,0, identityName, requestType, plan);
+		}
+		catch (Exception ex)
+		{
+			LogEnablement.isLogErrorEnabled(loggerTarget,"Error Target Aggregate "+identityName+".."+ex.getMessage());
+		}
+		
+      ]]></Source>
+    </Script>
+    <Transition to="Execute Wrapper Post Rule"/>
+  </Step>
+  <Step name="Execute Wrapper Post Rule">
+    <Script>
+      <Source><![CDATA[
+      import sailpoint.rapidapponboarding.rule.WrapperRuleLibrary;
+      WrapperRuleLibrary.postWrapperRule( context, identityName,  requestType, project);
+  	]]></Source>
+    </Script>
+    <Transition to="end"/>
+  </Step>
+  <Step action="call:addMessage" name="Exit On Invalid Request Type">
+    <Arg name="message" value="Failed due to Invalid Request Type"/>
+    <Arg name="type" value="Error"/>
+    <Transition to="end"/>
+  </Step>
+  <Step action="call:addMessage" name="Exit On Policy Violation">
+    <Arg name="message" value="Failed due to policy violation(s)"/>
+    <Arg name="type" value="Error"/>
+    <Transition to="end"/>
+  </Step>
+  <Step action="call:addMessage" name="Exit On Manual Work Items">
+    <Arg name="message" value="Failed due to manual work item(s)"/>
+    <Arg name="type" value="Error"/>
+    <Transition to="end"/>
+  </Step>
+  <Step action="call:addMessage" name="Exit On Accelartor Pack Enablement Validation">
+    <Arg name="message" value="ref:validationStringLeftRightError"/>
+    <Arg name="type" value="Error"/>
+    <Transition to="end"/>
+  </Step>
+  <Step action="call:addMessage" name="Exit On FireFighter Enablement Validation">
+    <Arg name="message" value="ref:validationFireFighter"/>
+    <Arg name="type" value="Error"/>
+    <Transition to="end"/>
+  </Step>
+  <Step action="call:addMessage" name="Exit On Provisioning Form">
+    <Arg name="message" value="Failed due to provisioning form"/>
+    <Arg name="type" value="Error"/>
+    <Transition to="end"/>
+  </Step>
+  <Step action="call:addMessage" name="Exit On Invalid Batch Request">
+    <Arg name="message" value="ref:batchValidationError"/>
+    <Arg name="type" value="Error"/>
+    <Transition to="end"/>
+  </Step>
+  <Step action="call:addMessage" name="Exit On Invalid Privileged Access">
+    <Arg name="message" value="ref:psaValidationError"/>
+    <Arg name="type" value="Error"/>
+    <Transition to="end"/>
+  </Step>
+  <Step action="call:addMessage" name="Exit on Invalid Multiple Forms">
+    <Arg name="message" value="Request Requires Multiple Forms, Please request roles individually"/>
+    <Arg name="type" value="Error"/>
+    <Transition to="end"/>
+  </Step>
+  <Step action="call:addMessage" name="Exit On Interceptor Error">
+    <Arg name="message" value="ref:interceptorErrorMessage"/>
+    <Arg name="type" value="Error"/>
+    <Transition to="end"/>
+  </Step>
+  <Step action="call:addMessage" name="Exit on Emergency Form">
+    <Arg name="message" value="Emergency Request Aborted"/>
+    <Arg name="type" value="Error"/>
+    <Transition to="end"/>
+  </Step>
+  <Step icon="Stop" name="end" posX="658" posY="10"/>
+</Workflow>

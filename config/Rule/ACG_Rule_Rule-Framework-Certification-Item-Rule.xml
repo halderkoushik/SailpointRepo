@@ -1,0 +1,170 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule-Framework-Certification-Item-Rule">
+  <Source><![CDATA[
+     
+		import sailpoint.object.ManagedAttribute;
+		import sailpoint.object.Certification;
+		import sailpoint.object.CertificationItem;
+		import sailpoint.object.CertificationEntity;
+		import sailpoint.object.Certification.Type;
+		import sailpoint.object.Certifiable;
+		import sailpoint.object.EntitlementGroup;
+		import sailpoint.object.EntitlementSnapshot;
+		import sailpoint.object.Entitlement;
+		import sailpoint.object.Entitlements;
+		import sailpoint.object.Attributes;
+		import sailpoint.object.Filter;
+		import sailpoint.object.Bundle;
+		import sailpoint.object.QueryOptions;
+		import sailpoint.object.Application;
+		import sailpoint.object.Attributes;
+		import sailpoint.object.Identity;
+		import sailpoint.object.Link;
+		import java.util.List;
+		import org.apache.commons.logging.Log;
+		import org.apache.commons.logging.LogFactory;
+		import sailpoint.api.IdentityService;
+		import sailpoint.tools.Util;	
+		import sailpoint.rapidapponboarding.rule.ObjectConfigAttributesRuleLibrary;
+		import sailpoint.rapidapponboarding.logger.LogEnablement;
+		Log logger = LogFactory.getLog("rapidapponboarding.rules");
+   		String nativeId=null;
+		String itemRoleType=null;
+		Application application=null;	
+		String entValue = "";		
+		String entitlementAppName = null;
+		String entitlementPrivileged = null;
+		String applicationName = null;
+		String entitlementName = null;
+		String entitlementValue = null;
+		String privilegedAccessEnabled=ObjectConfigAttributesRuleLibrary.extendedAttrPrivRoleEntitlementEnabled(context);
+		boolean privAccessEnabled=false;
+		if(privilegedAccessEnabled!=null && privilegedAccessEnabled.length()>0 && privilegedAccessEnabled.equalsIgnoreCase("TRUE"))
+		{
+			privAccessEnabled=true;
+		}
+		String logicalAppEnabled=ObjectConfigAttributesRuleLibrary.extendedAttrLogicalAppEnabled(context);
+		boolean logApp=false;
+		if(logicalAppEnabled!=null && logicalAppEnabled.length()>0 && logicalAppEnabled.equalsIgnoreCase("TRUE"))
+		{
+			logApp=true;
+		}
+	try
+	{
+		if(item != null)
+		{
+			//First check if this is an entitlement
+			if(CertificationItem.Type.Exception.equals(item.getType()) ) 
+			{
+				EntitlementSnapshot entsnapshot = ((CertificationItem)item).getExceptionEntitlements();
+				if(null != entsnapshot)
+				{
+					applicationName = entsnapshot.getApplicationName();				
+					entitlementName = (String) entsnapshot.getAttributeName();
+					entitlementValue = (String) entsnapshot.getAttributeValue();
+					QueryOptions qo = new QueryOptions();
+			        qo.addFilter(Filter.ignoreCase(Filter.eq("application.name", applicationName)));
+			        qo.addFilter(Filter.ignoreCase(Filter.eq("attribute", entitlementName)));
+		        	qo.addFilter(Filter.ignoreCase(Filter.eq("value", entitlementValue)));
+		        	List props = new ArrayList();
+			        if(logApp)
+			        {
+		  			 props.add("entAppName");
+		  			}
+		  			if(privAccessEnabled)
+		  			{
+		  				props.add("entPrivileged");	
+		  			}		
+			        Iterator iter = context.search(ManagedAttribute.class, qo, props);
+	                if (iter != null && iter.hasNext())
+					{
+						try 
+						{					   
+						    Object [] arrStr=(Object[]) iter.next();
+						    if(arrStr!=null && arrStr.length==2 && privAccessEnabled && logApp)
+						    {
+							    entitlementAppName = (String)arrStr[0];
+						    	entitlementPrivileged = (String)arrStr[1];
+					    	}
+					    	else if(arrStr!=null && arrStr.length==1 && logApp)
+						    {
+							    entitlementAppName = (String)arrStr[0];
+						  	}
+						  	else if(arrStr!=null && arrStr.length==1 && privAccessEnabled)
+						    {
+						    	entitlementPrivileged = (String)arrStr[0];
+						  	}
+				      	}
+				      	catch (Exception e) 
+				      	{
+				      		LogEnablement.isLogErrorEnabled(logger,e.getMessage());
+				      	}
+				      	Util.flushIterator(iter);
+				    }				    				    	
+					if(entitlementAppName!=null)
+					{					
+					((CertificationItem)item).setCustom1(entitlementAppName);
+					}
+					if(entitlementPrivileged!=null && privAccessEnabled)
+					{
+					((CertificationItem)item).setCustom2(entitlementPrivileged);
+					}
+				}
+			}
+		    //If it is a role 
+	        if(CertificationItem.Type.Bundle.equals(item.getType()) )
+	        {
+	        	String bundleName = item.getBundle();
+	        	List props = new ArrayList();
+	  			props.add("appName");
+	  			if(privAccessEnabled)
+		  		{
+	  				props.add("rolePrivileged");
+	  			}		
+	        	QueryOptions qo = new QueryOptions();
+			    qo.addFilter(Filter.ignoreCase(Filter.eq("name", bundleName)));
+	        	Iterator iter = context.search(Bundle.class, qo, props);
+	            if (iter != null && iter.hasNext())
+	            {
+					try 
+					{					    	
+						    Object [] arrStr=(Object[]) iter.next();
+						    if(arrStr!=null && arrStr.length==2 && privAccessEnabled && logApp)
+						    {
+							    entitlementAppName = (String)arrStr[0];
+						    	entitlementPrivileged = (String)arrStr[1];
+						    }
+					    	else if(arrStr!=null && arrStr.length==1 && logApp)
+						    {
+							    entitlementAppName = (String)arrStr[0];
+							}
+						  	else if(arrStr!=null && arrStr.length==1 && privAccessEnabled)
+						    {
+						    	entitlementPrivileged = (String)arrStr[0];
+						    }
+					}
+			      	catch (Exception e) 
+			      	{
+			      		LogEnablement.isLogErrorEnabled(logger,e.getMessage());
+			      	}
+			      	Util.flushIterator(iter);
+			    }				    		
+	        	if(entitlementAppName!=null && logApp)
+	        	{
+	        	((CertificationItem)item).setCustom1(entitlementAppName);
+	        	}
+	        	if(entitlementPrivileged!=null && privAccessEnabled)
+	        	{
+	        	((CertificationItem)item).setCustom2(entitlementPrivileged);
+	        	}
+	        }
+		}
+	}
+	catch(Exception ex)
+	{
+		LogEnablement.isLogErrorEnabled(logger,"Severe Exception "+ex.getMessage());
+	}
+		
+]]></Source>
+</Rule>

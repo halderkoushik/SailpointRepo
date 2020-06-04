@@ -1,0 +1,96 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule-Self-Service-Birthright-Roles">
+  <Source><![CDATA[
+  
+	import org.apache.commons.logging.Log;
+	import org.apache.commons.logging.LogFactory;
+	import sailpoint.object.Field;
+	import sailpoint.object.Form;
+	import sailpoint.object.Bundle;
+    import sailpoint.object.GroupDefinition;
+    import sailpoint.object.IdentitySelector;
+    import sailpoint.object.Filter;
+    import sailpoint.object.QueryOptions;
+    import sailpoint.tools.Util;
+    import sailpoint.rapidapponboarding.logger.LogEnablement;
+    Log logger = LogFactory.getLog("rapidapponboarding.rules");	
+	List brithrighRolesFromPopulation = new ArrayList();
+	LogEnablement.isLogDebugEnabled(logger,"Start BirthRight Roles Dynamic");
+	if(form!=null && field!=null && roadApplicationselect!=null)
+	{
+		Field joinerPopulationRegexField=form.getField("joinerPopulationRegex");
+		Object joinerPopulationRegex=null;
+		if(joinerPopulationRegexField!=null)
+		{
+			joinerPopulationRegex=joinerPopulationRegexField.getValue();
+			LogEnablement.isLogDebugEnabled(logger,"Joiner Populations...."+joinerPopulationRegex);
+		}
+		if(joinerPopulationRegex==null || (joinerPopulationRegex instanceof List && joinerPopulationRegex.size()<=0))
+		{
+		       LogEnablement.isLogDebugEnabled(logger,"Empty Birthright Roles");
+			   return brithrighRolesFromPopulation;
+		}
+		if(joinerPopulationRegex!=null)
+		{
+			 QueryOptions qo = new QueryOptions();
+	         Filter filter= Filter.and(Filter.eq("type", "birthright"),Filter.ignoreCase(Filter.eq("isBirthright", "TRUE")), 
+	         Filter.ignoreCase(Filter.in("profiles.application.name", Arrays.asList(roadApplicationselect))),Filter.eq("disabled",false));
+	        qo.addFilter(filter);
+			// Use a projection query first to return minimal data.  
+			ArrayList returnCols = new ArrayList();  
+			returnCols.add("name");  
+			Bundle joinerBundle=null;
+	  		// Execute the query against the IdentityIQ database.  
+			Iterator it = context.search(Bundle.class, qo, returnCols);
+			if(it!=null)
+			{
+				while (it.hasNext()) 
+				{  
+					Object[] retObjs = (Object[]) it.next();  
+					if(retObjs!=null && retObjs.length==1)
+					{
+						String bundleNameSer   = (String) retObjs[0];  
+						if(bundleNameSer!=null)
+						{
+								joinerBundle=context.getObjectByName(Bundle.class,bundleNameSer);
+								if(joinerBundle!=null && joinerBundle.getSelector()!=null)
+								{
+								  IdentitySelector idSelector = joinerBundle.getSelector();
+								  if(idSelector.getPopulation()!=null)
+								  {
+									  	GroupDefinition rolePopulation=idSelector.getPopulation();
+									  	String popName=rolePopulation.getName();
+									  	if(joinerPopulationRegex instanceof List && joinerPopulationRegex.contains(popName))
+									  	{
+									  	 	brithrighRolesFromPopulation.add(joinerBundle.getName());
+									  	}
+									  	else if (joinerPopulationRegex instanceof String && joinerPopulationRegex.equalsIgnoreCase(popName))
+									  	{
+									  		brithrighRolesFromPopulation.add(joinerBundle.getName());
+										}
+										else if (joinerPopulationRegex instanceof String && joinerPopulationRegex.contains(","))
+									  	{
+									  		List joinerPopulationRegexList=Util.csvToList(joinerPopulationRegex);
+									  		if(joinerPopulationRegexList!=null && joinerPopulationRegexList.contains(popName))
+									  		{
+									  			brithrighRolesFromPopulation.add(joinerBundle.getName());
+											}
+										}
+								  }
+								}
+								if(joinerBundle!=null)
+								{
+									context.decache(joinerBundle);
+								}
+						}
+					}
+				}
+				Util.flushIterator(it);
+			}  
+	   }
+	}
+	return brithrighRolesFromPopulation;
+   
+	]]></Source>
+</Rule>

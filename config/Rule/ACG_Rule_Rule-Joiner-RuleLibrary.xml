@@ -1,0 +1,76 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule-Joiner-RuleLibrary">
+  <Description>All the Joiner Logic for Eligibility and Plan Building.</Description>
+  <Signature returnType="Map"/>
+  <Source><![CDATA[
+	import java.util.ArrayList;
+	import java.util.HashMap;
+	import java.util.List;
+	import java.util.Map;
+	import org.apache.commons.logging.Log;
+	import org.apache.commons.logging.LogFactory;
+	import sailpoint.api.IdentityService;
+	import sailpoint.api.SailPointContext;
+	import sailpoint.object.Application;
+	import sailpoint.object.Attributes;
+	import sailpoint.object.Custom;
+	import sailpoint.object.Identity;
+	import sailpoint.object.Link;
+	import sailpoint.object.ObjectConfig;
+	import sailpoint.object.ProvisioningPlan;
+	import sailpoint.object.ProvisioningPlan.AccountRequest;
+    import sailpoint.object.ProvisioningPlan.AttributeRequest;
+	import sailpoint.object.Workflow;
+	import sailpoint.object.Bundle;
+	import sailpoint.object.Filter;
+	import sailpoint.object.IdentitySelector;
+	import sailpoint.object.QueryOptions;
+	import sailpoint.object.ProvisioningProject;
+	import sailpoint.object.GroupDefinition;
+	import sailpoint.tools.GeneralException;
+	import sailpoint.tools.Util;
+	import sailpoint.rapidapponboarding.rule.WrapperRuleLibrary;
+	import sailpoint.rapidapponboarding.rule.TriggersRuleLibrary;
+	import sailpoint.rapidapponboarding.rule.JoinerRuleLibrary;
+	import sailpoint.rapidapponboarding.logger.LogEnablement;
+	import sailpoint.rapidapponboarding.rule.ROADUtil;
+	import java.text.SimpleDateFormat;
+	private Log joinerLogger = LogFactory.getLog("rapidapponboarding.rules");
+    /**
+	 * Get Request Type
+	 * @param context
+	 * @param workflow
+	 * @return
+	 */
+    public String getRequestTypeName(SailPointContext context, Workflow workflow) {
+        String requestType = "JOINER FEATURE";
+        return requestType;
+    }
+     /**
+	 * Execute Post Joiner Rule
+	 * @param identityName
+	 * @param project
+	 * @param requestType
+	 */
+    public void postJoinerRule(String identityName, String requestType, ProvisioningProject project)
+    {
+    	LogEnablement.isLogDebugEnabled(joinerLogger,"Start  postJoinerRule" );
+    	LogEnablement.isLogDebugEnabled(joinerLogger,"..identityName..."+identityName );
+    	LogEnablement.isLogDebugEnabled(joinerLogger,"..requestType..."+requestType );
+    	LogEnablement.isLogDebugEnabled(joinerLogger,"..project..."+project );
+    	Map map = new HashMap();
+	    //Common Configuration
+        map = ROADUtil.getCustomGlobalMap(context);
+        if(map!=null && map.containsKey("postJoinerRule"))
+		{
+		    String ruleName=map.get("postJoinerRule");
+		    if(ruleName!=null && ruleName.length()>0)
+		    {
+		    ROADUtil.invokePostExtendedRuleNoObjectReferences(context,null,ruleName, null,  requestType, null, null, null, identityName,null, project);
+		    }
+		 }
+	 	LogEnablement.isLogDebugEnabled(joinerLogger,"End  postJoinerRule" );
+    }
+	]]></Source>
+</Rule>

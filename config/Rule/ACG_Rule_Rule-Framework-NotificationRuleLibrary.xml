@@ -1,0 +1,989 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule-Framework-NotificationRuleLibrary">
+  <Description>A rule used by a Workflow to determine a step action or variable value.
+    Note that an Attributes map of all variables from the current WorkflowContext,
+    merged with the arguments from the  Step, is also passed into the workflow rule .</Description>
+  <Signature returnType="Object">
+    <Inputs>
+      <Argument name="log">
+        <Description>
+          The log object associated with the SailPointContext.
+        </Description>
+      </Argument>
+      <Argument name="context">
+        <Description>
+          A sailpoint.api.SailPointContext object that can be used to query the database if necessary.
+        </Description>
+      </Argument>
+      <Argument name="wfcontext">
+        <Description>
+          The current WorkflowContext.
+        </Description>
+      </Argument>
+      <Argument name="handler">
+        <Description>
+          The workflow handler associated with the current WorkflowContext.
+        </Description>
+      </Argument>
+      <Argument name="workflow">
+        <Description>
+          The current Workflow definition.
+        </Description>
+      </Argument>
+      <Argument name="step">
+        <Description>
+          The current Step.
+        </Description>
+      </Argument>
+      <Argument name="approval">
+        <Description>
+          The current Approval.
+        </Description>
+      </Argument>
+      <Argument name="item">
+        <Description>
+          The WorkItem being processed.
+        </Description>
+      </Argument>
+    </Inputs>
+    <Returns>
+      <Argument name="Object">
+        <Description>
+          The result of the workflow rule; dependent on the rule itself.
+        </Description>
+      </Argument>
+    </Returns>
+  </Signature>
+  <Source><![CDATA[
+    
+        import java.util.ArrayList;
+        import java.util.HashMap;
+        import java.util.Iterator;
+        import java.util.List;
+        import java.util.Map;
+        import sailpoint.api.IdentityService;
+        import sailpoint.api.ObjectUtil;
+        import sailpoint.api.SailPointContext;
+        import sailpoint.object.Application;
+        import sailpoint.object.Custom;
+        import sailpoint.object.Attributes;
+        import sailpoint.object.Identity;
+        import sailpoint.object.IdentityRequest;
+        import sailpoint.object.BatchRequest;
+        import sailpoint.object.QueryOptions;
+        import sailpoint.object.Filter;
+        import sailpoint.object.ProvisioningPlan;
+        import sailpoint.object.ProvisioningPlan.AbstractRequest;
+        import sailpoint.object.ProvisioningPlan.AttributeRequest;
+        import sailpoint.object.ProvisioningProject;
+        import sailpoint.object.ProvisioningResult;
+        import sailpoint.object.Workflow;
+        import sailpoint.tools.GeneralException;
+        import sailpoint.tools.Message;
+        import sailpoint.tools.Util;
+        import org.apache.velocity.app.Velocity;
+        import org.apache.velocity.VelocityContext;
+        import java.io.StringWriter;
+        import sailpoint.object.Workflow;
+        import sailpoint.object.ProvisioningPlan.AccountRequest.Operation;
+        import sailpoint.rapidapponboarding.rule.ROADUtil;
+        import sailpoint.rapidapponboarding.rule.EmailNotificationRuleLibrary;
+        import sailpoint.rapidapponboarding.logger.LogEnablement;
+        import org.apache.commons.logging.Log;
+        import org.apache.commons.logging.LogFactory;
+        private Log notificationLogger = LogFactory.getLog("rapidapponboarding.rules");
+        private String isProvgSuccessful = "isProvgSuccessful";
+        private String provgStatusMsgs = "provgStatusMsgs";
+  /**
+    * Extract Provisioning Policy Field Values from Attribute Request
+    * Prepare a Map of name and value pairs 
+    * @param project
+    * @param templateName
+    * @param reqType
+    * @param workItemConfig
+    * @return
+    */
+    public Map getDynamicTextEmailTemplate(ProvisioningProject project, String templateName, String reqType, Attributes workItemConfig)
+    {
+     LogEnablement.isLogDebugEnabled(notificationLogger,"Enter getDynamicTextEmailTemplate "+reqType);
+     LogEnablement.isLogDebugEnabled(notificationLogger," before templateName "+templateName);
+     LogEnablement.isLogDebugEnabled(notificationLogger," workItemConfig "+workItemConfig);
+     if(workItemConfig!=null)
+     {
+        if(templateName!=null && (templateName.equalsIgnoreCase("Approval")||templateName.equalsIgnoreCase("Reminder")||templateName.equalsIgnoreCase("Escalation")))
+        {
+            if(templateName.equalsIgnoreCase("Approval"))
+            {
+            templateName="notifyEmailTemplate";
+            }
+            else if(templateName.equalsIgnoreCase("Reminder"))
+            {
+            templateName="reminderEmailTemplate";
+            }
+            else if(templateName.equalsIgnoreCase("Escalation"))
+            {
+            templateName="escalationEmailTemplate";
+            }
+            //Get Template Name from Custom-ApprovalFrameWorkMappings
+            if (workItemConfig != null && workItemConfig.containsKey(templateName)) 
+            {
+             templateName=workItemConfig.get(templateName);
+             LogEnablement.isLogDebugEnabled(notificationLogger," after templateName "+templateName);
+             return getDynamicTextEmailTemplate( project,  templateName,  reqType);
+            }
+        }
+      }
+      else
+      {
+        return getDynamicTextEmailTemplate( project,  templateName,  reqType);
+      }
+    }
+   /**
+    * Extract Provisioning Policy Field Values from Attribute Request
+    * Prepare a Map of name and value pairs 
+    * @param project
+    * @param templateName
+    * @param reqType
+    * @return
+    */
+    public Map getDynamicTextEmailTemplate(ProvisioningProject project, String templateName, String reqType)
+    {
+        Map dynamicAppContent = new HashMap();
+        Map entryObj = ROADUtil.getCustomGlobalMap(context);
+        LogEnablement.isLogDebugEnabled(notificationLogger,"Enter getDynamicTextEmailTemplate "+reqType);
+        LogEnablement.isLogDebugEnabled(notificationLogger," before templateName "+templateName);
+         if(templateName!=null)
+        {
+            //Get Template Name from Custom-Framework-Common-Settings
+            if (entryObj != null && entryObj.containsKey(templateName)) 
+            {
+            templateName=entryObj.get(templateName);
+            LogEnablement.isLogDebugEnabled(notificationLogger," after templateName "+templateName);
+            }
+        }
+
+        if(project!=null)
+        {
+            String identityName = project.getIdentity();
+            List planList = project.getPlans();
+            if( planList == null || planList.size() == 0) {
+                planList = new ArrayList();
+                planList.add(project.getMasterPlan());
+            }
+            for(ProvisioningPlan plan : planList) 
+            {
+                String requestTypePlanOperation="null";
+                List requests = plan.getAllRequests();
+                Attributes existingPlanAttributes=plan.getArguments();
+                if(existingPlanAttributes!=null && existingPlanAttributes.containsKey("requestType") && existingPlanAttributes.get("requestType")!=null
+                        &&  (((String) existingPlanAttributes.get("requestType")).equalsIgnoreCase("JOINER FEATURE") || 
+                        ((String) existingPlanAttributes.get("requestType")).equalsIgnoreCase("JOINER REHIRE FEATURE")))
+                {
+                    requestTypePlanOperation="Create";
+                }
+                if (requests != null) 
+                {
+                    List nativeIdentities = new ArrayList();
+                    for (AbstractRequest req : requests)
+                    {
+                        nativeIdentities.add(req.getNativeIdentity()); 
+                    }
+                    for (AbstractRequest req : requests)
+                    {
+                            String appName= req.getApplication();
+                            Map textMap= new HashMap();
+                            List atts = req.getAttributeRequests();
+                            if (atts != null) 
+                            {
+                                for (AttributeRequest att : atts) 
+                                {
+                                      if(att.getValue()!=null && att.getValue() instanceof String)
+                                      {
+                                         String value=String.valueOf(att.getValue());
+                                         String name=att.getName();
+                                         Attributes attributeRequestAttr=att.getArguments();
+                                         if(attributeRequestAttr!=null && attributeRequestAttr.containsKey("secret") && (String)attributeRequestAttr.get("secret")!=null && ((String)attributeRequestAttr.get("secret")).equalsIgnoreCase("true"))
+                                         {
+                                             if(value!=null)
+                                             {
+                                               LogEnablement.isLogDebugEnabled(notificationLogger," Decyrpt Attr value.. "+name);
+                                                value= context.decrypt(value);
+                                             }
+                                         }
+                                         textMap.put(name, value);
+                                     }
+                                }
+                            }
+                            LogEnablement.isLogDebugEnabled(notificationLogger," req.getOp() "+req.getOp());
+                            LogEnablement.isLogDebugEnabled(notificationLogger," textMap "+textMap);
+                            String staticText=null;
+                            if(req.getOp()!=null)
+                            {
+                               staticText=EmailNotificationRuleLibrary.getStaticAppText(context,reqType,templateName,appName,req.getOp().toString());
+                             }
+                             else
+                             {
+                                //No operation for ticket integration - appName is IdentityManager
+                                //Not used in Custom Email Template - We may use it in future
+                               if(requestTypePlanOperation!=null && requestTypePlanOperation.equalsIgnoreCase("Create"))
+                               {
+                                staticText=EmailNotificationRuleLibrary.getStaticAppText(context,reqType,templateName,appName, "Create");
+                               }
+                               else
+                               {
+                                staticText=EmailNotificationRuleLibrary.getStaticAppText(context,reqType,templateName,appName, "Modify");
+                               }
+                             }
+                             if(staticText!=null)
+                             {
+                                 EmailNotificationRuleLibrary.injectAttributesFromNonAuthoritativeApplications(context, identityName,appName, textMap, nativeIdentities);
+                                 String dynamicText=EmailNotificationRuleLibrary.getDynamicContent(textMap,staticText);
+                                 LogEnablement.isLogDebugEnabled(notificationLogger," dynamicText "+dynamicText);
+                                 if(dynamicText!=null)
+                                 {
+                                    dynamicAppContent.put(appName,dynamicText);
+                                 }
+                             }
+                    }
+                    if(identityName!=null)
+                    {
+                     EmailNotificationRuleLibrary.injectAttributesFromAuthoritativeApplications(context, identityName, reqType, templateName, dynamicAppContent, nativeIdentities);
+                    }
+                 }
+             }
+         }
+         LogEnablement.isLogDebugEnabled(notificationLogger," dynamicAppContent "+dynamicAppContent);
+         if(dynamicAppContent!=null && dynamicAppContent.size()>0)
+         {
+         return dynamicAppContent;
+         }
+         else
+         {
+         return null;
+         }
+    }
+   /**
+     * Provides the status from the Provisioning Result in map with status as
+     * boolean and error messages into a list, if any!
+     *
+     * @param provResult ProvisioningResult
+     * @return Map with isProvgSuccessful status as boolean and provgStatusMsgs
+     * as error messages into a list, if any!
+     * @throws GeneralException
+     */
+    public Map getStatusFromProvResult(ProvisioningResult provResult) throws GeneralException {
+        LogEnablement.isLogDebugEnabled(notificationLogger,"Rule-Framework-NotificationRuleLibrary: Enter getStatusFromProvResult: " + provResult);
+        //Using Map to accommodate any future enhancements
+        Map statusMap = null;
+        if (null == provResult) {
+            LogEnablement.isLogDebugEnabled(notificationLogger,"Rule-Framework-NotificationRuleLibrary: Input ProvisioningResult coming as null!");
+            LogEnablement.isLogDebugEnabled(notificationLogger,"Rule-Framework-NotificationRuleLibrary: Exit  getStatusFromProvResult: " + statusMap);
+            return statusMap;
+        }
+        statusMap = new HashMap();
+        String provStatus = provResult.getStatus();
+        if (null != provStatus && !provStatus.isEmpty() && (ProvisioningResult.STATUS_FAILED.equalsIgnoreCase(provStatus) || ProvisioningResult.STATUS_RETRY.equalsIgnoreCase(provStatus))) {
+            LogEnablement.isLogDebugEnabled(notificationLogger,"Rule-Framework-NotificationRuleLibrary: Provisioning Status is Failed (or) Retry");
+            statusMap.put(provgStatusMsgs, provResult.getErrors());
+        }
+        LogEnablement.isLogDebugEnabled(notificationLogger,"Rule-Framework-NotificationRuleLibrary: Exit  getStatusFromProvResult: " + statusMap);
+        return statusMap;
+    }
+    /**
+     * Provides the status from the Provisioning Result in map with status as
+     * boolean and error messages into a Status Messages list, if any! The
+     * Status Messages List will be placed into the resulting map iff there are
+     * errors found into one or more underlying requests from any of the Provisioning plans
+     * in the ProvisioningProject.
+     * The Status Messages List will be a cumulated list of all error messages
+     * found in underlying requests from input plan
+     *
+     * @param provProject ProvisioningProject
+     * @return Map with isProvgSuccessful status as boolean and provgStatusMsgs
+     * as error messages into a list, if any!
+     * @throws GeneralException
+     */
+    public Map getProvisioningStatusMap(ProvisioningProject provProject) throws GeneralException {
+        Map provStatusMap = new HashMap();
+       if (null == provProject || null == provProject.getPlans()) {
+            LogEnablement.isLogDebugEnabled(notificationLogger,"Input ProvisioningProject is null or has no ProvisioningPlans");
+            return provStatusMap;
+        }
+        List provStatusMsgs = new ArrayList();
+        Map reqStatusMap = null;
+        String identityRequest = "";
+        //Get the identityRequest from the project or from master plan
+        if(provProject.getString("identityRequestId") != null) {
+            identityRequest = provProject.getString("identityRequestId");
+        }
+        else if(provProject.getMasterPlan() != null && provProject.getMasterPlan().getString("identityRequestId") != null) {
+            identityRequest = provProject.getMasterPlan().getString("identityRequestId");
+        }
+        //First check if the IdentityRequest for contains errors
+        Map idReqStatusMap = getIdentityRequestStatusMap(identityRequest);
+        if (null != idReqStatusMap && null != idReqStatusMap.get(provgStatusMsgs)) {
+            List errMsgList = (List)idReqStatusMap.get(provgStatusMsgs);
+            for(String errStr: errMsgList) {
+                provStatusMsgs.add(errStr);
+            }
+        }
+        //check if project contains any error message 
+        if(provProject.getMessages() != null && provProject.getMessages().size() > 0) {
+            Iterator msgIterator = provProject.getMessages().iterator();
+            while(msgIterator.hasNext()) {
+                Message msg = (Message) msgIterator.next();
+                if(msg.isError()) {
+                    provStatusMsgs.add("Error message in ProvisioningProject: " + msg.getMessage());
+                }
+            }
+        }
+        //Now, check each plan in the project
+        List planList = provProject.getPlans();
+        if( planList == null || planList.size() == 0) {
+            planList = new ArrayList();
+            planList.add(provProject.getMasterPlan());
+        }
+        for(ProvisioningPlan provPlan : planList) {
+            if (provPlan == null) {
+                LogEnablement.isLogDebugEnabled(notificationLogger,"Input Provisioning Plan is null");
+                continue;
+            }
+            reqStatusMap = null;
+            //First check if the Plan has any ProvisioningResult
+            reqStatusMap = getStatusFromProvResult(provPlan.getResult());
+            if(reqStatusMap != null && reqStatusMap.get(provgStatusMsgs) != null) {
+                List errMsgList = (List)reqStatusMap.get(provgStatusMsgs);
+                for(Message err: errMsgList) {
+                    provStatusMsgs.add("Target: " + provPlan.getTargetIntegration() + ": " + err.getMessage());
+                }
+            }
+            //Iterate through all the ProvisioningResults from all requests into the plan
+            //NULL validation is done for the list of requests from input plan into the above!
+            List allProvReqsFromPlan = provPlan.getAllRequests();
+            for (Iterator iterReqs = allProvReqsFromPlan.iterator(); iterReqs.hasNext();) {
+                AbstractRequest provReq = (AbstractRequest) iterReqs.next();
+                reqStatusMap = getStatusFromProvResult(provReq.getResult());
+                if (null != reqStatusMap && null != reqStatusMap.get(provgStatusMsgs)) {
+                    List errMsgList = (List)reqStatusMap.get(provgStatusMsgs);
+                    for(Message err: errMsgList) {
+                        provStatusMsgs.add("Application: " + provReq.getApplicationName() + ": " + err.getMessage());
+                    }
+                }
+            }
+        }
+        if (provStatusMsgs.isEmpty()) {
+            //No error messages from all the underlying requests from the input Provisioning Plan hence setting the success flag as true
+            provStatusMap.put(isProvgSuccessful, true);
+        } else {
+            //Found error messages from one or more underlying requests from the input Provisioning Plan hence setting the success flag as false
+            provStatusMap.put(isProvgSuccessful, false);
+            provStatusMap.put(provgStatusMsgs, provStatusMsgs);
+        }
+        LogEnablement.isLogDebugEnabled(notificationLogger,"provStatusMap.."+provStatusMap);
+        return provStatusMap;
+    }
+    /**
+     * Returns a Map which contains:
+     * 1) A key called "isProvgSuccessful" with a true boolean value if the IdentityRequest contains no errors
+     * 2) A key called "provgStatusMsgs" with a list of error strings, if available
+     *
+     * @param identityRequest the Identity Request name (number)
+     * @return Map with isProvgSuccessful status as boolean and provgStatusMsgs
+     * as error messages into a list, if any
+     * @throws GeneralException
+     */
+    public Map getIdentityRequestStatusMap(String identityRequest) throws GeneralException {
+        Map provStatusMap = new HashMap();
+        if (Util.isNullOrEmpty(identityRequest)) {
+            return provStatusMap;
+        }
+        IdentityRequest idReq = context.getObjectByName(IdentityRequest.class, identityRequest);
+        if(idReq != null) {
+            List provStatusMsgs = new ArrayList();
+            //check if IdentityRequest contains any error message 
+            if(idReq.getMessages() != null && idReq.getMessages().size() > 0) {
+                Iterator msgIterator = idReq.getMessages().iterator();
+                while(msgIterator.hasNext()) {
+                    Message msg = (Message) msgIterator.next();
+                    if(msg.isError()) {
+                        provStatusMsgs.add("Error message in IdentityRequest: " + msg.getMessage());
+                    }
+                }
+            }
+            if (provStatusMsgs.isEmpty()) {
+                //No error messages in IdentityRequest
+                provStatusMap.put(isProvgSuccessful, true);
+            } 
+            else {
+                //Found error messages
+                provStatusMap.put(isProvgSuccessful, false);
+                provStatusMap.put(provgStatusMsgs, provStatusMsgs);
+            }
+            context.decache(idReq);
+        }
+        return provStatusMap;
+    }
+    /**
+     * Get Authoritative Sources to Identify humans
+     * @return
+     * @throws GeneralException
+     */
+    public List getAuthSourceAppNames() throws GeneralException
+    {
+        LogEnablement.isLogDebugEnabled(notificationLogger,"Enter getAuthSourceAppNames");
+        List authSourceAppAttrsList = new ArrayList();
+        String authSourceAppAttrString=null;
+        Map entryObj = ROADUtil.getCustomGlobalMap(context);
+        if (entryObj == null) 
+        {
+            LogEnablement.isLogErrorEnabled(notificationLogger,"Not defined in Custom-Framework-Common-Settings Custom object.");
+        } 
+        else 
+        { 
+           if(entryObj.get("authSourceAppName")!=null)
+           {
+                authSourceAppAttrString = entryObj.get("authSourceAppName").toString();     
+                if(authSourceAppAttrString!=null)
+                {     
+                    authSourceAppAttrsList=Util.stringToList(authSourceAppAttrString);    
+                }
+            }
+        }
+       LogEnablement.isLogDebugEnabled(notificationLogger,"authSourceAppAttrsList.."+authSourceAppAttrsList);
+        return authSourceAppAttrsList;
+    }
+    /**
+     * Check to see if there is a need to send temporary password
+     * @return
+     * @throws GeneralException
+     */
+    public boolean sendTemporaryPasswordEmail() throws GeneralException
+    {
+        LogEnablement.isLogDebugEnabled(notificationLogger,"Enter additionalPasswordEmail");
+        boolean additionalPasswordEmail=false;
+        String additionalPasswordEmailStr=null;
+        Map entryObj = ROADUtil.getCustomGlobalMap(context);
+         if (entryObj == null) 
+         {
+             LogEnablement.isLogErrorEnabled(notificationLogger,"Not defined in Custom-Framework-Common-Settings Custom object.");
+         } 
+         else 
+         {
+             if(entryObj.containsKey("additionalPasswordEmail") && entryObj.get("additionalPasswordEmail")!=null)
+             {
+              additionalPasswordEmailStr = entryObj.get("additionalPasswordEmail").toString();     
+              if(additionalPasswordEmailStr!=null && additionalPasswordEmailStr.equalsIgnoreCase("TRUE"))        
+              {     
+                additionalPasswordEmail=true;
+              }
+             }
+         }
+        LogEnablement.isLogDebugEnabled(notificationLogger,"Exit additionalPasswordEmail: " + additionalPasswordEmail);
+        return additionalPasswordEmail;
+    }
+/**
+ * Check to see is requestor is human, this means we can send notification
+ * @param launcher
+ * @param source
+ * @param requestType
+ * @param extSendRequestorNotifications
+ * @return
+ * @throws GeneralException
+ */
+    public boolean sendRequestorNotifications(String launcher, String source, String requestType, String extSendRequestorNotifications) throws GeneralException {
+          boolean retVal = false;
+          LogEnablement.isLogDebugEnabled(notificationLogger,"Enter sendRequestorNotifications: " + launcher);
+          LogEnablement.isLogDebugEnabled(notificationLogger,"extSendRequestorNotifications: " + extSendRequestorNotifications);
+          LogEnablement.isLogDebugEnabled(notificationLogger,"source: " + source);
+          LogEnablement.isLogDebugEnabled(notificationLogger,"requestType: " + requestType);
+          LogEnablement.isLogDebugEnabled(notificationLogger,"launcher: " + launcher);
+          if(extSendRequestorNotifications!=null && extSendRequestorNotifications.equalsIgnoreCase("true"))
+          {
+            return true;
+          }
+          else if(extSendRequestorNotifications!=null && extSendRequestorNotifications.equalsIgnoreCase("true"))
+          {
+            return false;
+          }
+          if(launcher!=null && (launcher.equalsIgnoreCase("SelfRegistrationWorkGroup")|| launcher.equalsIgnoreCase("SailPointContextRequestFilter")))
+          {
+            retVal=true;
+            LogEnablement.isLogDebugEnabled(notificationLogger,"End sendRequestorNotifications: " + retVal);
+            return retVal;
+          }
+        //Skip request submission and completion emails if this is a Batch request
+        if (source != null && source.equalsIgnoreCase("Batch")) 
+        {
+            retVal = false;
+        }
+        else 
+        {
+            if (launcher != null) 
+            {
+                Identity identity = context.getObjectByName(Identity.class, launcher);
+                if (identity != null) {
+                    IdentityService idService = new IdentityService(context);
+                    List authAppNames=getAuthSourceAppNames();
+                    for(String authAppName:authAppNames)
+                    {
+                        Application authApp=(Application)context.getObjectByName(Application.class, authAppName);
+                        int count = idService.countLinks(identity,authApp);
+                        if (count >= 1)
+                        {
+                            retVal = true;
+                        }
+                        if(authApp!=null)
+                        {
+                        context.decache(authApp);
+                        }
+                    }
+                }
+                if(identity!=null)
+                {
+                context.decache(identity);
+                }
+            }
+        }
+       LogEnablement.isLogDebugEnabled(notificationLogger,"End sendRequestorNotifications: " + retVal);
+       return retVal;
+    }
+    /**
+     * Send emails on errors to operations
+     * @param project
+     * @param flow
+     * @param requestType
+     * @return
+     * @throws GeneralException
+     */
+    public boolean sendRequestManagerFeatureErrorNotifications(ProvisioningProject project, String flow, String requestType) throws GeneralException 
+    {
+        boolean retVal = false;
+        Map resultMap;
+        //If there are errors in the project, then notify Ops Group during Request Completion step
+        // requestType variable gets preference over flow variable
+        if (requestType!=null && requestType.equalsIgnoreCase("REQUEST MANAGER FEATURE"))
+        {
+            resultMap = getProvisioningStatusMap(project);
+            if (resultMap != null && resultMap.size() > 0) 
+            {
+                if (!(boolean)resultMap.get("isProvgSuccessful")) 
+                {
+                    return true;
+                }
+            }
+        }
+        //If there are errors in the project, then notify Ops Group during Request Completion step
+        if(flow != null && flow.equalsIgnoreCase("REQUEST MANAGER FEATURE")) 
+        {
+            resultMap = getProvisioningStatusMap(project);
+            if (resultMap != null && resultMap.size() > 0) 
+            {
+                if (!(boolean)resultMap.get("isProvgSuccessful")) 
+                {
+                    retVal = true;
+                }
+            }
+        }
+        return retVal;
+    }
+    /**
+   * Get Identity DisplayName for Notification
+   * @param identityName
+   * @param provProject
+   * @param manager
+   * @param requestee
+   * @return
+   * @throws GeneralException
+   */
+    public String getIdentityDisplayName(Workflow workflow, String identityName, ProvisioningProject provProject, boolean manager, boolean requestee) throws GeneralException {
+        LogEnablement.isLogDebugEnabled(notificationLogger,"Enter getIdentityDisplayName: " + identityName);
+        String retVal = "";
+        retVal=getIdentityNameForNotification( workflow,  identityName,  provProject,  manager, requestee);
+        if(retVal!=null)
+        {
+                Identity identityDisplayName = context.getObjectByName(Identity.class, retVal);
+                if(identityDisplayName!=null)
+                {
+                    retVal = identityDisplayName.getDisplayName(); 
+                    context.decache(identityDisplayName);
+                }
+        }
+        LogEnablement.isLogDebugEnabled(notificationLogger,"Exit getIdentityDisplayName: " + retVal);
+        return retVal;
+    }
+  /**
+   * Get Identity DisplayName for Notification
+   * @param identityName
+   * @param provProject
+   * @param manager
+   * @return
+   * @throws GeneralException
+   */
+    public String getIdentityDisplayName(Workflow workflow, String identityName, ProvisioningProject provProject, boolean manager) throws GeneralException {
+        LogEnablement.isLogDebugEnabled(notificationLogger,"Enter getIdentityDisplayName: " + identityName);
+        String retVal = "";
+        retVal=getIdentityNameForNotification( workflow,  identityName,  provProject,  manager);
+        if(retVal!=null)
+        {
+                Identity identityDisplayName = context.getObjectByName(Identity.class, retVal);
+                if(identityDisplayName!=null)
+                {
+                    retVal = identityDisplayName.getDisplayName(); 
+                    context.decache(identityDisplayName);
+                }
+        }
+        LogEnablement.isLogDebugEnabled(notificationLogger,"Exit getIdentityDisplayName: " + retVal);
+        return retVal;
+    }
+     /**
+     * Get Identity Name for Notification
+     * @param identityName
+     * @param provProject
+     * @param manager
+     * @param requestee
+     * @return
+     * @throws GeneralException
+     */
+      public String getIdentityNameForNotification(Workflow workflow, String identityName, ProvisioningProject provProject, boolean manager,boolean requestee)
+      {
+        LogEnablement.isLogDebugEnabled(notificationLogger,"Enter getIdentityNameForNotification "+identityName);
+        String retVal = "";
+        if(!manager && !requestee)
+        {
+            Identity opWrkGrp = context.getObjectByName(Identity.class, getopWrkGrpName());
+            if(opWrkGrp!=null)
+            {
+                retVal = opWrkGrp.getName(); 
+                context.decache(opWrkGrp);
+            }
+        }
+        else
+        {
+            return getIdentityNameForNotification( workflow,identityName, provProject, manager);
+        }
+        LogEnablement.isLogDebugEnabled(notificationLogger,"Exit getIdentityNameForNotification: " + retVal);
+        return retVal;
+      }
+    /**
+     * Get Identity Name for Notification
+     * @param identityName
+     * @param provProject
+     * @param manager
+     * @return
+     * @throws GeneralException
+     */
+    public String getIdentityNameForNotification(Workflow workflow, String identityName, ProvisioningProject provProject, boolean manager) throws GeneralException {
+        LogEnablement.isLogDebugEnabled(notificationLogger,"Enter getIdentityNameForNotification "+identityName);
+        String retVal = "";
+        Map resultMap = getProvisioningStatusMap(provProject);
+        if(identityName!=null && (identityName.equalsIgnoreCase("SelfRegistrationWorkGroup") || identityName.equalsIgnoreCase("SailPointContextRequestFilter")) && workflow!=null)
+        {
+         LogEnablement.isLogDebugEnabled(notificationLogger,"Registration getIdentityNameForNotification "+identityName);
+         identityName=workflow.get("identityName");
+         LogEnablement.isLogDebugEnabled(notificationLogger,"Registration getIdentityNameForNotification "+identityName);
+        }
+        if (resultMap != null && resultMap.size() > 0) 
+        {
+            if ((boolean)resultMap.get("isProvgSuccessful") && identityName!=null) 
+            {
+                try 
+                {
+                    //Start Override Manager Notification to WorkGroup
+                    String wgJoinerRehireEmail=null;
+                    String wgLeaverReverseLeaverEmail=null;
+                    Map map = ROADUtil.getCustomGlobalMap(context);
+                    String requestType;
+                    if(workflow!=null)
+                    {
+                    requestType = (String) workflow.get("requestType");
+                    LogEnablement.isLogDebugEnabled(notificationLogger,"requestType "+requestType);
+                    }
+                    if(map!=null && map.containsKey("wgJoinerRehireEmail") && map.get("wgJoinerRehireEmail")!=null && ((String)map.get("wgJoinerRehireEmail")).length()>0)
+                    {
+                         wgJoinerRehireEmail=map.get("wgJoinerRehireEmail");
+                         LogEnablement.isLogDebugEnabled(notificationLogger,"wgJoinerRehireEmail "+wgJoinerRehireEmail);
+                    }
+                    if(map!=null && map.containsKey("wgLeaverReverseLeaverEmail") && map.get("wgLeaverReverseLeaverEmail")!=null && ((String)map.get("wgLeaverReverseLeaverEmail")).length()>0)
+                    {
+                         wgLeaverReverseLeaverEmail=map.get("wgLeaverReverseLeaverEmail");
+                         LogEnablement.isLogDebugEnabled(notificationLogger,"wgLeaverReverseLeaverEmail "+wgLeaverReverseLeaverEmail);
+                    }
+                    LogEnablement.isLogDebugEnabled(notificationLogger,"requestType "+requestType);
+                    if(manager && requestType!=null && wgJoinerRehireEmail!=null && (requestType.equalsIgnoreCase("JOINER FEATURE")||
+                    requestType.equalsIgnoreCase("JOINER REHIRE FEATURE")))
+                    {
+                        LogEnablement.isLogDebugEnabled(notificationLogger,"Override Manager Email for Joiner and Rehire ");
+                        // need to run it through getEffectiveEmails(): IIQSR-255
+                        Identity idname = context.getObjectByName(Identity.class, wgJoinerRehireEmail);
+                        if (null == idname) {
+                          LogEnablement.isLogDebugEnabled(notificationLogger,"getIdentityNameForNotification: No Identity for: "+wgJoinerRehireEmail);
+                          LogEnablement.isLogDebugEnabled(notificationLogger,"Exit getIdentityNameForNotification: ");
+                          return "";
+                        }
+                        List tolist = ObjectUtil.getEffectiveEmails(context, idname);
+                        if (Util.isEmpty(tolist)) {
+                          LogEnablement.isLogDebugEnabled(notificationLogger,"getIdentityNameForNotification: getEffectiveEmails empty for: "+wgJoinerRehireEmail);
+                          LogEnablement.isLogDebugEnabled(notificationLogger,"Exit getIdentityNameForNotification: ");
+                          return "";
+                        }
+                        // some places handle "to:" as a list, StandardWorkflowHandler.sendEmail() does not...
+                        String rc = Util.listToCsv(tolist);
+                        LogEnablement.isLogDebugEnabled(notificationLogger,"Exit getIdentityNameForNotification: " + rc);
+                        return rc;
+                    }
+                    if(manager && requestType!=null && wgLeaverReverseLeaverEmail!=null && (requestType.equalsIgnoreCase("LEAVER FEATURE")||
+                    requestType.equalsIgnoreCase("REVERSE LEAVER FEATURE")||requestType.equalsIgnoreCase("IMMEDIATE TERMINATION FEATURE")))
+                    {
+                        LogEnablement.isLogDebugEnabled(notificationLogger,"Override Manager Email for Leaver and Reverse Leaver ");
+                        // need to run it through getEffectiveEmails(): IIQSR-255
+                        Identity idname = context.getObjectByName(Identity.class, wgLeaverReverseLeaverEmail);
+                        if (null == idname) {
+                          LogEnablement.isLogDebugEnabled(notificationLogger,"getIdentityNameForNotification: No Identity for: " + wgLeaverReverseLeaverEmail);
+                          LogEnablement.isLogDebugEnabled(notificationLogger,"Exit getIdentityNameForNotification: ");
+                          return "";
+                        }
+                        List tolist = ObjectUtil.getEffectiveEmails(context, idname);
+                        if (Util.isEmpty(tolist)) {
+                          LogEnablement.isLogDebugEnabled(notificationLogger,"getIdentityNameForNotification: getEffectiveEmails empty for: "+wgLeaverReverseLeaverEmail);
+                          LogEnablement.isLogDebugEnabled(notificationLogger,"Exit getIdentityNameForNotification: ");
+                          return "";
+                        }
+                        // some places handle "to:" as a list, StandardWorkflowHandler.sendEmail() does not...
+                        String rc = Util.listToCsv(tolist);
+                        LogEnablement.isLogDebugEnabled(notificationLogger,"Exit getIdentityNameForNotification: " + rc);
+                        return rc;
+                    }
+                    //End Override Manager Notification to WorkGroup
+                    Identity ident = context.getObjectByName(Identity.class, identityName);
+                    if (ident != null) 
+                    {
+                        if (manager && ident.getManager() != null) 
+                        {
+                            retVal = ident.getManager().getName();
+                        } 
+                        else if (manager && ident.getManager() == null) 
+                        {
+                            Identity noManager = context.getObjectByName(Identity.class, "No Manager Found");
+                            retVal = noManager.getName();
+                            context.decache(noManager);
+                        } 
+                        else 
+                        {
+                            //Sometimes we need to send emails to Operations 
+                            retVal = ident.getName();
+                        }
+                        context.decache(ident);
+                    }
+                } 
+                catch (GeneralException e) 
+                {
+                     LogEnablement.isLogErrorEnabled(notificationLogger,"SEVERE "+e.getMessage());
+                    e.printStackTrace();
+                }
+            } 
+            else 
+            {
+                Identity opWrkGrp = context.getObjectByName(Identity.class, getopWrkGrpName());
+                if(opWrkGrp!=null)
+                {
+                    retVal = opWrkGrp.getName(); 
+                    context.decache(opWrkGrp);
+                }
+            }
+        } 
+        else 
+        {
+                Identity idObj = context.getObjectByName(Identity.class, identityName);
+                LogEnablement.isLogDebugEnabled(notificationLogger," getIdentityNameForNotification "+identityName);
+                if (idObj != null) 
+                {                       
+                    retVal = idObj.getName();
+                    context.decache(idObj);
+                }             
+        }
+        LogEnablement.isLogDebugEnabled(notificationLogger,"Exit getIdentityNameForNotification: " + retVal);
+        return retVal;
+    }
+    /**
+     * Just Return Template, We may want to add some additional checks here
+     * @param context
+     * @param provProject
+     * @param template
+     * @return
+     * @throws GeneralException
+     */
+     public String getWrapperEmailTemplateName(SailPointContext context, ProvisioningProject provProject, String template) throws GeneralException 
+     {
+       LogEnablement.isLogDebugEnabled(notificationLogger,"Enter getWrapperEmailTemplateName");
+       LogEnablement.isLogDebugEnabled(notificationLogger," before template "+template);
+       Map entryObj = ROADUtil.getCustomGlobalMap(context);
+       if(template!=null)
+        {
+            //Get Template Name from Custom-Framework-Common-Settings
+            if (entryObj != null && entryObj.containsKey(template)) 
+            {
+            template=entryObj.get(template);
+            LogEnablement.isLogDebugEnabled(notificationLogger," after template "+template);
+            }
+        }
+        LogEnablement.isLogDebugEnabled(notificationLogger,"End getWrapperEmailTemplateName");
+        return template;
+     }
+    /**
+     * Set Provisioning Plan Status
+     * @param workflow
+     * @param provProject
+     * @param template
+     * @return
+     * @throws GeneralException
+     */
+    public String getWrapperEmailTemplateName(Workflow workflow, ProvisioningProject provProject, String template) throws GeneralException {
+        LogEnablement.isLogDebugEnabled(notificationLogger,"Enter getWrapperEmailTemplateName");
+        LogEnablement.isLogDebugEnabled(notificationLogger," Before template "+template);
+        Map entryObj = ROADUtil.getCustomGlobalMap(context);
+        if(template!=null)
+        {
+            //Get Template Name from Custom-Framework-Common-Settings
+            if (entryObj != null && entryObj.containsKey(template)) 
+            {
+            template=entryObj.get(template);
+            LogEnablement.isLogDebugEnabled(notificationLogger," After template "+template);
+            }
+        }
+        if(provProject==null)
+        {
+            return template;
+        }
+        Map resultMap = getProvisioningStatusMap(provProject);
+        if (resultMap != null && resultMap.size() > 0) 
+        {
+            if ((boolean)resultMap.get("isProvgSuccessful"))
+            {
+               LogEnablement.isLogDebugEnabled(notificationLogger,"End getWrapperEmailTemplateName");
+                return template;
+            } 
+            else 
+            {
+                //If there are provisioning errors, set them on the WF variable
+                if(resultMap.get(provgStatusMsgs) != null && !((List)resultMap.get(provgStatusMsgs)).isEmpty()) 
+                {
+                    workflow.put("provisioningErrors", (List)resultMap.get(provgStatusMsgs));
+                }
+                LogEnablement.isLogDebugEnabled(notificationLogger,"End getWrapperEmailTemplateName");
+                return template;
+            }           
+        } 
+        LogEnablement.isLogDebugEnabled(notificationLogger,"End getWrapperEmailTemplateName");
+        return template;
+    }
+    /**
+     * Get Operations Work Group Name
+     * @return
+     * @throws GeneralException
+     */
+    public String getopWrkGrpName() throws GeneralException
+    {
+        LogEnablement.isLogDebugEnabled(notificationLogger,"Enter getopWrkGrpName");
+        String opWrkGrpName = "";
+        Map entryObj = ROADUtil.getCustomGlobalMap(context);
+        if (entryObj == null) 
+        {
+            LogEnablement.isLogErrorEnabled(notificationLogger,"Not defined in Custom-Framework-Common-Settings Custom object.");
+        } else {
+            opWrkGrpName = entryObj.get("errorNotificationWorkGroup").toString();                
+        }
+        return opWrkGrpName;
+    }
+    /**
+     * Get Request Id from Provisioning Plan
+     * @param plan
+     * @return
+     * @throws GeneralException
+     */
+    public String getRequestId(ProvisioningPlan plan) throws GeneralException {
+        LogEnablement.isLogDebugEnabled(notificationLogger,"Enter getRequestId");
+        String atrrIdentityReqId = "";
+        if (plan != null){
+            if (plan.getArguments().get("identityRequestId") != null)
+            {
+                IdentityRequest ir = context.getObjectByName(IdentityRequest.class,plan.getArguments().get("identityRequestId").toString());
+                if(ir != null) 
+                {
+                    atrrIdentityReqId = ir.getId();
+                    context.decache(ir);
+                }
+            }
+        }
+        return atrrIdentityReqId;
+    }
+    /**
+     * Get Batch File Name from batch Request Id
+     * @param batchRequestId
+     * @return
+     * @throws GeneralException
+     */
+    public String getBatchFileName(String batchRequestId) throws GeneralException {
+        LogEnablement.isLogDebugEnabled(notificationLogger,"Enter getBatchFileName");
+        String fileName = "";
+        if (batchRequestId != null) 
+        {
+            QueryOptions qo = new QueryOptions();
+            qo.addFilter(Filter.eq("id", batchRequestId));
+            Iterator resultIterator = context.search(BatchRequest.class, qo, "fileName");
+            if(resultIterator != null) 
+            {
+                while(resultIterator.hasNext()) 
+                {
+                    Object[] obj = resultIterator.next();
+                    if(obj != null && obj.length > 0) 
+                    {
+                       if(obj[0]!=null)
+                       {
+                        fileName = obj[0].toString();
+                        }
+                    }
+                }
+            }
+            Util.flushIterator(resultIterator); 
+        }
+        LogEnablement.isLogDebugEnabled(notificationLogger,"Exit getBatchFileName: " + fileName);
+        return fileName;
+    }
+    /**
+     * Get Batch Record Count for Batch Approver Email Template, Batch Approver defined in System Configuration
+     * @param batchRequestId
+     * @return
+     * @throws GeneralException
+     */
+    public String getBatchRecordCount(String batchRequestId) throws GeneralException 
+    {
+        LogEnablement.isLogDebugEnabled(notificationLogger,"Enter getBatchRecordCount");
+        String recordCount = "";
+        if (batchRequestId != null) 
+        {
+            QueryOptions qo = new QueryOptions();
+            qo.addFilter(Filter.eq("id", batchRequestId));
+            Iterator resultIterator = context.search(BatchRequest.class, qo, "recordCount");
+            if(resultIterator != null) 
+            {
+                while(resultIterator.hasNext()) 
+                {
+                    Object[] obj = resultIterator.next();
+                    if(obj != null && obj.length > 0) 
+                    {
+                        if(obj[0]!=null)
+                        {
+                            recordCount = obj[0].toString();
+                        }
+                    }
+                }
+            }
+            Util.flushIterator(resultIterator); 
+        }
+        LogEnablement.isLogDebugEnabled(notificationLogger,"Exit getBatchRecordCount: " + recordCount);
+        return recordCount;
+    }
+    
+    ]]></Source>
+</Rule>

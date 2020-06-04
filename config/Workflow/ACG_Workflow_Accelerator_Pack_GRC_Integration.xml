@@ -1,0 +1,56 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Workflow PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Workflow libraries="Identity" name="Accelerator Pack GRC Integration" type="Subprocess">
+  <Variable input="true" name="identityName" required="true">
+    <Description>The name of the identity being updated.</Description>
+  </Variable>
+  <Variable input="true" name="identityDisplayName"/>
+  <Variable input="true" name="launcher"/>
+  <Variable input="true" name="requestor"/>
+  <Variable input="true" name="source"/>
+  <Variable input="true" name="flow"/>
+  <Variable input="true" name="policyViolations"/>
+  <Variable input="true" name="identityRequestId"/>
+  <Variable input="true" name="batchRequestItemId"/>
+  <Variable input="true" name="requestType"/>
+  <Variable input="true" name="spExtAttrs"/>
+  <Variable input="true" name="trace"/>
+  <Variable input="true" name="approvalSet" output="true" required="true">
+    <Description>
+    This attributes is set during the "Build Approval Set" step,
+    which builds this list by going through the ProvisioningPlan
+    to build the line items that need to be approved,
+    This variable includes all ApprovalItems that are part of
+    the request process and is updated during the AfterScript
+    of the approval process by assimilating the decisions
+    and comments from the Approvals copy of the ApprovalItem.
+    </Description>
+  </Variable>
+  <Variable input="true" name="plan" required="true">
+    <Description>
+    A master provisioning plan object required for building transient approval set for GRC response.
+    </Description>
+  </Variable>
+  <Variable input="true" name="project" required="true">
+    <Description>
+    A ProvisioningProject object describing the modifications to the identity.
+    This may include a list of Question objects which will
+    cause the generation of a Form and a WorkItem to solicit
+    additional information necessary for provisioning.
+    </Description>
+  </Variable>
+  <Variable name="endDate" output="true">
+    <Description>End date of the role assignment.</Description>
+  </Variable>
+  <Variable name="startDate" output="true">
+    <Description>Start date of the role assignment.</Description>
+  </Variable>
+  <Description>This subprocess can be configured for 
+    1. GRC Work Item Creation. Work Item is used for Violation Analysis on GRC Systems
+    2. Polling of the  Work Item on GRC System
+    3. Get Action Result of Work Item from GRC System. Afterwards, ApprovalSet modification to either approve or reject access request in IdentityIQ</Description>
+  <Step icon="Start" name="Start">
+    <Transition to="End"/>
+  </Step>
+  <Step icon="Stop" name="End"/>
+</Workflow>

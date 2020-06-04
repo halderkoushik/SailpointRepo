@@ -9,7 +9,7 @@
             <Source><![CDATA[
                 
                   return (quickLinkWrapper.isAllowSelf() && !quickLinkWrapper.isAllowOthers()) ? "quicklink_request_access_label_my_access" : "quicklink_request_access_label_user_access";
-                
+                		
               ]]></Source>
           </Script>
         </value>

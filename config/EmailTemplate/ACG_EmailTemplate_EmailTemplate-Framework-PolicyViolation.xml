@@ -1,0 +1,80 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE EmailTemplate PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<EmailTemplate name="EmailTemplate-Framework-PolicyViolation">
+  <Body>
+		
+		#set($ctx = $spTools.class.forName("sailpoint.api.SailPointFactory").getMethod("getFactory", null).invoke(null,null).getCurrentContext())
+		#set($ruleObj = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Rule"), "Rule-Framework-Header-Footer-StyleSheet")) 
+		#set($ruleArgs = { 
+		    "keyEmailTemplate"  : "styleSheet"
+		}) 
+		#set($styleSheet = $ctx.runRule($ruleObj, $ruleArgs))
+		#if( $ruleObj )
+		$ctx.decache($ruleObj)
+		#end
+		#set($ruleObj = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Rule"), "Rule-Framework-Header-Footer-StyleSheet")) 
+		#set($ruleArgs = { 
+		    "keyEmailTemplate"  : "headerTemplate"
+		}) 
+		#set($headerTemplate = $ctx.runRule($ruleObj, $ruleArgs))
+		#if( $ruleObj )
+		$ctx.decache($ruleObj)
+		#end
+		#set($ruleObj = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Rule"), "Rule-Framework-Header-Footer-StyleSheet")) 
+		#set($ruleArgs = { 
+		    "keyEmailTemplate"  : "footerTemplate"
+		}) 
+		#set($footerTemplate = $ctx.runRule($ruleObj, $ruleArgs))
+		#if( $ruleObj )
+		$ctx.decache($ruleObj)
+		#end
+		<![CDATA[<html>
+			<head>
+			<meta charset="UTF-8">	    
+			#if( $styleSheet )
+			$styleSheet
+			#end 
+			</head>
+	    	<body>
+	    	#if( $headerTemplate )
+			$headerTemplate
+			#end
+			<br/> 				
+			A violation of policy '$policyName' rule '$constraintName' was detected on user '$identityName'.<br/>
+	  		#if( $footerTemplate )
+			$footerTemplate
+			#end
+			</body>
+		</html>]]>
+		
+	</Body>
+  <Description>
+      Email Template for notifying policy owners of violations.
+    </Description>
+  <Signature>
+    <Inputs>
+      <Argument name="identity" type="Identity">
+        <Description>The Identity object that has the violation.</Description>
+      </Argument>
+      <Argument name="policy" type="Policy">
+        <Description>The Policy object containing the constraint that was violated.</Description>
+      </Argument>
+      <Argument name="constraint" type="BaseConstraint">
+        <Description>A subclass of BaseConstraint representing the policy rule that was violated.</Description>
+      </Argument>
+      <Argument name="violation" type="PolicyViolation">
+        <Description>The PolicyViolation object created to represent the violation.</Description>
+      </Argument>
+      <Argument name="identityName" type="string">
+        <Description>The name of the Identity object that has the violation.</Description>
+      </Argument>
+      <Argument name="policyName" type="string">
+        <Description>The name of the Policy object.</Description>
+      </Argument>
+      <Argument name="constraintName" type="string">
+        <Description>The name of the constraint (aka rule) within the policy.</Description>
+      </Argument>
+    </Inputs>
+  </Signature>
+  <Subject>Policy violation by $identityName</Subject>
+</EmailTemplate>

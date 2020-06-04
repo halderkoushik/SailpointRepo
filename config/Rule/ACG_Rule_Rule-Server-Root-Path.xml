@@ -1,0 +1,30 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule-Server-Root-Path">
+  <Source><![CDATA[
+  
+        import sailpoint.object.Configuration;
+        import sailpoint.object.Attributes;
+        String defaultPath=Configuration.DEFAULT_SERVER_ROOT_PATH;
+        String rootPathKey=Configuration.SERVER_ROOT_PATH;
+        Configuration sysConfig = context.getConfiguration();
+        Attributes sysConfigAttributes=null;
+		if(sysConfig!=null)
+		{
+			sysConfigAttributes=sysConfig.getAttributes();
+			if(sysConfigAttributes!=null)
+			{
+				if(sysConfigAttributes.containsKey(rootPathKey))
+				{
+					String rootPath=sysConfigAttributes.get(rootPathKey);
+					if(rootPath!=null && rootPath.length()>0)
+					{
+						return rootPath;
+					}
+				}
+			}
+		}
+		return defaultPath;
+	   	
+    ]]></Source>
+</Rule>

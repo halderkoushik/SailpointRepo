@@ -1,3 +1,289 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <!DOCTYPE ObjectConfig PUBLIC "sailpoint.dtd" "sailpoint.dtd">
-<ObjectConfig name="Application"/>
+<ObjectConfig name="Application">
+  <ObjectAttribute categoryName="Leaver" defaultValue="" displayName="Termination Options" editMode="Permanent" name="terminationProcess" namedColumn="true" required="true">
+    <AllowedValues>
+      <String>Do Nothing</String>
+      <String>Disable Only</String>
+      <String>Disable Only and Scramble Password and Add Comments</String>
+      <String>Disable Only After X Days</String>
+      <String>Disable Only and Scramble Password and Add Comments After X Days</String>
+      <String>Disable Immediately and Scramble Password and Add Comments After X Days</String>
+      <String>Disable Only and Move Account</String>
+      <String>Disable Only and Scramble Password and Add Comments and Move Account</String>
+      <String>Disable Only and Move Account After X Days </String>
+      <String>Disable Immediately and Move Account After X Days </String>
+      <String>Disable Only and Scramble Password and Add Comments and Move Account After X Days</String>
+      <String>Disable Immediately and Scramble Password and Add Comments and Move Account After X Days</String>
+      <String>Disable and Remove Entitlements</String>
+      <String>Disable and Remove Entitlements and Scramble Password and Add Comments</String>
+      <String>Disable and Remove Entitlements After X Days</String>
+      <String>Disable Immediately and Remove Entitlements After X Days</String>
+      <String>Disable Immediately and Remove Entitlements and Move Account After X Days</String>
+      <String>Disable Immediately and Remove Entitlements and Move Account and Scramble Password and Add Comments After X Days</String>
+      <String>Disable and Remove Entitlements and Scramble Password and Add Comments After X Days</String>
+      <String>Disable and Remove Entitlements Immediately and Scramble Password and Add Comments After X Days</String>
+      <String>Disable and Remove Entitlements and Move Account</String>
+      <String>Disable and Remove Entitlements and Scramble Password and Add Comments and Move Account</String>
+      <String>Disable and Remove Entitlements and Move Account After X Days</String>
+      <String>Disable and Remove Entitlements Immediately and Move Account After X Days</String>
+      <String>Disable and Remove Entitlements and Scramble Password and Add Comments and Move Account After X Days</String>
+      <String>Disable and Remove Entitlements Immediately and Scramble Password and Add Comments and Move Account After X Days</String>
+      <String>Disable and Move Account Immediately and Remove Entitlements After X Days</String>
+      <String>Disable and Move Account and Scramble Password and Add Comments Immediately and Remove Entitlements After X Days</String>
+      <String>Remove Entitlements</String>
+      <String>Remove Entitlements and Scramble Password and Add Comments</String>
+      <String>Remove Entitlements After X Days</String>
+      <String>Remove Entitlements and Scramble Password and Add Comments After X Days</String>
+      <String>Remove Entitlements Immediately and Scramble Password and Add Comments After X Days</String>
+      <String>Remove Entitlements and Move Account</String>
+      <String>Remove Entitlements and Scramble Password and Add Comments and Move Account</String>
+      <String>Remove Entitlements and Move Account After X Days</String>
+      <String>Remove Entitlements Immediately and Move Account After X Days</String>
+      <String>Remove Entitlements and Scramble Password and Add Comments and Move Account After X Days</String>
+      <String>Remove Entitlements Immediately and Scramble Password and Add Comments and Move Account After X Days</String>
+      <String>Delete Only</String>
+      <String>Delete Only After X Days</String>
+      <String>Lock Only</String>
+      <String>Lock Only and Scramble Password and Add Comments</String>
+      <String>Lock Only After X Days</String>
+      <String>Lock Only and Scramble Password and Add Comments After X Days</String>
+      <String>Lock Immediately and Scramble Password and Add Comments After X Days</String>
+      <String>Lock Only and Move Account</String>
+      <String>Lock Only and Scramble Password and Add Comments and Move Account</String>
+      <String>Lock Only and Move Account After X Days</String>
+      <String>Lock Immediately and Move Account After X Days</String>
+      <String>Lock Only and Scramble Password and Add Comments and Move Account After X Days</String>
+      <String>Lock Immediately and Scramble Password and Add Comments and Move Account After X Days</String>
+      <String>Lock and Remove Entitlements</String>
+      <String>Lock and Remove Entitlements and Scramble Password and Add Comments</String>
+      <String>Lock and Remove Entitlements After X Days</String>
+      <String>Lock Immediately and Remove Entitlements After X Days</String>
+      <String>Lock Immediately and Remove Entitlements and Move Account After X Days</String>
+      <String>Lock Immediately and Remove Entitlements and Move Account and Scramble Password and Add Comments After X Days</String>
+      <String>Lock and Remove Entitlements and Scramble Password and Add Comments After X Days</String>
+      <String>Lock and Remove Entitlements Immediately and Scramble Password and Add Comments After X Days</String>
+      <String>Lock and Remove Entitlements and Move Account</String>
+      <String>Lock and Remove Entitlements and Scramble Password and Add Comments and Move Account</String>
+      <String>Lock and Remove Entitlements and Move Account After X Days</String>
+      <String>Lock and Remove Entitlements Immediately and Move Account After X Days</String>
+      <String>Lock and Remove Entitlements and Scramble Password and Add Comments and Move Account After X Days</String>
+      <String>Lock and Remove Entitlements Immediately and Scramble Password and Add Comments and Move Account After X Days</String>
+      <String>Lock and Move Account Immediately and Remove Entitlements After X Days</String>
+      <String>Lock and Move Account and Scramble Password and Add Comments Immediately and Remove Entitlements After X Days</String>
+      <String>Extended Rule</String>
+    </AllowedValues>
+    <Description>Termination Options. Please note, remove entitlements option will remove roles per application too. Within a role business application termination option wins</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Leaver" defaultValue="" displayName="Termination Extended Rule" editMode="Permanent" name="terminationExtendedRule">
+    <Description>This rule will be executed in case selected Termination Options is Extended Rule</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Leaver" defaultValue="" displayName="After X Days" editMode="Permanent" name="xDays">
+    <Description>This is required, in case selected Termination Options is one of X Days </Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Leaver" defaultValue="" displayName="Delete Account After X Days" editMode="Permanent" name="xDeleteDays">
+    <Description>Defer Account Deletion After X Days</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Leaver" defaultValue="" displayName="Scramble Password Attribute Name" editMode="Permanent" name="scramblePasswordAttr">
+    <Description>This is required Only if connector doesn't know the name of password attribute, if scramble password and add comments is selected</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Leaver" defaultValue="" displayName="Comments Attribute Name" editMode="Permanent" name="commentsAttr">
+    <Description>This is required, if scramble password and add comments is selected</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Leaver" defaultValue="" displayName="Comments Value" editMode="Permanent" name="commentsValue">
+    <Description>This is required, if scramble password and add comments is selected</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Leaver" defaultValue="" displayName="Move Account Container" editMode="Permanent" name="moveAccountContainer">
+    <Description>OU=Services</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Leaver" defaultValue="" displayName="Remove Entitlement Exceptions Identification" editMode="Permanent" name="removeEntitlementLeaverExceptionExpression">
+    <Description>SUPPORTED FORMATS: [Schema Attribute Name]#IIQEntitlementLeaverException#[Schema Attribute Value]#IIQEntitlementLeaverException#[Operation] OR [Schema Attribute Name]#IIQEntitlementLeaverException#[Java Regular Expression]</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Joiner" defaultValue="" displayName="Reverse Leaver Options" editMode="Permanent" name="reverseleaverProcess" namedColumn="true" required="true">
+    <AllowedValues>
+      <String>Do Nothing</String>
+      <String>Enable Immediately</String>
+      <String>Enable Immediately and Move Account</String>
+      <String>Enable Immediately, Restore Birthright Access, and Move Account</String>
+      <String>Restore All Access Immediately</String>
+      <String>Unlock Only</String>
+      <String>Unlock Only and Move Account</String>
+      <String>Unlock Only, Restore Birthright Access, and Move Account</String>
+      <String>Extended Rule</String>
+    </AllowedValues>
+    <Description>Reverse of Leaver, Pending X Days Requests will be removed </Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Joiner" defaultValue="" displayName="Reverse Termination Extended Rule" editMode="Permanent" name="reverseTerminationExtendedRule">
+    <Description>This rule will be executed in case selected Rehire Options is Extended Rule</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Joiner" defaultValue="" displayName="Reverse Leaver Options Per Population" editMode="Permanent" name="apPopulationReverseLeaverOptions">
+    <Description>List of Map Options. Please see AP Joiner documentation</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Aggregate" defaultValue="" displayName="Account Correlation Identification" editMode="Permanent" name="accountCorrelationAttrExpression">
+    <Description>SUPPORTED FORMATS: [Cube Attribute Name]#IIQCorrelated#[Schema Attribute Name] OR [Cube Attribute Name]#IIQCorrelated#[Schema Attribute Name]#IIQCorrelated#[Operation]</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Aggregate" defaultValue="" displayName="Account Lock Status Identification" editMode="Permanent" name="accountLockAttrExpression">
+    <Description>SUPPORTED FORMATS: [Schema Attribute Name]#IIQDisabled#[Schema Attribute Value]#IIQDisabled#[Operation] OR [Schema Attribute Name]#IIQDisabled#[Java Regular Expression]</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Aggregate" defaultValue="" displayName="Account Disable Status Identification" editMode="Permanent" name="accountDisableAttrExpression">
+    <Description>SUPPORTED FORMATS: [Schema Attribute Name]#IIQLocked#[Schema Attribute Value]#IIQLocked#[Operation] OR [Schema Attribute Name]#IIQLocked#[Java Regular Expression]</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Aggregate" defaultValue="" displayName="Contractor Authoritative Source" editMode="Permanent" name="authoritativeNonEmployee">
+    <Description>Contractor Authoritative Source</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Aggregate" defaultValue="" displayName="Employee Authoritative Source" editMode="Permanent" name="authoritativeEmployee">
+    <Description>Employee Authoritative Source</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Aggregate" defaultValue="" displayName="Birthright Entitlement Identification" editMode="Permanent" name="birthrightEntAttrExpression">
+    <Description>SUPPORTED FORMATS: [Object Type(Optional).Schema Attribute Name]#IIQEntitlementBirthright#[Schema Attribute Value]#IIQEntitlementBirthright#[Operation] OR [Schema Attribute Name]#IIQEntitlementBirthright#[Java Regular Expression]</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Joiner" defaultValue="" displayName="Is Eligible For Joiner" editMode="Permanent" name="joinerEnabled" namedColumn="true">
+    <Description>If Enabled, ONLY Birthright/Joiner Account will be created in case no Joiner IdentityIQ Roles are selected</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Joiner" defaultValue="" displayName="Joiner Population Identification" editMode="Permanent" name="joinerPopulationRegex">
+    <Description>SUPPORTED FORMATS: [Cube Attribute Name]#IIQJoiner#[Java Regular Expression] OR Comma Separated Group Definition Names</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Joiner" defaultValue="" displayName="Joiner IdentityIQ Birthright Roles" editMode="Permanent" name="joinerRoles">
+    <Description>Make sure these roles are of type "Birthright Roles" and value of the extended attribute "isBirthright" is set as "True"</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Mover" defaultValue="" displayName="Mover Options" editMode="Permanent" name="moverProcess" namedColumn="true" required="true">
+    <AllowedValues>
+      <String>Do Nothing</String>
+      <String>Manager Certification</String>
+    </AllowedValues>
+    <Description>Mover Options</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Mover" defaultValue="" displayName="Process Attribute Synchronization Before Mover Certification" editMode="Permanent" name="apBeforeMoverAttrSync" type="boolean">
+    <Description>This can be used when there are common Identity Trigger Attributes for Attribute Sync and Mover</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Mover" defaultValue="" displayName="Before Mover Certification Options" editMode="Permanent" name="beforemoverAccount">
+    <AllowedValues>
+      <String>Do Nothing</String>
+      <String>Rename / Move LDAP Account</String>
+      <String>Extended Rule</String>
+    </AllowedValues>
+    <Description>Before Mover Certification Options</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Mover" defaultValue="" displayName="Before Mover Extended Rule" editMode="Permanent" name="moverExtendedRule">
+    <Description>This rule will be executed in case Before Mover Certification Options is Extended Rule</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Mover" defaultValue="" displayName="Process Joiner After Mover" editMode="Permanent" name="apAfterMoverJoiner" type="boolean">
+    <Description>This can be used to recalculate joiner access after mover event</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Attribute Synchronization" defaultValue="" displayName="Evaluate Create Provisioning Policy" editMode="Permanent" name="evaluateCreateprovpolicy">
+    <Description>Attribute Synchronization for Accounts based on Create Policy</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Attribute Synchronization" displayName="Rename / Move LDAP Account (DN AND/OR CN Change)" editMode="Permanent" name="renameLDAPaccount" type="boolean">
+    <Description>Rename / Move LDAP Account</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Attribute Synchronization" displayName="Is Identity Eligible For Attribute Synchronization Rule" editMode="Permanent" name="apAttributeSyncEligibleRule">
+    <Description>Rename / Move LDAP Account</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Mover" defaultValue="" displayName="Automated Account Mitigation Options" editMode="Permanent" name="moverRevocation" required="true">
+    <AllowedValues>
+      <String>Do Nothing</String>
+      <String>Disable</String>
+      <String>Delete</String>
+    </AllowedValues>
+    <Description>Mover Account Revocation Options</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Joiner" defaultValue="" displayName="Rehire Options" editMode="Permanent" name="rehireProcess" namedColumn="true" required="true">
+    <AllowedValues>
+      <String>Do Nothing</String>
+      <String>Enable Immediately</String>
+      <String>Enable Immediately and Reset Password</String>
+      <String>Enable Immediately and Restore Account</String>
+      <String>Enable Immediately and Restore Account and Reset Password</String>
+      <String>Unlock Only</String>
+      <String>Unlock Only and Reset Password</String>
+      <String>Unlock Only and Restore Account</String>
+      <String>Unlock Only and Restore Account and Reset Password</String>
+      <String>Extended Rule</String>
+    </AllowedValues>
+    <Description>Employee Type Change (Contractor To Employee or Employee To Contractor) or Same Employee Type</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Joiner" defaultValue="" displayName="Process Attribute Synchronization After Rehire" editMode="Permanent" name="apAfterRehireAttrSync" type="boolean">
+    <Description>This can be used when there are common Identity Trigger Attributes for Attribute Sync and Rehire</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Joiner" defaultValue="" displayName="Rehire Extended Rule" editMode="Permanent" name="rehireExtendedRule">
+    <Description>This rule will be executed in case selected Rehire Options is Extended Rule</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Aggregate" defaultValue="" displayName="Is Business Application" editMode="Permanent" name="busApp" namedColumn="true" type="boolean">
+    <Description>Used By Certification, Leaver, and Approval</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Aggregate" defaultValue="" displayName="Additional Global Customization Rule" editMode="Permanent" name="apAdditionalApplicationCustomizationRule">
+    <Description>Additional Accelerator Pack Global Customization Rule</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Aggregate" defaultValue="" displayName="Additional Creation Rule" editMode="Permanent" name="apAdditionalApplicationCreationRule">
+    <Description>Additional Accelerator Pack Creation Rule</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Aggregate" defaultValue="" displayName="Additional Correlation Rule" editMode="Permanent" name="apAdditionalApplicationCorrelationRule">
+    <Description>Additional Accelerator Pack Correlation Rule</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Aggregate" defaultValue="" displayName="Additional Managed Attribute Customization Rule" editMode="Permanent" name="apAdditionalApplicationMCustomizationRule">
+    <Description>Additional Accelerator Pack Managed Attribute Customization Rule</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Aggregate" defaultValue="" displayName="Additional Managed Attribute Group Refresh Rule" editMode="Permanent" name="apAdditionalApplicationMGroupRefreshRule">
+    <Description>Additional Accelerator Pack Managed Attribute Group Refresh Rule</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Aggregate" defaultValue="" displayName="Additional After Provisioning Rule" editMode="Permanent" name="apAdditionalApplicationAfterProvisioningRule">
+    <Description>Additional Accelerator Pack After Provisioning Rule</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Aggregate" defaultValue="" displayName="Additional Pre Iterate Rule" editMode="Permanent" name="apAdditionalApplicationPreIterateRule">
+    <Description>Additional Accelerator Pack Pre Iterate Rule</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Policy Violation" defaultValue="" displayName="Allow Access Request Policy Names" editMode="Permanent" name="softPolicyviolations" namedColumn="true" type="string">
+    <Description>Comma Separated Policy Names</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Policy Violation" defaultValue="" displayName="Deny Access Request Policy Names" editMode="Permanent" name="hardPolicyviolations" namedColumn="true" type="string">
+    <Description>Comma Separated Policy Names</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Approval" defaultValue="" displayName="Omit or Override with Multiple Manager Approval Rule" editMode="Permanent" name="skipSupervisorApproval">
+    <Description>This rule can  be used to bypass supervisor approval</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Approval" displayName="IdentityIQ 1st Level Business Approvers" editMode="Permanent" name="appBusApprovers" namedColumn="true">
+    <Description>Enter a comma separated  Cube Ids or WorkGroups </Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Approval" defaultValue="" displayName="Omit or Override IdentityIQ 1st Level Business Approvers Rule" editMode="Permanent" name="appBusApprovalRule">
+    <Description> This rule can be used to override 1st Level Business Approvers</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Approval" displayName="IdentityIQ 2nd Level Business Approvers" editMode="Permanent" name="additionalAppBusApprovers" namedColumn="true">
+    <Description>Enter a comma separated  Cube Ids or WorkGroups</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Approval" defaultValue="" displayName="Omit or Override IdentityIQ 2nd Level Business Approvers Rule" editMode="Permanent" name="additionalAppBusApprovalRule">
+    <Description> This rule can be used to override 2nd Level Business Approvers</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Approval" displayName="Display Form Name or Rule Name" editMode="Permanent" name="displayFormRule">
+    <Description>When a form is needed to be shown during the request process.</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Approval" displayName="Request Access Form Role Name" editMode="Permanent" name="requestorFormRole">
+    <Description>When a form is needed to be shown during the request process, access request will start by requesting this role</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Multiple Acces or Account Request Workflows" displayName="Accelerator Pack Enabled" editMode="Permanent" name="acceleratorPackEnabled">
+    <Description>Used to make sure access request is redirected to Accelerator Pack Wrapper Workflow</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="New Account Dependency Entitlements" defaultValue="" displayName="Dependency Application Entitlements" editMode="Permanent" name="accountCreateEntitlements">
+    <Description>SUPPORTED FORMAT:[Application Name]#[Application Attribute Name]#[Application Attribute Value]|[Application Name]#[Application Attribute Name]#[Application Attribute Value].</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="New Account Dependency Entitlements" defaultValue="" displayName="Conditional Omit Dependency Application Entitlements Rule" editMode="Permanent" name="accountCreateConditionalRule">
+    <Description>Rule that determines if the provisioning of the dependency entitlements for this Application should be executed or not. The Rule must return a Boolean "true" value if the provisioning should be executed, or "false" if the provisioning should be skipped.</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Aggregate" defaultValue="" displayName="Privileged Entitlement Identification" editMode="Permanent" name="privilegedEntAttrExpression">
+    <Description>SUPPORTED FORMATS: [Object Type(Optional).Schema Attribute Name]#IIQEntitlementPrivileged#[Schema Attribute Value]#IIQEntitlementPrivileged#[Operation] OR [Schema Attribute Name]#IIQEntitlementPrivileged#[Java Regular Expression]</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Aggregate" defaultValue="" displayName="Privileged Account Identification" editMode="Permanent" name="privilegedAccountAttrExpression">
+    <Description>SUPPORTED FORMATS: [Schema Attribute Name]#IIQPrivileged#[Schema Attribute Value]#IIQPrivileged#[Operation] OR [Schema Attribute Name]#IIQPrivileged#[Java Regular Expression]</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Mover" defaultValue="" displayName="Before Mover Only Primary Account" editMode="Permanent" name="beforemoverPrimaryaccount" type="boolean">
+    <Description>Before Mover Only Primary Account</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Attribute Synchronization" defaultValue="" displayName="Only Primary Account Attribute Synchronization" editMode="Permanent" name="primarySyncaccounts" type="boolean">
+    <Description>Attribute Synchronization for Accounts</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Password Synchronization" defaultValue="" displayName="Detect Change Password on Primary Account" editMode="Permanent" name="primarypasswordSyncaccounts" type="boolean">
+    <Description>Password Synchronization for Accounts</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Joiner" defaultValue="" displayName="On Rehire Restore Only Primary Account" editMode="Permanent" name="rehirePrimaryaccount" type="boolean">
+    <Description>Move Only Primary Account</Description>
+  </ObjectAttribute>
+</ObjectConfig>

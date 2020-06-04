@@ -1,0 +1,3265 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Form PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Form name="Form-Global-SmartServices" type="Workflow">
+  <Attributes>
+    <Map>
+      <entry key="isWizard">
+        <value>
+          <Script>
+            <Source><![CDATA[
+              
+			    if(acceleratorPackSectionAttributes!=null && acceleratorPackSectionAttributes.containsKey("acceleratorPackIsWizard"))
+				 {
+				   if(acceleratorPackSectionAttributes.get("acceleratorPackIsWizard")!=null && acceleratorPackSectionAttributes.get("acceleratorPackIsWizard").equalsIgnoreCase("TRUE"))
+				   {
+				    return true;
+				   }
+				 }
+				 else
+				 {
+				    return false;
+				 }
+				
+			]]></Source>
+          </Script>
+        </value>
+      </entry>
+      <entry key="title" value="Accelerator Pack Global Definitions"/>
+    </Map>
+  </Attributes>
+  <Description>Accelerator Pack Global Definitions</Description>
+  <Section columns="2" label="Existing Workflow References" name="Workflows">
+    <Field displayName="LCM Access Request" helpKey="Define Existing Workflow for Interactive Access Request" name="existingAccessRequest">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+			import sailpoint.rapidapponboarding.rule.WorkflowUtil;
+			return WorkflowUtil.getAllLcmWorkflows(context);
+			]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+    </Field>
+    <Field displayName="LCM Account Request" helpKey="Define Existing Workflow for Interactive Account Request" name="existingAccountRequest">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+			import sailpoint.rapidapponboarding.rule.WorkflowUtil;
+			return WorkflowUtil.getAllLcmWorkflows(context);
+			]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+    </Field>
+    <Field displayName="Batch Access Request" helpKey="Define Existing Workflow for Batch Access Request" name="existingBatchAccessRequest">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+			import sailpoint.rapidapponboarding.rule.WorkflowUtil;
+			return WorkflowUtil.getAllLcmWorkflows(context);
+			]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+    </Field>
+    <Field displayName="Batch Account Request" helpKey="Define Existing Workflow for Batch Account Request" name="existingBatchAccountRequest">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+			import sailpoint.rapidapponboarding.rule.WorkflowUtil;
+			return WorkflowUtil.getAllLcmWorkflows(context);
+			]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+    </Field>
+    <Field displayName="Wait Time in Seconds" helpKey="Define Wait Time for Lifecycle Event Workflows" name="globalWait"/>
+  </Section>
+  <Section columns="2" label="Operations" name="roadGlobalOperations">
+    <Attributes>
+      <Map>
+        <entry key="subtitle" value="Global Definitions"/>
+      </Map>
+    </Attributes>
+    <Field displayName="Error Notifications To" helpKey="Error Notification Work Group" name="errorNotificationWorkGroup" type="Identity">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+                	
+                	import sailpoint.object.Filter;
+                	Filter filter= Filter.eq("workgroup", true );
+               	    field.setFilterString(filter.toString());
+               	    return false;
+                 
+                ]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Staged Approvals For" helpKey="Lifecycle Event Staging Work Group" name="temporaryApprovalsWorkGroup" type="Identity">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+                	
+                	import sailpoint.object.Filter;
+                	Filter filter= Filter.eq("workgroup", true );
+               	    field.setFilterString(filter.toString());
+               	    return false;
+                 
+                ]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Batch Approvals Work Group" helpKey="Approvals will by bypassed for group members" name="byPassBatchApprovals" type="Identity">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+                	
+                	import sailpoint.object.Filter;
+                	Filter filter= Filter.eq("workgroup", true );
+               	    field.setFilterString(filter.toString());
+               	    return false;
+                 
+                ]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Send Email To Operations" helpKey="Notify Operations on Attribute Synchronization for an Identity" name="apSendEmailToOperations">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+			List list = new ArrayList();	
+			List displayList = new ArrayList();
+			displayList.add("TRUE");
+			displayList.add("ON");
+			list.add(displayList);
+			displayList = new ArrayList();
+			displayList.add("FALSE");
+			displayList.add("OFF");
+			list.add(displayList);
+			return list;
+			]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+				 if(acceleratorPackSectionAttributes!=null && acceleratorPackSectionAttributes.containsKey("acceleratorPackAttrSync"))
+				 {
+				 return acceleratorPackSectionAttributes.get("acceleratorPackAttrSync");
+				 }
+			  
+			]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="2" displayName="Operations Attribute Synchronization EmailTemplate" helpKey="This email template is used for staged attribute synchronization approval" name="OperationsAttributeSync" type="EmailTemplate">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+				 if(acceleratorPackSectionAttributes!=null && acceleratorPackSectionAttributes.containsKey("acceleratorPackAttrSync"))
+				 {
+				 return acceleratorPackSectionAttributes.get("acceleratorPackAttrSync");
+				 }
+			  
+			]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Send Email To Operations" helpKey="Notify Operations on Epic SER Linking or Unlinking for an Identity" name="apSendEmailToOperationsEpicSER">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+			List list = new ArrayList();	
+			List displayList = new ArrayList();
+			displayList.add("TRUE");
+			displayList.add("ON");
+			list.add(displayList);
+			displayList = new ArrayList();
+			displayList.add("FALSE");
+			displayList.add("OFF");
+			list.add(displayList);
+			return list;
+			]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+				 if(acceleratorPackSectionAttributes!=null && acceleratorPackSectionAttributes.containsKey("acceleratorPackEpicSER"))
+				 {
+				 return acceleratorPackSectionAttributes.get("acceleratorPackEpicSER");
+				 }
+			  
+			]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="2" displayName="Operations Epic/SER EmailTemplate" helpKey="This email template is used for staged Epic/SER Linking approval" name="OperationsSER" type="EmailTemplate">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+				 if(acceleratorPackSectionAttributes!=null && acceleratorPackSectionAttributes.containsKey("acceleratorPackEpicSER"))
+				 {
+				 return acceleratorPackSectionAttributes.get("acceleratorPackEpicSER");
+				 }
+			  
+			]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Send Email To Operations" helpKey="Notify Operations on Return To Work LOA for an Identity" name="apSendEmailToOperationsRLOA">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+			List list = new ArrayList();	
+			List displayList = new ArrayList();
+			displayList.add("TRUE");
+			displayList.add("ON");
+			list.add(displayList);
+			displayList = new ArrayList();
+			displayList.add("FALSE");
+			displayList.add("OFF");
+			list.add(displayList);
+			return list;
+			]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+				 if(acceleratorPackSectionAttributes!=null && acceleratorPackSectionAttributes.containsKey("acceleratorPackJoinerLoa"))
+				 {
+				 return acceleratorPackSectionAttributes.get("acceleratorPackJoinerLoa");
+				 }
+			  
+			]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="2" displayName="Operations Return To Work Leave of Absence EmailTemplate" helpKey="This email template is used for staged return to work leave of absence approval" name="OperationsRTWLOA" type="EmailTemplate">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+				 if(acceleratorPackSectionAttributes!=null && acceleratorPackSectionAttributes.containsKey("acceleratorPackJoinerLoa"))
+				 {
+				 return acceleratorPackSectionAttributes.get("acceleratorPackJoinerLoa");
+				 }
+			  
+			]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Send Email To Operations" helpKey="Notify Operations on Return To Work LTD for an Identity" name="apSendEmailToOperationsRLTD">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+			List list = new ArrayList();	
+			List displayList = new ArrayList();
+			displayList.add("TRUE");
+			displayList.add("ON");
+			list.add(displayList);
+			displayList = new ArrayList();
+			displayList.add("FALSE");
+			displayList.add("OFF");
+			list.add(displayList);
+			return list;
+			]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+				 if(acceleratorPackSectionAttributes!=null && acceleratorPackSectionAttributes.containsKey("acceleratorPackJoinerLtd"))
+				 {
+				 return acceleratorPackSectionAttributes.get("acceleratorPackJoinerLtd");
+				 }
+			  
+			]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="2" displayName="Operations Return To Work Long-Term Disability EmailTemplate" helpKey="This email template is used for staged return to work long-term disability approval" name="OperationsRTWLTD" type="EmailTemplate">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+				 if(acceleratorPackSectionAttributes!=null && acceleratorPackSectionAttributes.containsKey("acceleratorPackJoinerLtd"))
+				 {
+				 return acceleratorPackSectionAttributes.get("acceleratorPackJoinerLtd");
+				 }
+			  
+			]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Send Email To Operations" helpKey="Notify Operations on LOA for an Identity" name="apSendEmailToOperationsLOA">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+			List list = new ArrayList();	
+			List displayList = new ArrayList();
+			displayList.add("TRUE");
+			displayList.add("ON");
+			list.add(displayList);
+			displayList = new ArrayList();
+			displayList.add("FALSE");
+			displayList.add("OFF");
+			list.add(displayList);
+			return list;
+			]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+				 if(acceleratorPackSectionAttributes!=null && acceleratorPackSectionAttributes.containsKey("acceleratorPackLeaverLoa"))
+				 {
+				 return acceleratorPackSectionAttributes.get("acceleratorPackLeaverLoa");
+				 }
+			  
+			]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="2" displayName="Operations Leave of Absence EmailTemplate" helpKey="This email template is used for staged  leave of absence approval" name="OperationsLOA" type="EmailTemplate">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+				 if(acceleratorPackSectionAttributes!=null && acceleratorPackSectionAttributes.containsKey("acceleratorPackLeaverLoa"))
+				 {
+				 return acceleratorPackSectionAttributes.get("acceleratorPackLeaverLoa");
+				 }
+			  
+			]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Send Email To Operations" helpKey="Notify Operations on LOA for an Identity" name="apSendEmailToOperationsLTD">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+			List list = new ArrayList();	
+			List displayList = new ArrayList();
+			displayList.add("TRUE");
+			displayList.add("ON");
+			list.add(displayList);
+			displayList = new ArrayList();
+			displayList.add("FALSE");
+			displayList.add("OFF");
+			list.add(displayList);
+			return list;
+			]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+				 if(acceleratorPackSectionAttributes!=null && acceleratorPackSectionAttributes.containsKey("acceleratorPackLeaverLtd"))
+				 {
+				 return acceleratorPackSectionAttributes.get("acceleratorPackLeaverLtd");
+				 }
+			  
+			]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="2" displayName="Operations Long-Term Disability EmailTemplate" helpKey="This email template is used for staged long-term disability approval" name="OperationsLTD" type="EmailTemplate">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+				 if(acceleratorPackSectionAttributes!=null && acceleratorPackSectionAttributes.containsKey("acceleratorPackLeaverLtd"))
+				 {
+				 return acceleratorPackSectionAttributes.get("acceleratorPackLeaverLtd");
+				 }
+			  
+			]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Send Email To Operations" helpKey="Notify Operations on Native Change for an Identity" name="apSendEmailToOperationsNC">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+			List list = new ArrayList();	
+			List displayList = new ArrayList();
+			displayList.add("TRUE");
+			displayList.add("ON");
+			list.add(displayList);
+			displayList = new ArrayList();
+			displayList.add("FALSE");
+			displayList.add("OFF");
+			list.add(displayList);
+			return list;
+			]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+				 if(acceleratorPackSectionAttributes!=null && acceleratorPackSectionAttributes.containsKey("acceleratorPackNativeChange"))
+				 {
+				 return acceleratorPackSectionAttributes.get("acceleratorPackNativeChange");
+				 }
+			  
+			]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="2" displayName="Operations Native Change EmailTemplate" helpKey="This email template is used for staged native change approval" name="OperationsNativeChange" type="EmailTemplate">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+				 if(acceleratorPackSectionAttributes!=null && acceleratorPackSectionAttributes.containsKey("acceleratorPackNativeChange"))
+				 {
+				 return acceleratorPackSectionAttributes.get("acceleratorPackNativeChange");
+				 }
+			  
+			]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="2" displayName="Mover Automated Allow Exceptions" helpKey="This email template is used for mover automated allow exceptions email" name="MitigationExpiration" type="EmailTemplate">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+               if(acceleratorPackSectionAttributes!=null && acceleratorPackSectionAttributes.containsKey("acceleratorPackManagerCertAut"))
+				 {
+				 return acceleratorPackSectionAttributes.get("acceleratorPackManagerCertAut");
+				 }
+				
+			]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+  </Section>
+  <Section columns="2" label="Email" name="roadGlobalEmail">
+    <Field columnSpan="2" displayName="Email Notifications Verification" helpKey="Authoritative Source List to Identify Human Population for Email Notifications from IdentityIQ" multi="true" name="authSourceAppName" type="Application">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+                	
+                	import sailpoint.object.Filter;
+                	Filter filter= Filter.eq("authoritative", true );
+               	    field.setFilterString(filter.toString());
+               	    return false;
+                 
+                ]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Separate Joiner Temporary Password Email" name="additionalPasswordEmail" type="string">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+			List list = new ArrayList();	
+			List displayList = new ArrayList();
+			displayList.add("TRUE");
+			displayList.add("ON");
+			list.add(displayList);
+			displayList = new ArrayList();
+			displayList.add("FALSE");
+			displayList.add("OFF");
+			list.add(displayList);
+			return list;
+			]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+    </Field>
+    <Field columnSpan="2" displayName="Joiner and Rehire Email To" helpKey="Send Joiner and Rehire Email to a WorkGroup instead of a Manager" name="wgJoinerRehireEmail" type="Identity">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+                	
+                	import sailpoint.object.Filter;
+                	Filter filter= Filter.eq("workgroup", true );
+               	    if(acceleratorPackSectionAttributes!=null && acceleratorPackSectionAttributes.containsKey("acceleratorPackJoiner"))
+				    {
+				      if( acceleratorPackSectionAttributes.get("acceleratorPackJoiner") !=null && acceleratorPackSectionAttributes.get("acceleratorPackJoiner").equalsIgnoreCase("False"))
+				      {
+						field.setFilterString(filter.toString());
+						return false;
+					   }
+					   else
+					   {
+						 return true;
+					   }
+					}
+					return true;
+				 
+                ]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="2" displayName="CC Email To Workgroup" helpKey="This is applied to all Accelerator Pack workflows that sends out manager notification" name="apCCEmailWorkgroup" type="Identity">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+                	
+                	import sailpoint.object.Filter;
+                	Filter filter= Filter.eq("workgroup", true );
+               	    field.setFilterString(filter.toString());
+				 
+                ]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="2" displayName="CC Email Rule" helpKey="This is applied to all Accelerator Pack workflows that sends out manager and operations notification. It has priority over CC Email To Workgroup in case of Manager Notifications" name="apCCEmailRule" type="Rule">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+                	
+                
+                ]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Disable Static Email Content on Manager Emails" helpKey="This is applied to Accelerator Pack Email Notifications To Managers" name="apDisableStaticManagerEmailContent" type="string">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+			List list = new ArrayList();	
+			List displayList = new ArrayList();
+			displayList.add("True");
+			displayList.add("ON");
+			list.add(displayList);
+			displayList = new ArrayList();
+			displayList.add("False");
+			displayList.add("OFF");
+			list.add(displayList);
+			return list;
+			]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+    </Field>
+    <Field columnSpan="2" displayName="Leaver and Reverse Leaver Email To" helpKey="Send Leaver and Reverse Leaver Email to a WorkGroup instead of a Manager" name="wgLeaverReverseLeaverEmail" type="Identity">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+                	
+               		import sailpoint.object.Filter;
+                	Filter filter= Filter.eq("workgroup", true );
+               	    if(acceleratorPackSectionAttributes!=null && acceleratorPackSectionAttributes.containsKey("acceleratorPackLeaver"))
+				    {
+				      if( acceleratorPackSectionAttributes.get("acceleratorPackLeaver") !=null && acceleratorPackSectionAttributes.get("acceleratorPackLeaver").equalsIgnoreCase("False"))
+				      {
+						field.setFilterString(filter.toString());
+						return false;
+					   }
+					   else
+					   {
+						 return true;
+					   }
+					}
+					return true;
+                 
+                ]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="2" displayName="Request Submission Email" helpKey="This email template is used for submission of requests by Accelerator Pack Workflow" name="RequestSubmission" type="EmailTemplate">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+               if(acceleratorPackSectionAttributes!=null && acceleratorPackSectionAttributes.containsKey("acceleratorPackAccessAccounts"))
+				 {
+				 return acceleratorPackSectionAttributes.get("acceleratorPackAccessAccounts");
+				 }
+				
+			]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="2" displayName="Request Completion Email" helpKey="This email template is used for completion of requests within Accelerator Pack Workflow" name="RequestCompletion" type="EmailTemplate">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+               if(acceleratorPackSectionAttributes!=null && acceleratorPackSectionAttributes.containsKey("acceleratorPackAccessAccounts"))
+				 {
+				 return acceleratorPackSectionAttributes.get("acceleratorPackAccessAccounts");
+				 }
+				
+			]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="2" displayName="Request Rejection Email" helpKey="This email template is used for rejection of requests within Accelerator Pack Workflow" name="Rejection" type="EmailTemplate">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+               if(acceleratorPackSectionAttributes!=null && acceleratorPackSectionAttributes.containsKey("acceleratorPackAccessAccounts"))
+				 {
+				 return acceleratorPackSectionAttributes.get("acceleratorPackAccessAccounts");
+				 }
+				
+			]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="2" displayName="Request Auto Rejection Email" helpKey="This email template is used for auto rejection of requests within Accelerator Pack Workflow" name="AutoRejection" type="EmailTemplate">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+               if(acceleratorPackSectionAttributes!=null && acceleratorPackSectionAttributes.containsKey("acceleratorPackAccessAccounts"))
+				 {
+				 return acceleratorPackSectionAttributes.get("acceleratorPackAccessAccounts");
+				 }
+				
+			]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="2" displayName="Batch Request Completion Email" helpKey="This email template is used for completion of batch requests within Accelerator Pack Workflow" name="BatchCompletion" type="EmailTemplate">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+               if(acceleratorPackSectionAttributes!=null && acceleratorPackSectionAttributes.containsKey("acceleratorPackBatchCompletion"))
+				 {
+				 return acceleratorPackSectionAttributes.get("acceleratorPackBatchCompletion");
+				 }
+				
+			]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="2" displayName="Privileged Account Notification EmailTemplate" helpKey="This email template is used for privileged account notifications" name="PSAPasswordExpiration" type="EmailTemplate">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+				 if(acceleratorPackSectionAttributes!=null && acceleratorPackSectionAttributes.containsKey("acceleratorPackPrivilegedNotifications"))
+				 {
+				 return acceleratorPackSectionAttributes.get("acceleratorPackPrivilegedNotifications");
+				 }
+			  
+			]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+  </Section>
+  <Section columns="2" label="Approval (Access and Accounts)" name="roadCartRequest">
+    <Attributes>
+      <Map>
+        <entry key="hidden">
+          <value>
+            <Script>
+              <Source><![CDATA[
+              
+               if(acceleratorPackSectionAttributes!=null && acceleratorPackSectionAttributes.containsKey("acceleratorPackCartRequest"))
+				 {
+				 return acceleratorPackSectionAttributes.get("acceleratorPackCartRequest");
+				 }
+				
+			]]></Source>
+            </Script>
+          </value>
+        </entry>
+      </Map>
+    </Attributes>
+    <Field displayName="Implicit Approval" helpKey="Auto Approve Items when Requestor or Requestee is Approver and is not a Workgroup" name="apEnableAutoApprovalsAccessAccountRequest" postBack="true" type="string">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+			List list = new ArrayList();	
+			List displayList = new ArrayList();
+			displayList.add("TRUE");
+			displayList.add("ON");
+			list.add(displayList);
+			displayList = new ArrayList();
+			displayList.add("FALSE");
+			displayList.add("OFF");
+			list.add(displayList);
+			return list;
+			]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+    </Field>
+    <Field displayName="First Level Application Access Approval Split" name="ApplicationBusApprovers" type="string">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+				List list = new ArrayList();	
+				List displayList = new ArrayList();
+				displayList.add("true");
+				displayList.add("ON");
+				list.add(displayList);
+				displayList = new ArrayList();
+				displayList.add("false");
+				displayList.add("OFF");
+				list.add(displayList);
+				return list;
+				]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+    </Field>
+    <Field displayName="Second Level Application Access Approval Split" name="AdditionalApplicationBusApprovers" type="string">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+				List list = new ArrayList();	
+				List displayList = new ArrayList();
+				displayList.add("true");
+				displayList.add("ON");
+				list.add(displayList);
+				displayList = new ArrayList();
+				displayList.add("false");
+				displayList.add("OFF");
+				list.add(displayList);
+				return list;
+				]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+    </Field>
+    <Field displayName="First Level Entitlement Access Approval Split" name="EntitlementBusApprovers" type="string">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+				List list = new ArrayList();	
+				List displayList = new ArrayList();
+				displayList.add("true");
+				displayList.add("ON");
+				list.add(displayList);
+				displayList = new ArrayList();
+				displayList.add("false");
+				displayList.add("OFF");
+				list.add(displayList);
+				return list;
+				]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+    </Field>
+    <Field displayName="First Level Role Access Approval Split" name="RoleBusApprovers" type="string">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+				List list = new ArrayList();	
+				List displayList = new ArrayList();
+				displayList.add("true");
+				displayList.add("ON");
+				list.add(displayList);
+				displayList = new ArrayList();
+				displayList.add("false");
+				displayList.add("OFF");
+				list.add(displayList);
+				return list;
+				]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+    </Field>
+    <Field columnSpan="2" displayName="Enable Electronic Signature" name="electronicSignature" type="string">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+				List list = new ArrayList();	
+				List displayList = new ArrayList();
+				displayList.add("SmartServices Electronic Signature");
+				displayList.add("ON");
+				list.add(displayList);
+				displayList = new ArrayList();
+				displayList.add("No Electronic Signature Required");
+				displayList.add("OFF");
+				list.add(displayList);
+				return list;
+				]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+    </Field>
+    <Field displayName="Hours Before First Reminder" helpKey="Total Number of Hours Before First Reminder." name="hoursTillEscalation" type="string"/>
+    <Field displayName="Reminders Before First Escalation" helpKey="Total Number of Reminders Before First Escalation. Reminder cycle restarts After Escalation." name="maxReminders" type="string"/>
+    <Field displayName="Hours Between Reminders" helpKey="Reminder Frequency" name="hoursBetweenReminders" type="string"/>
+    <Field displayName="Work Item Expiration in Hours" helpKey="Auto Rejection of Approval Item." name="hoursTillExpiration" type="string"/>
+    <Field displayName="Approval Notifications" name="disableApprovalNotifications" type="string">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+			List list = new ArrayList();	
+			List displayList = new ArrayList();
+			displayList.add("true");
+			displayList.add("DO NOT SEND NOTIFICATIONS");
+			list.add(displayList);
+			displayList = new ArrayList();
+			displayList.add("false");
+			displayList.add("SEND NOTIFICATIONS");
+			list.add(displayList);
+			return list;
+			]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+    </Field>
+    <Field displayName="Notification Scheme" name="escalationStyle" type="string">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+			List list = new ArrayList();	
+			List displayList = new ArrayList();
+			displayList.add("reminder");
+			displayList.add("Only Reminders");
+			list.add(displayList);
+			displayList = new ArrayList();
+			displayList.add("escalation");
+			displayList.add("Only Escalations");
+			list.add(displayList);
+			displayList = new ArrayList();
+			displayList.add("both");
+			displayList.add("Both Reminders and Escalations");
+			list.add(displayList);
+			displayList = new ArrayList();
+			displayList.add("None");
+			displayList.add("None");
+			list.add(displayList);
+			return list;
+			]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+    </Field>
+    <Field displayName="Escalation Options" displayType="radio" name="escalationType" postBack="true" type="string">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+			List list = new ArrayList();	
+			List displayList = new ArrayList();
+			displayList.add("emailToManager");
+			displayList.add("No Reassignment Send an Email to Owner's Manager and cc the Owner");
+			list.add(displayList);
+			displayList = new ArrayList();
+			displayList.add("directManager");
+			displayList.add("Reassignment To Manager");
+			list.add(displayList);
+			displayList = new ArrayList();
+			displayList.add("sameLevel");
+			displayList.add("Escalation Rule");
+			list.add(displayList);
+			return list;
+			]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+    </Field>
+    <Field displayName="Escalation Reassignment Rule" dynamic="true" helpKey="Peer or Same Level Escalation Rule" name="escalationSameLevelRule" required="true" type="Rule">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+                	
+                	//Remove Artifacts , But No Reassignmnet to Manager
+                	if(escalationType!=null
+                	&& escalationType.equalsIgnoreCase("sameLevel"))
+                	{
+                	return false;
+                	}
+                	else
+                	{
+                	return true;
+                	}
+                 
+                ]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="2" displayName="Approval Notification EmailTemplate" helpKey="This email template is used for approval notification" name="notifyEmailTemplate" type="EmailTemplate">
+      <Attributes>
+        <Map>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="2" displayName="Approval Reminder Notification EmailTemplate" helpKey="This email template is used for approval reminder notification" name="reminderEmailTemplate" type="EmailTemplate">
+      <Attributes>
+        <Map>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="2" displayName="Approval Escalation Notification EmailTemplate" helpKey="This email template is used for approval escalation notification" name="escalationEmailTemplate" type="EmailTemplate">
+      <Attributes>
+        <Map>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="2" displayName="Account Selection Notification EmailTemplate" helpKey="This email template is used for multiple account, preventive policy violation, and provisioning policy selection notification" name="accountSelectionNotifyEmailTemplate" type="EmailTemplate">
+      <Attributes>
+        <Map>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+  </Section>
+  <Section columns="2" label="Create/Edit/Register Identity" name="roadGlobalIdentity">
+    <Field displayName="Create Identity Service Account Cubes " name="createServiceCubes" type="string">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+			List list = new ArrayList();	
+			List displayList = new ArrayList();
+			displayList.add("TRUE");
+			displayList.add("ON");
+			list.add(displayList);
+			displayList = new ArrayList();
+			displayList.add("FALSE");
+			displayList.add("OFF");
+			list.add(displayList);
+			return list;
+			]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+              	 if(acceleratorPackSectionAttributes!=null && acceleratorPackSectionAttributes.containsKey("acceleratorPackCreate"))
+				 {
+				 return acceleratorPackSectionAttributes.get("acceleratorPackCreate");
+				 }
+				
+			]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="2" displayName="Create Identity Approval" helpKey="Create Identity Manager or Service Account Owner Approval" multi="true" name="CREATEGSPACEGIDENTITYGSPACEGFEATURE" type="string">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+			List displayList = new ArrayList();	
+			displayList.add("ManagerOrServiceAccountOwner");
+			displayList.add("Workgroup");
+			return displayList;
+			]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+              	 if(acceleratorPackSectionAttributes!=null && acceleratorPackSectionAttributes.containsKey("acceleratorPackCreate"))
+				 {
+				 return acceleratorPackSectionAttributes.get("acceleratorPackCreate");
+				 }
+				
+			]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Edit Identity Service Account Cubes " name="editServiceCubes" type="string">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+			List list = new ArrayList();	
+			List displayList = new ArrayList();
+			displayList.add("TRUE");
+			displayList.add("ON");
+			list.add(displayList);
+			displayList = new ArrayList();
+			displayList.add("FALSE");
+			displayList.add("OFF");
+			list.add(displayList);
+			return list;
+			]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+			 	if(acceleratorPackSectionAttributes!=null && acceleratorPackSectionAttributes.containsKey("acceleratorPackEdit"))
+				 {
+				 return acceleratorPackSectionAttributes.get("acceleratorPackEdit");
+				 }
+				
+			]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="2" displayName="Edit Identity Approval" helpKey="Edit Identity Manager or Service Account Owner Approval" multi="true" name="EDITGSPACEGIDENTITYGSPACEGFEATURE" type="string">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+			List displayList = new ArrayList();	
+			displayList.add("ManagerOrServiceAccountOwner");
+			displayList.add("Workgroup");
+			return displayList;
+			]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+			 	if(acceleratorPackSectionAttributes!=null && acceleratorPackSectionAttributes.containsKey("acceleratorPackEdit"))
+				 {
+				 return acceleratorPackSectionAttributes.get("acceleratorPackEdit");
+				 }
+				
+			]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="2" displayName="Register Identity Approval" helpKey="Register Identity Manager or Service Account Owner Approval" multi="true" name="REGISTRATIONGSPACEGFEATURE" type="string">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+			List displayList = new ArrayList();	
+			displayList.add("ManagerOrServiceAccountOwner");
+			displayList.add("Workgroup");
+			return displayList;
+			]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+                if(acceleratorPackSectionAttributes!=null && acceleratorPackSectionAttributes.containsKey("acceleratorPackRegister"))
+				 {
+				 return acceleratorPackSectionAttributes.get("acceleratorPackRegister");
+				 }
+				
+			]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Approval for" helpKey="Create Edit Register Identity Work Group Approval" name="apCreateEditWorkGroup" type="Identity">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+                	
+                	import sailpoint.object.Filter;
+                	Filter filter= Filter.eq("workgroup", true );
+               	    field.setFilterString(filter.toString());
+               	    return false;
+                 
+                ]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+  </Section>
+  <Section columns="2" label="Service Account" name="roadGlobalServiceAccounts">
+    <Attributes>
+      <Map>
+        <entry key="hidden">
+          <value>
+            <Script>
+              <Source><![CDATA[
+              
+			   import sailpoint.rapidapponboarding.rule.ObjectConfigAttributesRuleLibrary;
+				String serviceAccountEnabled = ObjectConfigAttributesRuleLibrary.extendedAttrServiceAccountEnabled(context);
+				boolean servAccEnabled=false;
+				if(serviceAccountEnabled!=null && serviceAccountEnabled.length()>0 && serviceAccountEnabled.equalsIgnoreCase("TRUE"))
+				{
+					servAccEnabled=true;
+				}
+				if(servAccEnabled)
+				{
+				return false;
+				}
+				else
+				{
+				return true;
+				}
+				
+			]]></Source>
+            </Script>
+          </value>
+        </entry>
+      </Map>
+    </Attributes>
+    <Field displayName="Reassignment" helpKey="On Termination, Reassign Service Account Ownership" name="serviceAccountremoveOwnership" postBack="true" type="string">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+				List list = new ArrayList();	
+				List displayList = new ArrayList();
+				displayList.add("TRUE");
+				displayList.add("ON");
+				list.add(displayList);
+				displayList = new ArrayList();
+				displayList.add("FALSE");
+				displayList.add("OFF");
+				list.add(displayList);
+				return list;
+				]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+				 if(acceleratorPackSectionAttributes!=null && acceleratorPackSectionAttributes.containsKey("acceleratorPackLeaver"))
+				 {
+				 return acceleratorPackSectionAttributes.get("acceleratorPackLeaver");
+				 }
+			  
+			]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="2" displayName="Service Account Ownership Attributes" helpKey="Reassignment on Termination Service Account Ownership Attributes" multi="true" name="serviceAccountOwnerAttrs" type="string">
+      <AllowedValuesDefinition>
+        <RuleRef>
+          <Reference class="sailpoint.object.Rule" name="Rule-FrameWork-IIQ-Service-Account-Attributes-List"/>
+        </RuleRef>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+                	
+                	if(serviceAccountremoveOwnership!=null && serviceAccountremoveOwnership.equalsIgnoreCase("TRUE"))
+                	{
+                	return false;
+                	}
+                	else
+                	{
+                	return true;
+                	}
+                 
+                ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Reassign To Manager" helpKey="On Termination, Reassign Service Account Ownership To Owner's Manager" name="serviceAccountreassignOwnershipToManager" postBack="true" type="string">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+			List list = new ArrayList();	
+			List displayList = new ArrayList();
+			displayList.add("TRUE");
+			displayList.add("ON");
+			list.add(displayList);
+			displayList = new ArrayList();
+			displayList.add("FALSE");
+			displayList.add("OFF");
+			list.add(displayList);
+			return list;
+			]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+                	
+                	if(serviceAccountremoveOwnership!=null && serviceAccountremoveOwnership.equalsIgnoreCase("TRUE"))
+                	{
+                	return false;
+                	}
+                	else
+                	{
+                	return true;
+                	}
+                 
+                ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Reassignmnet Rule" dynamic="true" helpKey="Reassign Service Accounts Ownership Rule" name="serviceAccountreassignmentRule" type="Rule">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+                	
+                	if(serviceAccountreassignOwnershipToManager!=null && serviceAccountreassignOwnershipToManager.equalsIgnoreCase("FALSE")
+                	&& serviceAccountremoveOwnership!=null && serviceAccountremoveOwnership.equalsIgnoreCase("TRUE"))
+                	{
+                	return false;
+                	}
+                	else
+                	{
+                	return true;
+                	}
+                 
+                ]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+  </Section>
+  <Section columns="2" label="Certification" name="roadGlobalCert">
+    <Field displayName="Exclude Privileged Access" helpKey="This is for Mover Certifications" name="excludePrivilegedAccess" type="string">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+				List list = new ArrayList();	
+				List displayList = new ArrayList();
+				displayList.add("TRUE");
+				displayList.add("ON");
+				list.add(displayList);
+				displayList = new ArrayList();
+				displayList.add("FALSE");
+				displayList.add("OFF");
+				list.add(displayList);
+				return list;
+				]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+               import sailpoint.rapidapponboarding.rule.ObjectConfigAttributesRuleLibrary;
+			 	boolean privAcces=false;
+				if(ObjectConfigAttributesRuleLibrary.extendedAttrPrivRoleEntEnabled(context))
+				{
+					privAcces=true;
+				}
+				if(privAcces)
+				{
+				return false;
+				}
+				else
+				{
+				return true;
+				}
+				
+			]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Include Only Privileged Access" helpKey="This is for Entitlement Owner Certifications" name="includeOnlyPrivilegedAccessEntitlementOwnerCert" type="string">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+				List list = new ArrayList();	
+				List displayList = new ArrayList();
+				displayList.add("TRUE");
+				displayList.add("ON");
+				list.add(displayList);
+				displayList = new ArrayList();
+				displayList.add("FALSE");
+				displayList.add("OFF");
+				list.add(displayList);
+				return list;
+				]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+               import sailpoint.rapidapponboarding.rule.ObjectConfigAttributesRuleLibrary;
+			 	boolean privAcces=false;
+				if(ObjectConfigAttributesRuleLibrary.extendedAttrPrivRoleEntEnabled(context))
+				{
+					privAcces=true;
+				}
+				if(privAcces)
+				{
+				return false;
+				}
+				else
+				{
+				return true;
+				}
+				
+			]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Include Only Privileged Access" helpKey="This is for Account Group Membership Certifications" name="includeOnlyPrivilegedAccessAccountGroupMemCert" type="string">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+				List list = new ArrayList();	
+				List displayList = new ArrayList();
+				displayList.add("TRUE");
+				displayList.add("ON");
+				list.add(displayList);
+				displayList = new ArrayList();
+				displayList.add("FALSE");
+				displayList.add("OFF");
+				list.add(displayList);
+				return list;
+				]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+               import sailpoint.rapidapponboarding.rule.ObjectConfigAttributesRuleLibrary;
+			 	boolean privAcces=false;
+				if(ObjectConfigAttributesRuleLibrary.extendedAttrPrivRoleEntEnabled(context))
+				{
+					privAcces=true;
+				}
+				if(privAcces)
+				{
+				return false;
+				}
+				else
+				{
+				return true;
+				}
+				
+			]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Include Only Privileged Access" helpKey="This is for Application Owner Certifications" name="includeOnlyPrivilegedAccessApplicationOwnerCert" type="string">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+				List list = new ArrayList();	
+				List displayList = new ArrayList();
+				displayList.add("TRUE");
+				displayList.add("ON");
+				list.add(displayList);
+				displayList = new ArrayList();
+				displayList.add("FALSE");
+				displayList.add("OFF");
+				list.add(displayList);
+				return list;
+				]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+               import sailpoint.rapidapponboarding.rule.ObjectConfigAttributesRuleLibrary;
+			 	boolean privAcces=false;
+				if(ObjectConfigAttributesRuleLibrary.extendedAttrPrivRoleEntEnabled(context))
+				{
+					privAcces=true;
+				}
+				if(privAcces)
+				{
+				return false;
+				}
+				else
+				{
+				return true;
+				}
+				
+			]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Include Only Privileged Access" helpKey="This is for Native Change Certifications" name="includeOnlyPrivilegedAccessNativeChangeCert" type="string">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+				List list = new ArrayList();	
+				List displayList = new ArrayList();
+				displayList.add("TRUE");
+				displayList.add("ON");
+				list.add(displayList);
+				displayList = new ArrayList();
+				displayList.add("FALSE");
+				displayList.add("OFF");
+				list.add(displayList);
+				return list;
+				]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+               import sailpoint.rapidapponboarding.rule.ObjectConfigAttributesRuleLibrary;
+			 	boolean privAcces=false;
+				if(ObjectConfigAttributesRuleLibrary.extendedAttrPrivRoleEntEnabled(context))
+				{
+					privAcces=true;
+				}
+				if(privAcces)
+				{
+				return false;
+				}
+				else
+				{
+				return true;
+				}
+				
+			]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Mover Certification Staging" name="moverFeatureStaging" type="string">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+				List list = new ArrayList();	
+				List displayList = new ArrayList();
+				displayList.add("true");
+				displayList.add("ON");
+				list.add(displayList);
+				displayList = new ArrayList();
+				displayList.add("false");
+				displayList.add("OFF");
+				list.add(displayList);
+				return list;
+				]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+	              
+	               if(acceleratorPackSectionAttributes!=null && acceleratorPackSectionAttributes.containsKey("acceleratorPackMover"))
+					 {
+					 return acceleratorPackSectionAttributes.get("acceleratorPackMover");
+					 }
+					
+				]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Native Change Certification Staging" name="nativeChangeFeatureStaging" type="string">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+				List list = new ArrayList();	
+				List displayList = new ArrayList();
+				displayList.add("true");
+				displayList.add("ON");
+				list.add(displayList);
+				displayList = new ArrayList();
+				displayList.add("false");
+				displayList.add("OFF");
+				list.add(displayList);
+				return list;
+				]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+	              
+	                import sailpoint.rapidapponboarding.rule.ROADUtil;
+					String disabledFeature=ROADUtil.roadFeatureDisabledString(context,"NATIVE CHANGE DETECTION FEATURE");
+				 	boolean enabled=true;
+					if(disabledFeature!=null && disabledFeature.length()>0 && disabledFeature.equalsIgnoreCase("TRUE"))
+					{
+						enabled=false;
+					}
+					if(enabled)
+					{
+					return false;
+					}
+					else
+					{
+					return true;
+					}
+					
+				]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Certification Assigned To" helpKey="Native Change Certifications To Security Work Group, This will override Manager as recipient of certifications" name="securityGroupName" type="Identity">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+                	
+                	import sailpoint.object.Filter;
+                	Filter filter= Filter.eq("workgroup", true );
+               	    field.setFilterString(filter.toString());
+               	    return false;
+                 
+                ]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="2" displayName="Exclude Logical Applications" helpKey="Exclude Logical Applications for Mover and Native Change Certification" multi="true" name="LogicalBusinessApps" type="string">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+              	import sailpoint.rapidapponboarding.rule.ObjectConfigAttributesRuleLibrary;
+			 	String logicalAppEnabled=ObjectConfigAttributesRuleLibrary.extendedAttrLogicalAppEnabled(context);
+				boolean logApp=false;
+				if(logicalAppEnabled!=null && logicalAppEnabled.length()>0 && logicalAppEnabled.equalsIgnoreCase("TRUE"))
+				{
+					logApp=true;
+				}
+				if(logApp)
+				{
+				return false;
+				}
+				else
+				{
+				return true;
+				}
+				
+			]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Post Mover Rule" helpKey="This rule is only applied to Mover Workflow" name="postMoverRule" type="Rule">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+	              
+	                 if(acceleratorPackSectionAttributes!=null && acceleratorPackSectionAttributes.containsKey("acceleratorPackMover"))
+					 {
+					 return acceleratorPackSectionAttributes.get("acceleratorPackMover");
+					 }
+					
+				]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Post Mitigation Rule" helpKey="This rule is only applied to Mitigation or Automated Allow Exception Workflow" name="postMitigationRule" type="Rule">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+	              
+	                if(acceleratorPackSectionAttributes!=null && acceleratorPackSectionAttributes.containsKey("acceleratorPackManagerCertAut"))
+					 {
+					 return acceleratorPackSectionAttributes.get("acceleratorPackManagerCertAut");
+					 }
+					
+				]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Post Native Change Rule" helpKey="This rule is only applied to Native Change Workflow" name="postNativeChangeRule" type="Rule">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+	              
+	                if(acceleratorPackSectionAttributes!=null && acceleratorPackSectionAttributes.containsKey("acceleratorPackNativeChange"))
+					 {
+					 return acceleratorPackSectionAttributes.get("acceleratorPackNativeChange");
+					 }
+					
+				]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+  </Section>
+  <Section columns="2" label="Policy Violation" name="roadGlobalPolicy">
+    <Field columnSpan="2" displayName="Preventive Policy Violations" name="policyScheme" postBack="true" type="string">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+				List list = new ArrayList();	
+				List displayList = new ArrayList();
+				displayList.add("interactive");
+				displayList.add("Enable");
+				list.add(displayList);
+				displayList = new ArrayList();
+				displayList.add("none");
+				displayList.add("Disable");
+				list.add(displayList);
+				return list;
+				]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+               if(acceleratorPackSectionAttributes!=null && acceleratorPackSectionAttributes.containsKey("acceleratorPackPolicyViolation"))
+				 {
+				 return acceleratorPackSectionAttributes.get("acceleratorPackPolicyViolation");
+				 }
+				
+			]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="2" displayName="Preventive Policy Violation Allow Filter" helpKey="This can be used for applications that can have a lot of policy violations for example Oracle EBS, SAP GRC. Example: name == &quot;Policy Name&quot;" name="policySoftFilter" postBack="true" type="string">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+               if(acceleratorPackSectionAttributes!=null && acceleratorPackSectionAttributes.containsKey("acceleratorPackPolicyViolation"))
+				 {
+				 return acceleratorPackSectionAttributes.get("acceleratorPackPolicyViolation");
+				 }
+				
+			]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="2" displayName="Preventive Policy Violation Deny Filter" helpKey="This can be used for applications that can have a lot of policy violations for example Oracle EBS, SAP GRC. Example: name == &quot;Policy Name&quot;" name="policyDenyFilter" postBack="true" type="string">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+               if(acceleratorPackSectionAttributes!=null && acceleratorPackSectionAttributes.containsKey("acceleratorPackPolicyViolation"))
+				 {
+				 return acceleratorPackSectionAttributes.get("acceleratorPackPolicyViolation");
+				 }
+				
+			]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="2" displayName="Default Allow Request" helpKey="This will be used in case there are no hard and soft definitions on policy violations" name="defaultAllowRequest" postBack="true" type="string">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+			List displayList = new ArrayList();
+			displayList.add("True");
+			displayList.add("False");
+			return displayList;
+			]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+               if(acceleratorPackSectionAttributes!=null && acceleratorPackSectionAttributes.containsKey("acceleratorPackPolicyViolation"))
+				 {
+				 return acceleratorPackSectionAttributes.get("acceleratorPackPolicyViolation");
+				 }
+				
+			]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="2" displayName="Default Allow Request Comments Required" helpKey="This will be used in case there are no hard and soft definitions on policy violations" name="defaultAllowRequestCommentsRequired" postBack="true" type="string">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+			List displayList = new ArrayList();
+			displayList.add("True");
+			displayList.add("False");
+			return displayList;
+			]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+              
+               if(acceleratorPackSectionAttributes!=null && acceleratorPackSectionAttributes.containsKey("acceleratorPackPolicyViolation"))
+				 {
+				 return acceleratorPackSectionAttributes.get("acceleratorPackPolicyViolation");
+				 }
+				
+			]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="2" displayName="Multiple Applications Allow Exceptions" helpKey="Multiple Applications ONLY" multi="true" name="allowExceptions" type="Policy">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+		              
+					    import sailpoint.rapidapponboarding.rule.ObjectConfigAttributesRuleLibrary;
+					    String policyCheckEnabled=ObjectConfigAttributesRuleLibrary.extendedAttrSoftPolicyEnabled(context);
+						boolean policyAccessEnabled=false;
+						if(policyCheckEnabled!=null && policyCheckEnabled.length()>0 && policyCheckEnabled.equalsIgnoreCase("TRUE"))
+						{
+							policyAccessEnabled=true;
+						}
+						if(policyAccessEnabled)
+						{
+							if(policyScheme!=void && policyScheme.equalsIgnoreCase("interactive"))
+						    {
+						     return false;
+						    }
+						    else
+						    {
+						    return true;
+						    }
+						}
+						else
+						{
+						return true;
+						}
+						
+					]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="2" displayName="Multiple Applications Deny Exceptions" helpKey="Multiple Applications ONLY" multi="true" name="denyExceptions" type="Policy">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+		              
+					 	import sailpoint.rapidapponboarding.rule.ObjectConfigAttributesRuleLibrary;
+					    String policyCheckEnabled=ObjectConfigAttributesRuleLibrary.extendedAttrHardPolicyEnabled(context);
+						boolean policyAccessEnabled=false;
+						if(policyCheckEnabled!=null && policyCheckEnabled.length()>0 && policyCheckEnabled.equalsIgnoreCase("TRUE"))
+						{
+							policyAccessEnabled=true;
+						}
+						if(policyAccessEnabled)
+						{
+							if(policyScheme!=void && policyScheme.equalsIgnoreCase("interactive"))
+						    {
+						     return false;
+						    }
+						    else
+						    {
+						    return true;
+						    }
+						}
+						else
+						{
+						return true;
+						}
+						
+					]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+  </Section>
+  <Section columns="2" label="Ticket Integration" name="roadTicketInegration">
+    <Attributes>
+      <Map>
+        <entry key="hidden">
+          <value>
+            <Script>
+              <Source><![CDATA[
+	              
+	                import sailpoint.rapidapponboarding.rule.ObjectConfigAttributesRuleLibrary;
+				 	String ticketEnabled = ObjectConfigAttributesRuleLibrary.extendedAttrTicketEnabled(context);
+		        	if(ticketEnabled!=null && ticketEnabled.length()>0 && ticketEnabled.equalsIgnoreCase("TRUE"))
+		       		{
+		       		return false;
+		       		}
+		       		else
+		       		{
+		       		return true;
+		       		}
+					
+				]]></Source>
+            </Script>
+          </value>
+        </entry>
+      </Map>
+    </Attributes>
+    <Field displayName="Global Ticket Polling Maximum Retries" name="provisioningMaxStatusChecks" type="Integer"/>
+    <Field displayName="Global Ticket Status Check Interval in Minutes" name="provisioningStatusCheckInterval" type="string"/>
+    <Field displayName="Optimistic Provisioning" name="optimisticProvisioningTicket" type="string">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+			List list = new ArrayList();	
+			List displayList = new ArrayList();
+			displayList.add("True");
+			displayList.add("ON");
+			list.add(displayList);
+			displayList = new ArrayList();
+			displayList.add("False");
+			displayList.add("OFF");
+			list.add(displayList);
+			return list;
+			]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+    </Field>
+  </Section>
+  <Section columns="2" label="Provisioning" name="roadProvisioning">
+    <Field displayName="Provisioning Maximum Retries" name="provisioningMaxRetries" type="Integer"/>
+    <Field displayName="Provisioning Retry Interval in Minutes" name="provisioningRetryThreshold" type="string"/>
+    <Field displayName="Post Wrapper Workflow Rule" helpKey="This rule is only applied to Wrapper Workflow" name="postWrapperRule" type="Rule">
+      <Attributes>
+        <Map>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Plan Wrapper Interceptor Rule" helpKey="This rule is only applied to Wrapper Workflow before plan compilation" name="interceptorPlanRule" type="Rule">
+      <Attributes>
+        <Map>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Project Wrapper Interceptor Rule" helpKey="This rule is only applied to Wrapper Workflow before provisioning" name="interceptorProjectRule" type="Rule">
+      <Attributes>
+        <Map>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="2" displayName="Target Aggregation Attributes" multi="true" name="targetAggregationAttributes" type="string">
+      <AllowedValuesDefinition>
+        <RuleRef>
+          <Reference class="sailpoint.object.Rule" name="Rule-FrameWork-IIQ-Target-Aggregation-List"/>
+        </RuleRef>
+      </AllowedValuesDefinition>
+    </Field>
+    <Field columnSpan="2" displayName="Enable Snapshots For" multi="true" name="requestSnapshot" type="string">
+      <AllowedValuesDefinition>
+        <RuleRef>
+          <Reference class="sailpoint.object.Rule" name="Rule-FrameWork-View-SmartServices-RequestTypes"/>
+        </RuleRef>
+      </AllowedValuesDefinition>
+    </Field>
+  </Section>
+  <Section columns="2" label="Password Synchronization" name="roadPasswordSync">
+    <Attributes>
+      <Map>
+        <entry key="hidden">
+          <value>
+            <Script>
+              <Source><![CDATA[
+               		 import sailpoint.rapidapponboarding.rule.ObjectConfigAttributesRuleLibrary;
+					String passwordSyncEnabled = ObjectConfigAttributesRuleLibrary.extendedAttrPasswordSyncEnabled(context);
+                   if(passwordSyncEnabled!=null && passwordSyncEnabled.length()>0 && passwordSyncEnabled.equalsIgnoreCase("TRUE"))
+		       		{
+		       			return false;
+		       		}
+		       		else
+		       		{
+		       			return true;
+		       		}
+				]]></Source>
+            </Script>
+          </value>
+        </entry>
+      </Map>
+    </Attributes>
+    <Field columnSpan="2" displayName="Exclude Verification Attributes" helpKey="Attributes that are excluded during Identity verification. Identity Verification is performed by HelpDesk during Password Change." multi="true" name="verificationAttrsExclude" type="string">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+	            import sailpoint.rapidapponboarding.rule.ROADUtil;
+	            List list = new ArrayList();
+	            try
+	            {
+					list = ROADUtil.getCubeAttributesList(context,true,true,false,false);
+				}
+				catch (Exception ex)
+				{
+				}
+				return list;
+				]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+    </Field>
+  </Section>
+  <Section columns="2" label="Attribute Synchronization" name="roadAttrSync">
+    <Attributes>
+      <Map>
+        <entry key="hidden">
+          <value>
+            <Script>
+              <Source><![CDATA[
+              
+				 if(acceleratorPackSectionAttributes!=null && acceleratorPackSectionAttributes.containsKey("acceleratorPackAttrSync"))
+				 {
+				 return acceleratorPackSectionAttributes.get("acceleratorPackAttrSync");
+				 }
+			  
+			]]></Source>
+            </Script>
+          </value>
+        </entry>
+      </Map>
+    </Attributes>
+    <Field displayName="Post Attribute Synchronization Rule" helpKey="This rule is only applied to Attribute Synchronization Workflow" name="postAttributeSyncRule" type="Rule">
+      <Attributes>
+        <Map>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Mover and Attribute Synchronization Parallel Processing" helpKey="Allow Attribute Synchronization and Mover Processing in Parllel" name="attributeSyncParallelMover">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+			List list = new ArrayList();	
+			List displayList = new ArrayList();
+			displayList.add("TRUE");
+			displayList.add("ON");
+			list.add(displayList);
+			displayList = new ArrayList();
+			displayList.add("FALSE");
+			displayList.add("OFF");
+			list.add(displayList);
+			return list;
+			]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+    </Field>
+    <Field displayName="Rehire and Attribute Synchronization Parallel Processing" helpKey="Allow Attribute Synchronization and Rehire Processing in Parllel" name="attributeSyncParallelRehire">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+			List list = new ArrayList();	
+			List displayList = new ArrayList();
+			displayList.add("TRUE");
+			displayList.add("ON");
+			list.add(displayList);
+			displayList = new ArrayList();
+			displayList.add("FALSE");
+			displayList.add("OFF");
+			list.add(displayList);
+			return list;
+			]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+    </Field>
+  </Section>
+  <Section columns="2" label="Joiner" name="roadRehire">
+    <Field displayName="Rehire Before Plan Rule" helpKey="This rule is only applied to Rehire Workflow" name="rehireBeforePlanRule" type="Rule">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+	              
+	                if(acceleratorPackSectionAttributes!=null && acceleratorPackSectionAttributes.containsKey("acceleratorPackJoinerRehire"))
+					 {
+					 return acceleratorPackSectionAttributes.get("acceleratorPackJoinerRehire");
+					 }
+					
+				]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Post Joiner Rule" helpKey="This rule is only applied to Joiner Workflow" name="postJoinerRule" type="Rule">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+	              
+	                if(acceleratorPackSectionAttributes!=null && acceleratorPackSectionAttributes.containsKey("acceleratorPackJoiner"))
+					 {
+					 return acceleratorPackSectionAttributes.get("acceleratorPackJoiner");
+					 }
+					
+				]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Post Rehire Rule" helpKey="This rule is only applied to Joiner Rehire Workflow" name="postRehireRule" type="Rule">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+	              
+	                 if(acceleratorPackSectionAttributes!=null && acceleratorPackSectionAttributes.containsKey("acceleratorPackJoinerRehire"))
+					 {
+					 return acceleratorPackSectionAttributes.get("acceleratorPackJoinerRehire");
+					 }
+					
+				]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Post Return To Work LOA Rule" helpKey="This rule is only applied to Return To Work Leave of Absence Workflow" name="postRTWLOARule" type="Rule">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+	              
+	                 if(acceleratorPackSectionAttributes!=null && acceleratorPackSectionAttributes.containsKey("acceleratorPackJoinerLoa"))
+					 {
+					 return acceleratorPackSectionAttributes.get("acceleratorPackJoinerLoa");
+					 }
+					
+				]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Post Return To Work LTD Rule" helpKey="This rule is only applied to Return To Work Long Term Disability Workflow" name="postRTWLTDRule" type="Rule">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+	              
+	                 if(acceleratorPackSectionAttributes!=null && acceleratorPackSectionAttributes.containsKey("acceleratorPackJoinerLtd"))
+					 {
+					 return acceleratorPackSectionAttributes.get("acceleratorPackJoinerLtd");
+					 }
+					
+				]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Post Reverse Leaver Rule" helpKey="This rule is only applied to Reverse Leaver Workflow" name="postReverseLeaverRule" type="Rule">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+	              
+	               if(acceleratorPackSectionAttributes!=null && acceleratorPackSectionAttributes.containsKey("acceleratorPackReverseLeaver"))
+					 {
+					 return acceleratorPackSectionAttributes.get("acceleratorPackReverseLeaver");
+					 }
+					
+				]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="2" displayName="Joiner and Rehire Email" helpKey="This email template is used for Joiner and Rehire To Manager or Workgroup" name="JoinerManager" type="EmailTemplate">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+	              
+	                if(acceleratorPackSectionAttributes!=null && acceleratorPackSectionAttributes.containsKey("acceleratorPackJoiner"))
+					 {
+					 return acceleratorPackSectionAttributes.get("acceleratorPackJoiner");
+					 }
+					
+				]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="2" displayName="Password Joiner and Rehire Email" helpKey="This email template is used for Password Joiner and Rehire To Manager or Workgroup" name="PasswordJoinerManager" type="EmailTemplate">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+	              
+	                if(acceleratorPackSectionAttributes!=null && acceleratorPackSectionAttributes.containsKey("acceleratorPackJoiner"))
+					 {
+					 return acceleratorPackSectionAttributes.get("acceleratorPackJoiner");
+					 }
+					
+				]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="2" displayName="Reverse Leaver Email" helpKey="This email template is used for Reverse Leaver To Manager or Workgroup" name="ReverseLeaver" type="EmailTemplate">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+	              
+	                if(acceleratorPackSectionAttributes!=null && acceleratorPackSectionAttributes.containsKey("acceleratorPackReverseLeaver"))
+					 {
+					 return acceleratorPackSectionAttributes.get("acceleratorPackReverseLeaver");
+					 }
+					
+				]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+  </Section>
+  <Section columns="2" label="Leaver" name="roadLeaver">
+    <Attributes>
+      <Map>
+        <entry key="hidden">
+          <value>
+            <Script>
+              <Source><![CDATA[
+              
+				 if(acceleratorPackSectionAttributes!=null && acceleratorPackSectionAttributes.containsKey("acceleratorPackLeaver"))
+				 {
+				 return acceleratorPackSectionAttributes.get("acceleratorPackLeaver");
+				 }
+			  
+			]]></Source>
+            </Script>
+          </value>
+        </entry>
+      </Map>
+    </Attributes>
+    <Field displayName="Artifacts Reassignment" helpKey="On Termination, Reassign Artifacts Ownership" name="removeIIQArtifactsOwnership" postBack="true" type="string">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+			List list = new ArrayList();	
+			List displayList = new ArrayList();
+			displayList.add("TRUE");
+			displayList.add("ON");
+			list.add(displayList);
+			displayList = new ArrayList();
+			displayList.add("FALSE");
+			displayList.add("OFF");
+			list.add(displayList);
+			return list;
+			]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+    </Field>
+    <Field columnSpan="2" displayName="Artifacts Ownership" multi="true" name="sailpointArtifacts" type="string">
+      <AllowedValuesDefinition>
+        <RuleRef>
+          <Reference class="sailpoint.object.Rule" name="Rule-FrameWork-IIQ-Artifacts-List"/>
+        </RuleRef>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+                	
+                	if(removeIIQArtifactsOwnership!=null && removeIIQArtifactsOwnership.equalsIgnoreCase("TRUE"))
+                	{
+                	return false;
+                	}
+                	else
+                	{
+                	return true;
+                	}
+                 
+                ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Artifacts Reassign To Manager" helpKey="On Termination, Reassign Artifacts To Owner's Manager" name="reassignOwnershipToManager" postBack="true" type="string">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+			List list = new ArrayList();	
+			List displayList = new ArrayList();
+			displayList.add("TRUE");
+			displayList.add("ON");
+			list.add(displayList);
+			displayList = new ArrayList();
+			displayList.add("FALSE");
+			displayList.add("OFF");
+			list.add(displayList);
+			return list;
+			]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+                	
+                	if(removeIIQArtifactsOwnership!=null && removeIIQArtifactsOwnership.equalsIgnoreCase("TRUE"))
+                	{
+                	return false;
+                	}
+                	else
+                	{
+                	return true;
+                	}
+                 
+                ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Artifacts Reassignmnet Rule" dynamic="true" helpKey="On Termination, Reassign Artifacts Ownership Rule" name="reassignmentRule" type="Rule">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+                	
+                	//Remove Artifacts , But No Reassignmnet to Manager
+                	if(removeIIQArtifactsOwnership!=null && removeIIQArtifactsOwnership.equalsIgnoreCase("TRUE")
+                	&& reassignOwnershipToManager!=null && reassignOwnershipToManager.equalsIgnoreCase("FALSE"))
+                	{
+                	return false;
+                	}
+                	else
+                	{
+                	return true;
+                	}
+                 
+                ]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Business Approvers Ownership Reassignment" helpKey="On Termination, Reassign Business Approvers Ownership" name="businessApproversremoveOwnership" postBack="true" type="string">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+			List list = new ArrayList();	
+			List displayList = new ArrayList();
+			displayList.add("TRUE");
+			displayList.add("ON");
+			list.add(displayList);
+			displayList = new ArrayList();
+			displayList.add("FALSE");
+			displayList.add("OFF");
+			list.add(displayList);
+			return list;
+			]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+    </Field>
+    <Field columnSpan="2" displayName="Business Approvers List" multi="true" name="sailpointBusinessApproversArtifacts" type="string">
+      <AllowedValuesDefinition>
+        <RuleRef>
+          <Reference class="sailpoint.object.Rule" name="Rule-FrameWork-IIQ-Business-Approvers-Artifacts-List"/>
+        </RuleRef>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+                	
+                	if(businessApproversremoveOwnership!=null && businessApproversremoveOwnership.equalsIgnoreCase("TRUE"))
+                	{
+                	return false;
+                	}
+                	else
+                	{
+                	return true;
+                	}
+                 
+                ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Business Approvers Reassign To Manager" helpKey="On Termination, Reassign Business Approvers Ownership To Owner's Manager" name="businessApproversToManager" postBack="true" type="string">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+			List list = new ArrayList();	
+			List displayList = new ArrayList();
+			displayList.add("TRUE");
+			displayList.add("ON");
+			list.add(displayList);
+			displayList = new ArrayList();
+			displayList.add("FALSE");
+			displayList.add("OFF");
+			list.add(displayList);
+			return list;
+			]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+                	
+                	if(businessApproversremoveOwnership!=null && businessApproversremoveOwnership.equalsIgnoreCase("TRUE"))
+                	{
+                	return false;
+                	}
+                	else
+                	{
+                	return true;
+                	}
+                 
+                ]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Business Approvers Reassignmnet Rule" dynamic="true" helpKey="On Termination, Reassign Business Approvers Ownership Reassignment Rule" name="businessApproversreassignmentRule" type="Rule">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+                	
+                	//Remove Artifacts , But No Reassignmnet to Manager
+                	if(businessApproversremoveOwnership!=null && businessApproversremoveOwnership.equalsIgnoreCase("TRUE")
+                	&& businessApproversToManager!=null && businessApproversToManager.equalsIgnoreCase("FALSE"))
+                	{
+                	return false;
+                	}
+                	else
+                	{
+                	return true;
+                	}
+                 
+                ]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="2" displayName="Termination Reassignment Email" helpKey="This email template is used for Termination Reassignments" name="LeaverManagerOwnershipRemoval" type="EmailTemplate">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+	              
+	                if(acceleratorPackSectionAttributes!=null && acceleratorPackSectionAttributes.containsKey("acceleratorPackLeaver"))
+					 {
+					 return acceleratorPackSectionAttributes.get("acceleratorPackLeaver");
+					 }
+					
+				]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Post Leaver Rule" helpKey="This rule is only applied to Leaver Workflow" name="postLeaverRule" type="Rule">
+      <Attributes>
+        <Map>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Post LOA Rule" helpKey="This rule is only applied to Leave of Absence Workflow" name="postLOARule" type="Rule">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+	              
+	                if(acceleratorPackSectionAttributes!=null && acceleratorPackSectionAttributes.containsKey("acceleratorPackLeaverLoa"))
+					 {
+					 return acceleratorPackSectionAttributes.get("acceleratorPackLeaverLoa");
+					 }
+					
+				]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Post LTD Rule" helpKey="This rule is only applied to Long Term Disability Workflow" name="postLTDRule" type="Rule">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+	              
+	                 if(acceleratorPackSectionAttributes!=null && acceleratorPackSectionAttributes.containsKey("acceleratorPackLeaverLtd"))
+					 {
+					 return acceleratorPackSectionAttributes.get("acceleratorPackLeaverLtd");
+					 }
+					
+				]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="2" displayName="Leaver Email" helpKey="This email template is used for Leaver Email To Manager or Workgroup" name="LeaverManager" type="EmailTemplate">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+	              
+	                if(acceleratorPackSectionAttributes!=null && acceleratorPackSectionAttributes.containsKey("acceleratorPackLeaver"))
+					 {
+					 return acceleratorPackSectionAttributes.get("acceleratorPackLeaver");
+					 }
+					
+				]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+  </Section>
+  <Section columns="2" label="Persona" name="roadPersona">
+    <Attributes>
+      <Map>
+        <entry key="hidden">
+          <value>
+            <Script>
+              <Source><![CDATA[
+                 if(acceleratorPackSectionAttributes!=null && acceleratorPackSectionAttributes.containsKey("acceleratorPackPersona"))
+				 {
+				 return acceleratorPackSectionAttributes.get("acceleratorPackPersona");
+				 }
+				]]></Source>
+            </Script>
+          </value>
+        </entry>
+      </Map>
+    </Attributes>
+    <Field columnSpan="2" displayName="Ignore Relationship Drop For Mover Certification or Leaver (For All Persona Drops)" helpKey="This is compared against relationships attribute on an Identity Cube using STARTS WITH operation. Relationship added here must be in the format Relationship [INACTIVE], where Relationship is the name of the relationship from authoritative sources." multi="true" name="moverRelationshipsDropIgnore" type="string">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+            import sailpoint.rapidapponboarding.rule.ROADUtil;
+			String personaEnabled="False";
+			if(acceleratorPackSectionAttributes!=null && acceleratorPackSectionAttributes.containsKey("acceleratorPackPersona"))
+		    {
+		      if( acceleratorPackSectionAttributes.get("acceleratorPackPersona") !=null && acceleratorPackSectionAttributes.get("acceleratorPackPersona").equalsIgnoreCase("False"))
+		      {
+				personaEnabled="True";
+			   }
+			}
+			return ROADUtil.getUniqueRelationships(context,personaEnabled);
+			]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+    </Field>
+    <Field displayName="Enable Persona Triggers" helpKey="Enable Persona Trigger for Joiner, Mover, Leaver, and Reverse Leaver Lifecycle Events" name="enabledPersona" type="string">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+				List list = new ArrayList();	
+				List displayList = new ArrayList();
+				displayList.add("TRUE");
+				displayList.add("ON");
+				list.add(displayList);
+				displayList = new ArrayList();
+				displayList.add("FALSE");
+				displayList.add("OFF");
+				list.add(displayList);
+				return list;
+				]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+    </Field>
+  </Section>
+  <Section columns="2" label="Epic" name="roadEpic">
+    <Attributes>
+      <Map>
+        <entry key="hidden">
+          <value>
+            <Script>
+              <Source><![CDATA[
+                	 if(acceleratorPackSectionAttributes!=null && acceleratorPackSectionAttributes.containsKey("acceleratorPackEpicSER"))
+					 {
+					 return acceleratorPackSectionAttributes.get("acceleratorPackEpicSER");
+					 }
+				]]></Source>
+            </Script>
+          </value>
+        </entry>
+      </Map>
+    </Attributes>
+    <Field displayName="Epic Application Name" helpKey="Please Select Epic Application Name." name="epicAppName" postBack="true" type="Application">
+      <Attributes>
+        <Map>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="EMP ID Attribute Name" helpKey="This attribute provides EMP ID on Epic Application" name="epicIdAttr" type="string">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+              	import sailpoint.rapidapponboarding.rule.ROADUtil;
+				return ROADUtil.getApplicationSchemaAttributes(context,epicAppName);
+				]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+                if(epicAppName!=void && epicAppName!=null)
+                {
+					return false;
+				}
+				else
+				{
+					return true;
+				}
+				]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="SER Record Application Name" helpKey="Please Select SER Application Name." name="serAppName" postBack="true" type="Application">
+      <Attributes>
+        <Map>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="SER ID Attribute Name" helpKey="This attribute provides SER ID that is Linked to EMP on Epic" name="serIdAttr" type="string">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+				import sailpoint.rapidapponboarding.rule.ROADUtil;
+			return ROADUtil.getApplicationSchemaAttributes(context,serAppName);
+				]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+                if(serAppName!=void && serAppName!=null)
+                {
+					return false;
+				}
+				else
+				{
+					return true;
+				}
+				]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+  </Section>
+  <Section columns="2" label="Self Service Onboarding Wizard" name="roadSelfServiceWizard">
+    <Attributes>
+      <Map>
+        <entry key="hidden">
+          <value>
+            <Script>
+              <Source><![CDATA[
+                import sailpoint.rapidapponboarding.rule.ROADUtil;
+                String selfServiceFeature=ROADUtil.isFormEnabled(context,"ROAD-Self-Service");
+				if(selfServiceFeature!=null && selfServiceFeature.length()>0 )
+				{
+					return false;
+				}
+				else
+				{
+					return true;
+				}
+				]]></Source>
+            </Script>
+          </value>
+        </entry>
+      </Map>
+    </Attributes>
+    <Field displayName="Joiner" helpKey="Joiner,Rehire,Return To Work Leave of Absence,Return To Work Long Term Disablity,Reverse Leaver" name="roadJoiner">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+			List list = new ArrayList();	
+			List displayList = new ArrayList();
+			displayList.add("true");
+			displayList.add("Hide Form");
+			list.add(displayList);
+			displayList = new ArrayList();
+			displayList.add("false");
+			displayList.add("Show Form");
+			list.add(displayList);
+			return list;
+			]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+    </Field>
+    <Field displayName="Leaver" helpKey="Leaver,Long Term Disablity,Leave of Absence" name="roadLeaver">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+			List list = new ArrayList();	
+			List displayList = new ArrayList();
+			displayList.add("true");
+			displayList.add("Hide Form");
+			list.add(displayList);
+			displayList = new ArrayList();
+			displayList.add("false");
+			displayList.add("Show Form");
+			list.add(displayList);
+			return list;
+			]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+    </Field>
+    <Field displayName="Mover" helpKey="Mover, Automated Mitigation" name="roadMover">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+			List list = new ArrayList();	
+			List displayList = new ArrayList();
+			displayList.add("true");
+			displayList.add("Hide Form");
+			list.add(displayList);
+			displayList = new ArrayList();
+			displayList.add("false");
+			displayList.add("Show Form");
+			list.add(displayList);
+			return list;
+			]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+    </Field>
+    <Field displayName="Native Change" name="roadNativeChange">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+			List list = new ArrayList();	
+			List displayList = new ArrayList();
+			displayList.add("true");
+			displayList.add("Hide Form");
+			list.add(displayList);
+			displayList = new ArrayList();
+			displayList.add("false");
+			displayList.add("Show Form");
+			list.add(displayList);
+			return list;
+			]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+    </Field>
+    <Field displayName="Attribute Synchronization" name="roadAttrSync">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+			List list = new ArrayList();	
+			List displayList = new ArrayList();
+			displayList.add("true");
+			displayList.add("Hide Form");
+			list.add(displayList);
+			displayList = new ArrayList();
+			displayList.add("false");
+			displayList.add("Show Form");
+			list.add(displayList);
+			return list;
+			]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+    </Field>
+    <Field displayName="Approval Access and Accounts" name="roadCartRequest">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+			List list = new ArrayList();	
+			List displayList = new ArrayList();
+			displayList.add("true");
+			displayList.add("Hide Form");
+			list.add(displayList);
+			displayList = new ArrayList();
+			displayList.add("false");
+			displayList.add("Show Form");
+			list.add(displayList);
+			return list;
+			]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+    </Field>
+    <Field displayName="Aggregation" name="roadAggregation">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+			List list = new ArrayList();	
+			List displayList = new ArrayList();
+			displayList.add("true");
+			displayList.add("Hide Form");
+			list.add(displayList);
+			displayList = new ArrayList();
+			displayList.add("false");
+			displayList.add("Show Form");
+			list.add(displayList);
+			return list;
+			]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+    </Field>
+    <Field displayName="Privileged Account" name="roadPSA">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+			List list = new ArrayList();	
+			List displayList = new ArrayList();
+			displayList.add("true");
+			displayList.add("Hide Form");
+			list.add(displayList);
+			displayList = new ArrayList();
+			displayList.add("false");
+			displayList.add("Show Form");
+			list.add(displayList);
+			return list;
+			]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+    </Field>
+    <Field displayName="Password Synchronization" name="roadPassword">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+			List list = new ArrayList();	
+			List displayList = new ArrayList();
+			displayList.add("true");
+			displayList.add("Hide Form");
+			list.add(displayList);
+			displayList = new ArrayList();
+			displayList.add("false");
+			displayList.add("Show Form");
+			list.add(displayList);
+			return list;
+			]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+    </Field>
+    <Field displayName="Policy Violation" name="roadPolicyViolation">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+			List list = new ArrayList();	
+			List displayList = new ArrayList();
+			displayList.add("true");
+			displayList.add("Hide Form");
+			list.add(displayList);
+			displayList = new ArrayList();
+			displayList.add("false");
+			displayList.add("Show Form");
+			list.add(displayList);
+			return list;
+			]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+    </Field>
+    <Field displayName="New Account Entitlement Dependency" name="roadSSO">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+			List list = new ArrayList();	
+			List displayList = new ArrayList();
+			displayList.add("true");
+			displayList.add("Hide Form");
+			list.add(displayList);
+			displayList = new ArrayList();
+			displayList.add("false");
+			displayList.add("Show Form");
+			list.add(displayList);
+			return list;
+			]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+    </Field>
+    <Field displayName="Ticket Integration" name="roadTicketintegration">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+			List list = new ArrayList();	
+			List displayList = new ArrayList();
+			displayList.add("true");
+			displayList.add("Hide Form");
+			list.add(displayList);
+			displayList = new ArrayList();
+			displayList.add("false");
+			displayList.add("Show Form");
+			list.add(displayList);
+			return list;
+			]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+    </Field>
+    <Field displayName="Provisioning" name="roadProvisioning">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+		List list = new ArrayList();	
+			List displayList = new ArrayList();
+			displayList.add("true");
+			displayList.add("Hide Form");
+			list.add(displayList);
+			displayList = new ArrayList();
+			displayList.add("false");
+			displayList.add("Show Form");
+			list.add(displayList);
+			return list;
+			]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+    </Field>
+    <Field displayName="Confirmation Form" name="roadConfirmation">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+			List list = new ArrayList();	
+			List displayList = new ArrayList();
+			displayList.add("true");
+			displayList.add("Hide Form");
+			list.add(displayList);
+			displayList = new ArrayList();
+			displayList.add("false");
+			displayList.add("Show Form");
+			list.add(displayList);
+			return list;
+			]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+    </Field>
+    <Field displayName="Onboarding Form" helpKey="Read Only Mode can be used for Production Environment" name="roadReadOnly">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+			List list = new ArrayList();	
+			List displayList = new ArrayList();
+			displayList.add("true");
+			displayList.add("Read Only");
+			list.add(displayList);
+			displayList = new ArrayList();
+			displayList.add("false");
+			displayList.add("Read and Modify");
+			list.add(displayList);
+			return list;
+			]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+    </Field>
+    <Field columnSpan="2" displayName="Exclude Connectors from Aggregation Disable Definition" helpKey="Connector supports disable operation,no need to define disable attribute" multi="true" name="roadSupportedAggregationDisableConnectors"/>
+    <Field columnSpan="2" displayName="Exclude Connectors from Aggregation Lock Definition" helpKey="Connector supports lock operation,no need to define lock attribute" multi="true" name="roadSupportedAggregationLockConnectors"/>
+    <Field columnSpan="2" displayName="Include Connectors for Provisioning Lock Definition" helpKey="Connector supports lock operation, need to define lock attribute" multi="true" name="roadDefineProvisioningLockConnectors"/>
+    <Field columnSpan="2" displayName="Include Connectors for Provisioning Unlock Definition" helpKey="Connector supports Unlock operation, need to define unlock attribute" multi="true" name="roadDefineProvisioningUnLockConnectors"/>
+    <Field columnSpan="2" displayName="Include Connectors for Provisioning Enable Definition" helpKey="Connector supports enable operation, need to define enable attribute" multi="true" name="roadDefineProvisioningEnableConnectors"/>
+    <Field columnSpan="2" displayName="Include Connectors for Provisioning Disable Definition" helpKey="Connector supports disable operation, need to define disable attribute" multi="true" name="roadDefineProvisioningDisableConnectors"/>
+    <Field columnSpan="2" displayName="Include Connectors for Provisioning Password Definition" helpKey="Connector supports password operation, need to define password attribute" multi="true" name="roadDefineProvisioningPasswordConnectors"/>
+  </Section>
+  <Button action="cancel" label="Cancel"/>
+  <Button action="next" label="Confirm"/>
+</Form>
