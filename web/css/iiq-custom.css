@@ -1,0 +1,147 @@
+/*Controls the styling for (older) ExtJS pages in the desktop UI */
+
+/*
+primary = #009900 -> main/base (green where navy blue is used in default scheme)
+primary 2 shades darker = #008000 -> used for highlights/hover
+secondary = #ffa500 (orange where light blue is used in default scheme)
+secondary 2 shades darker = #e59400 -> highlight/hover
+
+gray = #808080 -> accents
+white = #fff -> accents
+*/
+
+/****************************************************************
+   Main Pages Background - not likely to set now that background
+   is neutral colored - recommend to leave as default
+****************************************************************/
+/*
+body, body.x-border-layout-ct,  .borderCell 
+     { background: #808080; }
+*/
+
+/****************************************************************
+    Page Titles,Subtitles
+****************************************************************/
+#bodyDivTitle h1, .bodyDivTitle h1, #bodyDivTitle 
+     { color: #ffa500 }
+
+/* headers within pages 
+   (e.g. On Application Definition: Account Correlation, Activity Data Source, etc.)*/	 
+.spContentTitle, .sectionHeader, .subSectionHeader 
+     { color: #ffa500;}
+
+/*
+  Object Type headers (e.g. panel heading for "object type: account").
+  color for background is gray - keep that in mind when setting text color.
+  recommend leaving header background for these panels as default.
+*/
+.x-panel-header-text {
+  color: #ffa500 !important;
+}
+
+/* Tables with blue banner header like in My Work -> Access Requests details */
+/*  This shows example of overriding with a gradient background image 
+    like used in core product but with a different color scheme.  
+    Or could specify a solid color with just the first two tags here. */
+.spBlueTable th {  
+     background-image: none;
+     background-color: #ffa500;
+     background-image: -webkit-gradient(linear, 50% 0%, 50% 100%, color-stop(0%, #e59400), color-stop(100%, #ffa500));
+     background-image: -webkit-linear-gradient(top, #e59400, #ffa500);
+     background-image: -moz-linear-gradient(top, #e59400, #ffa500);
+     background-image: -o-linear-gradient(top, #e59400, #ffa500);
+     background-image: linear-gradient(top, #e59400, #ffa500);
+} 
+
+/* Text in some Dashboard Widgets */
+.progressText {
+  color: #ffa500;
+}
+
+/********************************************************************
+  Links and text which looks and behaves like links 
+   (such as identity names in application Accounts list and
+    page index in Reports configuration UI) 
+********************************************************************/
+a, a:link, a:visited, a:active { color: #ffa500; }
+a:hover, a:focus {color:#e59400}
+.fakeLink, .unboldFakeLink, .smallFakeLink, .fakeLink .x-grid-cell-inner 
+     { color: #ffa500; }
+
+/* Cert Wizard step names */
+li.wizardStep:hover 
+      { color: #e59400  }
+
+/*********************************************
+    Menus and sub-menus
+**********************************************/
+/* New Certification, New Policy, etc. menus */
+.menuBtnClass {background-color: #ffa500; background-image:none; border-color: #ffa500}
+.x-menu-list-item a:hover, .x-menu-list-item a:active{
+  background-color: #ffa500 !important;
+}
+
+
+.main-submenu .x-menu-item-active, .main-submenu .x-menu-item-active a {background-color: #ffa500 !important}
+
+/* Menu tabs within Task, Cert, etc. pages */
+.x-tab-active button {
+  color: #ffa500 !important ;
+}
+/* Application Definition tabs/submenus */
+div.appPageExtTabs .x-tab-active {background-color: #ffa500 !important; background-image: none !important}
+
+/*********************************
+    Buttons
+*********************************/
+/* Primary Buttons (colored buttons with white text) */
+/* must use !important on many of these to override border, 
+   background-color, background-image because original file  
+   uses !important as well */
+div.primaryBtn, input.primaryBtn , .primaryBtn 
+      { background-image: none !important;
+	 background-color: #ffa500 !important;
+	 border-color: #ffa500 !important;}
+
+div.primaryBtn:hover, input.primaryBtn:hover, .primaryBtn:hover, 
+div.primaryBtn:focus, input.primaryBtn:focus, .primaryBtn:focus
+      { background-image: none !important;
+     background-color: #e59400 !important;
+	 border-color: #ffa500 !important;}
+
+.primaryBtn .x-btn-center .x-btn-inner 
+      { color: #ffffff !important; }
+
+.x-btn-default-small {background-color:#ffa500; border-color: #ffa500; background-image:none}
+.x-btn-default-small:hover {background-color:#e59400; border-color: #ffa500; background-image:none}
+
+.x-btn.x-btn-identityEntitlementTogglePressed .x-btn-center .x-btn-inner,
+.x-btn.x-btn-identityEntitlementTogglePressed { background-color: #ffa500 !important}
+
+/* Secondary Buttons (gray/white with colored text) */
+div.secondaryBtn, input.secondaryBtn, button.secondaryBtn,  
+div.secondaryBtn:hover, input.secondaryBtn:hover, button.secondaryBtn:hover
+      { color: #ffa500;} 
+.secondaryBtn .x-btn-inner { color: #ffa500 !important;} 
+
+/* default toolbar buttons, e.g. Advanced Search buttons */
+.x-btn-default-toolbar-small-noicon, .x-btn-default-toolbar-medium-noicon, 
+.x-btn-default-toolbar-small-noicon .x-btn-center .x-btn-inner,
+.x-btn-default-toolbar-medium-noicon .x-btn-center .x-btn-inner 
+     { color: #ffa500; }
+
+/* default toolbar button style: hover  */
+.x-btn-default-toolbar-small-noicon.x-btn-default-toolbar-small-over,
+.x-btn-default-toolbar-medium-noicon.x-btn-default-toolbar-medium-over 
+     { color: #e59400; }
+
+
+/* Disabled buttons (the overrides above turn disabled buttons 
+   into white text on light gray buttons so this change makes 
+   disabled button text easier to see)*/
+.x-btn-disabled .x-btn-center .x-btn-inner,
+.x-btn-default-toolbar-small-disabled .x-btn-inner {
+  color: gray !important;
+}
+
+

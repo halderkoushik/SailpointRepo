@@ -1,0 +1,379 @@
+/*Controls the styling for Angular pages in the desktop and mobile UI */
+
+/*
+primary = #009900 -> main/base (green where navy blue is used in default scheme)
+primary 2 shades darker = #008000 -> used for highlights/hover
+secondary = #ffa500 (orange where light blue is used in default scheme)
+secondary 2 shades darker = #e59400 -> highlight/hover
+
+gray = #808080 -> accents
+white = #fff -> accents
+*/
+
+/**********************************************************
+   Common UI Components
+**********************************************************/
+/* Primary Buttons (white text on colored background) */	
+.btn-primary { background-color: #009900; border-color: #009900;}
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active {
+  background-color: #008000; border-color: #009900;}
+
+/* Loading Data message - this is seen in panels on refresh (as an example) */
+.alert-info {
+  color: #ffa500;
+}
+
+/* Focused or hovered links */
+a:hover, a:focus {
+  color: #e59400;
+}
+
+ /* Disabled primary button */
+.btn-info.disabled, .btn-info[disabled] {background-color: #ffa500}
+
+
+/**********************************************************
+   Login Page (mobile and desktop)
+**********************************************************/	
+
+/* Header bar around and line under logo on login page; not usually modified */
+.header
+{ 
+  min-height: 50px;
+  /*  background-color: #009900; 
+  border-bottom-color: #009900 */ 
+}  
+.header .nav-brand img {max-height: 40px}
+
+/* Center box on login page */
+.login-welcome {color: #ffa500 } 
+
+.form-control:focus {border-color: #ffa500;}
+
+#loginForm\:loginButton {background-color: #333333; border-color: #ffa500}
+#loginForm\:loginButton.btn-info:hover, 
+#loginForm\:loginButton.btn-info:focus {
+  background-color: #f8d21c ;
+}
+
+/* All optional links on Login page (Forgot password, Unlock Account, New User Registration) */
+#loginForm a.text-info {color:#ffa500 }
+#loginForm a.text-info:hover, 
+#loginForm a.text-info:focus {color:#e59400 }
+
+.fa-blue {color: #ffa500}
+
+/* Use if login page center logo is a square image */
+.img-circle {border-radius: 0%;}
+
+/**********************************************************
+ Desktop Only Angular Pages 
+**********************************************************/
+
+/* size the topbar logo images */
+.topbar img {
+  max-width: 100px !important;
+}
+
+/* Main Menu header bar in Desktop body pages */
+/*.bg-primary { background-color: #009900  } */
+.bg-primary { background-color: #333333  } 
+
+/* Desktop Main Menu Bar options and sub-options when selected/open */
+/*.bg-primary .nav .open > a {background-color: #008000}*/
+.bg-primary .nav .open > a {background-color: #333333}
+.dropdown-menu .menuitem:hover {background-color:#009900 }
+/*.nav > .dropdown > .dropdown-toggle:focus:not(:hover) {background-color: #008000; color:#ffffff}*/
+.nav > .dropdown > .dropdown-toggle:focus:not(:hover) {background-color: #333333; color:#ffffff}
+/*.bg-primary .nav li > ul.dropdown-menu > li > a {color: #009900}*/
+.bg-primary .nav li > ul.dropdown-menu > li > a {color: #333333}
+/*.bg-primary .nav li > a:focus, .bg-primary .nav li > a:hover {background-color: #008000 ; color:#ffffff }*/
+.bg-primary .nav li > a:focus, .bg-primary .nav li > a:hover {background-color: #333333 ; color:yellow}
+.bg-primary-inverse .nav li > a {color: silver;}
+
+
+/* Quicklink Panel List Button in Desktop main menu bar*/
+#quicklinkButton:hover:not(.collapsed), 
+#quicklinkButton:focus:not(.collapsed),
+/*#quicklinkButton:not(.collapsed) {background-color: #008000}*/
+#quicklinkButton:not(.collapsed) {background-color: #f8d21c}
+
+/* Quicklink Panel */
+.bg-primary.lt,
+#quicklinkPanel .panel-group .panel .panel-heading,
+/*#quicklinkPanel .panel-group .panel .panel-body {background-color: #009900}*/
+#quicklinkPanel .panel-group .panel .panel-body {background-color: #333333}
+#quicklinkPanel .panel-group .panel .panel-body a:focus, 
+/*#quicklinkPanel .panel-group .panel .panel-body a:hover {background-color: #008000}*/
+#quicklinkPanel .panel-group .panel .panel-body a:hover {background-color: #333333 ; color:yellow}
+
+/* Desktop Home Page */
+/*.card-title, .card-arrow-icon {color: #ffa500}*/
+.card-title, .card-arrow-icon {color: #333333}
+
+.quicklink-card-link .panel:hover ,
+.quicklink-card-link .panel:focus,
+.quicklink-card-link:hover .panel,
+.home-edit-card-link:hover .panel,
+.quicklink-card-link:focus .panel,
+.home-edit-card-link:focus .panel,
+.quicklink-card-link a:hover .panel,
+.home-edit-card-link a:hover .panel,
+.quicklink-card-link a:focus .panel,
+.home-edit-card-link a:focus .panel 
+{
+  border-color: #f8d21c;
+  background: #f8d21c;
+  color: #f8d21c ;
+}
+
+/* Drop-down menu on violation work items Widget header */
+.text-info {color: #ffa500 }
+.btn-link:hover,
+.btn-link:focus {
+  color: #ffa500 ;
+  text-decoration: underline;
+  background-color: transparent ;
+}
+.dropdown > .dropdown-toggle:focus:not(:hover) { background-color: #f9fafc}
+.dropdown-menu > li > a:hover, .dropdown-menu > li > a:focus { background-color: #ffa500}
+
+/*Widget list hovers*/
+a.list-group-item.ng-scope:hover, a.list-group-item.ng-scope:focus 
+ {background-color:#ffa500 !important }
+
+/* Edit Home page */
+.home-edit-card .panel-heading {color:#ffa500}
+.home-edit-card-link a .card-title {color:#ffa500}
+
+
+/* NOTE: btn-info could affect a wide array of buttons, but is the only tag available for 
+   controlling the Save button on the Edit Home page */
+/*.btn-info, .btn-info.active,.btn-info:active
+     { background-color: #ffa500; border: #ffa500;} */
+
+.btn-info, .btn-info.active,.btn-info:active
+     { background-color: #f8d21c; border: #f8d21c;}
+
+.btn-info:hover,.btn-info:focus {
+  background-color: #e59400;
+}
+
+/*Add Card checkboxes */
+sp-checkbox button.checkbox-btn:hover,
+sp-checkbox button.checkbox-btn + label:hover,
+sp-checkbox button.checkbox-btn:active,
+sp-checkbox button.checkbox-btn + label:active
+ {color:#333333 !important}
+
+/******************************************
+  Access Request Pages (mobile and desktop)
+******************************************/
+/* Access Request Progress Bar (Select Users, Manage Access, Review) */
+
+.btn-group-progress > .btn-table-cell > button {color:#ffa500}
+.btn-group-progress > .btn-table-cell > button.progress-active, .btn-group-progress > .btn-table-cell > button:hover {!important;background-color: #ffa500; color: #ffffff; }
+.btn-group-progress > .btn-table-cell > button.progress-active:before, .btn-group-progress > .btn-table-cell > button:hover:before { !important;border-left-color: #ffa500; }
+.btn-group-progress > .btn-table-cell > button.enabled {color: #ffa500}
+.access .btn-link {color:#ffa500}
+
+/* Badge on Review tab of Manage User Access page (mobile and desktop) */
+/*.badge.bg-info {background-color: #ffa500 ;} */
+.badge.bg-info {background-color: #f8d21c ;}
+
+.btn-progress:hover .badge.bg-info, .btn-progress:focus .badge.bg-info, btn-progress:active .badge.bg-info, 
+.btn-progress.progress-active:not(:focus) .badge.bg-info   {background-color: #ffffff ; color: #ffa500 }
+
+/* Sub-menu on Manage Access page (Add access/Remove access */
+.btn-group.sub-nav .btn.active, 
+.btn-group.sub-nav .btn:focus { color: #ffa500 !important }
+
+/* page navigation within access request pages */
+.pagination > li > a { color:#ffa500 }
+.pagination > li > a:hover { color:#e59400 }
+.pagination > .active > a,
+.pagination > .active > a:focus {background-color: #ffa500 ;  border-color: #ffa500 }
+.pagination > .active > a:hover, 
+.pagination > .active > a:focus:hover {background-color: #e59400 ; border-color: #ffa500  }
+
+
+/***********************************************
+ Edit Identity, Accounts, Change Password page 
+************************************************/
+/*Button on Identity Cards */
+.identity-card .panel-footer .btn-info {background-color: #ffa500}
+.identity-card .panel-footer .btn-info:hover {background-color: #e59400}
+
+/* Edit Identity, Accounts, Change Password page left menu */
+.identity .sidebar .list-group li a:hover {color: #e59400}
+.identity .sidebar .list-group-item.active:hover a, .list-group-item.active:focus a {color: #ffffff}
+.identity .sidebar .list-group-item.active {background-color: #ffa500 !important; border-color:#ffa500 !important}
+
+/* Password application count badge */
+.identity .identity-details-container .panel-heading .label-info-solid {background-color: #ffa500 }
+
+/* Forwarding User pick list */
+.dropdown-menu > li > a:hover,
+.dropdown-menu > li > a:focus,
+.dropdown-menu > li.active > a,
+.dropdown-menu > li.active > a:hover,
+.dropdown-menu > li.active > a:focus {background-color: #ffa500}
+
+/* Role hierarchy (modal box content in role details) */
+a.angular-ui-tree-node-content, 
+a.angular-ui-tree-node-content.angular-ui-tree-node-selected  {color: #009900}
+a.angular-ui-tree-node-content:hover {color: #008000}
+
+/* Manage Passwords checkbox */
+button.checkbox-btn:focus, button.checkbox-btn:hover {color: #ffa500}
+
+
+/****************************
+Violation Work Items Page
+****************************/
+.decision-page .decision-page-tabs > li.active > button {color:#ffa500}
+.decision-page .decision-page-tabs > li.active .label {background-color:#ffa500}
+.decision-page .decision-page-tabs > li > button:hover {color:#ffa500}
+
+/*****************
+ Gear Menu
+ *****************/
+/* Global Settings menu page hover over/click options */
+a.list-group-item:focus, a.list-group-item:hover {
+  color: #e59400;
+}
+
+/* Admin Console Headers */
+.header .nav-tabs li > a:hover {color:#e59400 }
+.header .nav-tabs li.active > a:hover {color:#717171}
+.header > .nav-tabs > li > a {color:#ffa500}
+
+.panel-heading .nav-tabs > li > a {color: #717171} 
+.panel-heading .nav-tabs > li.active > a,
+.panel-heading .nav-tabs > li.active  {color: #ffa500}
+.panel-heading .nav-tabs > li > a:hover,
+.panel-heading .nav-tabs > li.active > a:hover, 
+.panel-heading .nav-tabs > li.active > a:focus {color: #e59400}
+
+
+/* Quicklink Populations */
+/* List of QL Populations */
+#qlpEditorDiv .selectableGrid .x-grid-row-selected.x-grid-row-focused .x-grid-cell { background-color: #ffa500 !important;}
+
+/* Section headers on Configuration tab */
+#qlpEditorDiv .spTable caption .m-l-xs {color: #ffa500 }
+
+
+/********************************************
+  Mobile Pages
+*********************************************/
+
+/* buttons in header bar (Home, Exit) */
+a.btn-mobile {color: #009900}
+a.btn-mobile:hover, a.btn-mobile:focus {color: #008000}
+
+/* Mobile Home Page menu options */
+.mobile-quick-links .card-title {color: #ffa500}
+.mobile-quick-links .quick-links-btn {border-color: #ffa500; color: #ffa500}
+.mobile-quick-links .card-title:hover, 
+.mobile-quick-links .card-title:focus  {color: #e59400}
+.mobile-quick-links .quick-links-btn:hover,
+.mobile-quick-links .quick-links-btn:focus {border-color: #ffa500; background-color: #e59400; color: #ffffff}
+
+/* Dropdowns in Desktop main menu viewed in narrow browser window
+   require this to make text visible by setting background white 
+   media query limits effect only to narrow browsers 
+   (lt or eq to 767 pixels = tablets and phones)*/
+@media (max-width: 767px) {
+   .bg-primary .nav .open .dropdown-menu  {background-color: #ffffff}
+}
+
+/**************************************************
+  Modal Dialog Boxes (use primary color for these
+  to match main menu bar)
+ **************************************************/
+/* Header bar */
+/* NOTE: don't make too dark or the .close (little "x") will not show up well */
+
+.modal-header,
+div.info-modal[role="dialog"] .modal-header,
+div.warning-modal[role="dialog"] .modal-header {
+  background-color: #009900;
+  border-color: #009900;
+}
+
+/* Primary button in modal boxes */
+.modal-footer .btn-info , .modal-footer .btn-warning, .modal-body .panel-footer .btn-info {
+ background-color: #009900;
+ border-color: #009900;
+ }
+.modal-footer .btn-info:hover , .modal-footer .btn-warning:hover,
+.modal-footer .btn-info:focus , .modal-footer .btn-warning:focus,
+.modal-footer .btn-info:active , .modal-footer .btn-warning:active
+ {
+ background-color: #008000;
+ }
+
+/* Data entry box on modal forms */
+.modal-body .form-control:focus { border-color: #009900}
+
+/*Secondary option (usually Cancel) on some modal boxes 
+  Sometimes is colored link, sometimes just gray button; this
+  is for colored link; gray button left alone since neutral */
+.modal-body .panel-footer .btn-link:hover, .modal-body .panel-footer .btn-link:focus,
+.modal-footer .btn-link:hover, .modal-footer .btn-link:focus {color: #009900}
+
+/*Sub headers in modal boxes*/
+.modal-content .panel-heading .nav-tabs > li > a,
+.modal-content .panel-heading .nav-tabs > li.active > a,
+.modal-content .panel-heading .nav-tabs > li.active  {color: #009900}
+.modal-content .panel-heading .nav-tabs > li > a:hover,
+.modal-content .panel-heading .nav-tabs > li.active > a:hover, 
+.modal-content .panel-heading .nav-tabs > li.active > a:focus {color: #008000}
+
+/* drop-down list boxes on modal forms */
+.modal-content .dropdown-menu > li > a:hover,
+.modal-content .dropdown-menu > li > a:focus,
+.modal-content .dropdown-menu > li.active > a,
+.modal-content .dropdown-menu > li.active > a:hover,
+.modal-content .dropdown-menu > li.active > a:focus {background-color: #009900}
+
+/* Global setting: text-info links when hovered */
+a.text-info:hover {color: #e59400}
+
+/* Alert Definition-> New; footer bar */
+div.footer-action-bar {background-color: #d8dde5}
+
+
+/*Access Review Identity List*/
+.certification .entity-list-panel .cert-id-list .active {background-color: #ffa500}
+.certification .entity-list-panel .cert-id-list > tbody > tr:focus,
+.certification .entity-list-panel .cert-id-list > tbody > tr:hover {background-color: #ffa500}
+
+/*EY Specific UI Customization*/
+
+body > header,
+#menuMainDiv > header {
+  background-color: #333333;
+}
+body > header {
+    border-bottom-width: 4px;
+    border-bottom-style: solid;
+    #border-bottom-color: #333333;
+}
+body {
+    background: #333333;
+	#background-color: #333333;
+}
+
+.navSkipNavigationBtnStyle {
+    visibility: hidden;
+}
+
+
+
+
+
+
