@@ -55,12 +55,12 @@ extended attribute mappings.
 <property name="lockedAccount" type="string" length="450"
               access="sailpoint.persistence.ExtendedPropertyAccessor"
               index="spt_link_lockedAccount_ci"/>
-<!--<property name="sAccount" type="string" length="450"
+<property name="sAccount" type="string" length="450"
               access="sailpoint.persistence.ExtendedPropertyAccessor"
-              index="spt_link_sAccount_ci"/>--> 
+              index="spt_link_sAccount_ci"/>
 <!--AGGREGATION, REPORTING, REPORTING END UNCOMMENT THIS FOR SERVICE ACCOUNTT BETA FEATURE-->
 <!--PRIVILEGED ACCOUNT TYPE START UNCOMMENT THIS FOR PRIVILEGED ACCOUNT FEATURE-->
-<!--<property name="apaccountType" type="string" length="450"
+<property name="apaccountType" type="string" length="450"
           access="sailpoint.persistence.ExtendedPropertyAccessor"
-          index="spt_link_apAccttype_ci"/>-->
+          index="spt_link_apAccttype_ci"/>
 <!--PRIVILEGED ACCOUNT TYPE END-->

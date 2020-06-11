@@ -1,0 +1,65 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule-Customization-IdentityIQ" type="ResourceObjectCustomization">
+  <Description>This rule will check the IdentityIQ LoopBack Connector data that is being aggregated and filters out the users, who are not having any work groups</Description>
+  <Signature returnType="ResourceObject">
+    <Inputs>
+      <Argument name="log">
+        <Description>
+          The log object associated with the SailPointContext.
+        </Description>
+      </Argument>
+      <Argument name="context">
+        <Description>
+          A sailpoint.api.SailPointContext object that can be used to query the database if necessary.
+        </Description>
+      </Argument>
+      <Argument name="object">
+        <Description>
+          The ResourceObject built by the connector.
+        </Description>
+      </Argument>
+      <Argument name="application">
+        <Description>
+          Application that references the connector.
+        </Description>
+      </Argument>
+      <Argument name="connector">
+        <Description>
+          The connector object.
+        </Description>
+      </Argument>
+      <Argument name="state">
+        <Description>
+          A Map containing state information.
+        </Description>
+      </Argument>
+    </Inputs>
+    <Returns>
+      <Argument name="resourceObject">
+        <Description>
+          The updated resource object.
+        </Description>
+      </Argument>
+    </Returns>
+  </Signature>
+  <Source><![CDATA[
+  	
+  	import java.util.List;
+  	import java.util.Iterator;
+	import java.util.HashMap;
+	import sailpoint.object.ResourceObject;
+	if(object!=null && object.getObjectType()!=null && "account".equalsIgnoreCase(object.getObjectType()))
+	{		
+		List workGps = object.get("workgroups.name");		
+		List capabilities = object.get("capabilities.name");		
+		if((workGps == null || workGps.isEmpty()) && ( capabilities==null || capabilities.isEmpty())) 
+		{
+		    // This is giving null pointer exception in 7.2
+		    //return null;
+		}
+	}
+	return object;
+	
+	]]></Source>
+</Rule>

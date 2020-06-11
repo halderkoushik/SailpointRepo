@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <!DOCTYPE FullTextIndex PUBLIC "sailpoint.dtd" "sailpoint.dtd">
-<FullTextIndex lastRefresh="1591302952395" name="BundleManagedAttribute">
+<FullTextIndex lastRefresh="1591889944442" name="BundleManagedAttribute">
   <Attributes>
     <Map>
       <entry key="classes" value="BundleManagedAttribute"/>

@@ -5,13 +5,13 @@
     <Reference class="sailpoint.object.Rule" name="Objects in Requestor's Authorized Scopes"/>
   </ApplicationRequestControl>
   <ManagedAttributeRequestControl>
-    <Reference class="sailpoint.object.Rule" name="Rule-FrameWorkRegularEntitlements"/>
+    <Reference class="sailpoint.object.Rule" name="All Objects"/>
   </ManagedAttributeRequestControl>
   <PopulationRequestAuthority>
     <MatchConfig customControl="(correlated == true)" enableCustomControl="true" matchAll="true"/>
   </PopulationRequestAuthority>
   <RoleRequestControl>
-    <Reference class="sailpoint.object.Rule" name="Rule-FrameWorkRegularRoles"/>
+    <Reference class="sailpoint.object.Rule" name="Objects in Requestor's Authorized Scopes"/>
   </RoleRequestControl>
   <Selector>
     <IdentitySelector>

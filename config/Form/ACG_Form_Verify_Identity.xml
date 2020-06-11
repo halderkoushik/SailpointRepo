@@ -1,0 +1,10 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Form PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Form name="Verify Identity">
+  <Section label="Instructions" name="instructions" type="text">
+    <Field value="Please verify and confirm the identity of the selected user below."/>
+  </Section>
+  <Section label="Identity Information" name="identityInfo" type="datatable"/>
+  <Button action="next" label="Confirm"/>
+  <Button action="back" label="Cancel"/>
+</Form>

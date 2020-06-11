@@ -1,0 +1,207 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule-Framework-Plan-Initializer">
+  <Description>
+			Use this rule to customize the data loaded into the Provisioning Plan
+			object.
+			The provisioning plan and its integrationData object are used by
+			Velocity to populate values in the XML templates for the web service
+			calls.
+	  </Description>
+  <Signature returnType="Object">
+    <Inputs>
+      <Argument name="identity">
+        <Description>
+						A sailpoint.object.Identity representing the person being
+						remediated.
+			</Description>
+      </Argument>
+      <Argument name="plan">
+        <Description>
+			  A sailpoint.object.ProvisioningPlan representing remediation.
+			</Description>
+      </Argument>
+      <Argument name="integration">
+        <Description>
+						A sailpoint.object.IntegrationConfig representing configuration
+						object.
+			</Description>
+      </Argument>
+      <Argument name="context">
+        <Description>
+						A sailpoint.api.SailPointContext object that can be used to query
+						the database to find the Rule.
+			</Description>
+      </Argument>
+      <Argument name="log">
+        <Description>
+			  A Log object to help report and/or debug the Rule.
+			</Description>
+      </Argument>
+    </Inputs>
+  </Signature>
+  <Source><![CDATA[
+		import java.util.List;
+		import java.util.Map;
+		import org.apache.commons.logging.Log;
+		import org.apache.commons.logging.LogFactory;
+		import sailpoint.api.SailPointContext;
+		import sailpoint.object.Application;
+		import sailpoint.object.Attributes;
+		import sailpoint.object.Identity;
+		import sailpoint.object.ProvisioningPlan;
+		import sailpoint.tools.GeneralException;
+		import sailpoint.tools.Util;
+		import sailpoint.object.ObjectConfig;
+		import sailpoint.object.ObjectAttribute;
+		import sailpoint.rapidapponboarding.rule.ROADUtil;
+		import sailpoint.rapidapponboarding.logger.LogEnablement;
+       	Log ticketlogger = LogFactory.getLog("rapidapponboarding.rules");
+      //Fill Argumnets for Velocity Expression to consume in SOAP Envelope
+		public void fillArguments( Map arguments, Identity identity, String prefix)
+		{
+			if(identity != null && arguments!=null && prefix!=null)
+	        {
+		        List cubeAttrsList=ROADUtil.getCubeAttributesList(context,true,true,false,false);
+		        if(cubeAttrsList!=null && cubeAttrsList.size()>0)
+		        {
+			        for(String attrName:cubeAttrsList)
+			        {
+				        if(attrName!=null)
+				        {
+				        arguments.put(prefix+attrName, identity.getStringAttribute(attrName));
+				        }
+			        }
+		        }
+	        }
+		}
+		//Lets Get Arguments from Plan
+        Map arguments = (Map)plan.getArguments();
+        //Let's Put Identity Attributes - START
+        fillArguments( arguments,  identity,  "requestee");
+        //Let's Put Identity Attributes - END
+        //Let's Put Manager Attributes - START
+        Identity manager = identity.getManager();
+        Identity finalManager=null;
+        if(manager==null)
+        {
+        finalManager=context.getObjectByName(Identity.class,"No Manager Found");
+        }
+        else
+        {
+        finalManager=manager;
+        }
+        //Let's Put Manager Attributes - END
+       fillArguments(  arguments,  finalManager,  "manager");
+       if(finalManager!=null)
+       {
+       context.decache(finalManager);
+       }
+       //Let's Put Requestor Attributes - START
+       Identity finalRequestor=null;
+       Identity requestorHuman=null;
+       Identity defaultRequestor=null;
+       String defaultRequestorName=null;
+       //We have to pick this up from Integration Config
+		 if(integration!=null &&  integration.getAttributes()!=null &&  integration.getAttributes().getMap()!=null)
+		 {
+		 	defaultRequestorName=integration.getAttributes().getMap().get("defaultRequestedBy");
+		 }
+       if(plan.getRequesters() != null) 
+       {
+	        Identity requester = plan.getRequesters().get(0);
+	        if(requester!=null)
+	        {
+		        requestorHuman=context.getObjectByName(Identity.class,requester.getName());
+		        if(requestorHuman!=null)
+		        {
+		        finalRequestor=requestorHuman;
+		        }
+		        else if(defaultRequestorName!=null)
+		        {
+		        	defaultRequestor=context.getObjectByName(Identity.class,defaultRequestorName);
+		        	finalRequestor=defaultRequestor;
+		        }
+		    }
+		    else if(defaultRequestorName!=null)
+	        {
+	        	defaultRequestor=context.getObjectByName(Identity.class,defaultRequestorName);
+	        	finalRequestor=defaultRequestor;
+	        }
+        }
+        else if(defaultRequestorName!=null)
+        {
+        	defaultRequestor=context.getObjectByName(Identity.class,defaultRequestorName);
+        	finalRequestor=defaultRequestor;
+        }
+        if(finalRequestor!=null)
+        {
+        fillArguments(arguments,  finalRequestor,  "requestor");
+        }
+        if(requestorHuman!=null)
+        {
+        context.decache(requestorHuman);
+        }
+        if(defaultRequestor!=null)
+        {
+        context.decache(defaultRequestor);
+        }
+         //Let's Put Requestor Attributes - END
+ 	    //Let's Put Application Assignment Group - START
+		List applicationsList = plan.getApplications(context);
+		String assignmentGroupname=null;
+		String defaultAssignmentGroupname=null;
+		//Let's pick default from Integration Config
+		 if(integration!=null &&  integration.getAttributes()!=null &&  integration.getAttributes().getMap()!=null)
+		 {
+		 	defaultAssignmentGroupname=integration.getAttributes().getMap().get("defaultAssignmentGroupName");
+		 }
+		 //Override With Application Assignment Group
+		if(applicationsList != null && !applicationsList.isEmpty()) 
+		{
+			//Picking First Application, Assuming it's a groupBy Application
+			 Application app = applicationsList.get(0);
+			 if(app!=null)
+			 {
+				 assignmentGroupname = app.getAttributeValue("assignmentGroupname");
+			 }
+		}
+		if(assignmentGroupname==null || assignmentGroupname.length()<=0)
+		{
+			assignmentGroupname=defaultAssignmentGroupname;
+		}
+		arguments.put("assignmentGroupName",assignmentGroupname);
+		 //Let's Put Application Assignment Group - END
+ 		//Let's Put Source Attributes - START
+ 		 arguments.put("sourceId", plan.getSourceId());
+		 arguments.put("sourceName", plan.getSourceName());
+		 arguments.put("sourceType", plan.getSourceType());
+		//Let's Put Source Attributes - END
+        //Let's Put Flow Variable - START
+		if(plan != null && plan.getAccountRequests() != null && plan.getAccountRequests().size() > 0) 
+		{
+			ProvisioningPlan.AccountRequest acctReq = plan.getAccountRequests().get(0);
+			if(acctReq != null && acctReq.getArguments() != null) 
+			{
+				Attributes attrs = acctReq.getArguments();
+				if(attrs.get("flow") != null) 
+				{
+					arguments.put("flow",attrs.get("flow"));
+				}
+			}
+		}
+		  //Let's Put Flow Variable - END
+		 //Lets Put Request Type and Identity Request Id - START
+         //Arguments should have identityRequestId and requestType
+         //Lets Put Request Type and Identity Request Id - END
+         //Lets Put Catalog Map - START
+         // This is done in executor class, key is "catalogItem"
+         //Lets Put Catalog Map - END
+         //Lets Put Current Date - START
+         // This is done in executor class, key is "timestamp"
+         //Lets Put Current Date - END
+         //Lets Put Simple Date Format Object - START
+         // This is done in executor class, key is "dateFormatter" format is provided using "dateFormat"
+         //Lets Put Simple Date Format Object - END
+         	  ]]></Source>
+</Rule>

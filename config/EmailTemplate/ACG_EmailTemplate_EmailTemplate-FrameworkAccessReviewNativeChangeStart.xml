@@ -1,0 +1,98 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE EmailTemplate PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<EmailTemplate name="EmailTemplate-FrameworkAccessReviewNativeChangeStart">
+  <Body>
+	    
+	    #set($ctx = $spTools.class.forName("sailpoint.api.SailPointFactory").getMethod("getFactory", null).invoke(null,null).getCurrentContext())
+		#set($ruleObj = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Rule"), "Rule-Framework-Header-Footer-StyleSheet")) 
+		#set($ruleArgs = { 
+		    "keyEmailTemplate"  : "styleSheet"
+		}) 
+		#set($styleSheet = $ctx.runRule($ruleObj, $ruleArgs))
+		#if( $ruleObj )
+		$ctx.decache($ruleObj)
+		#end
+		#set($ruleObj = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Rule"), "Rule-Framework-Header-Footer-StyleSheet")) 
+		#set($ruleArgs = { 
+		    "keyEmailTemplate"  : "headerTemplate"
+		}) 
+		#set($headerTemplate = $ctx.runRule($ruleObj, $ruleArgs))
+		#if( $ruleObj )
+		$ctx.decache($ruleObj)
+		#end
+		#set($ruleObj = $ctx.getObjectByName($spTools.class.forName("sailpoint.object.Rule"), "Rule-Framework-Header-Footer-StyleSheet")) 
+		#set($ruleArgs = { 
+		    "keyEmailTemplate"  : "footerTemplate"
+		}) 
+		#set($footerTemplate = $ctx.runRule($ruleObj, $ruleArgs))
+		#if( $ruleObj )
+		$ctx.decache($ruleObj)
+		#end
+	    #set($currentYear = $spTools.formatDate($certification.getActivated(),"YYYY"))
+	    #set($dueDate = $spTools.formatDate($certification.getExpiration(),"MMM. dd "))
+	    <![CDATA[<html>
+	    <head>
+		<meta charset="UTF-8">	    
+		#if( $styleSheet )
+		$styleSheet
+		#end 
+		</head>   
+	    	<body>
+	    	#if( $headerTemplate )
+			$headerTemplate
+			#end
+			<br/>    	
+			#if ($workItem.getOwner().getDisplayName()) 
+				Dear $workItem.getOwner().getDisplayName(),<br/>
+			#elseif($workItem.getOwner().getFirstname())
+				Dear $workItem.getOwner().getFirstname(),<br/>
+			#else
+				Dear $workItem.getOwner().getName(),<br/>
+			#end<br/> 	
+   		    <p>
+			The $currentYear Native Change Access Review is scheduled to be completed on $dueDate
+			</p>
+			<p>
+            $certification.getCertificationName()
+            </p>
+			#if( $footerTemplate )
+			$footerTemplate
+			#end
+			</body>
+		</html>]]>
+		
+	</Body>
+  <Description>
+		Email Template for notifying work item owners of new certifications.
+		Arguments
+		---------
+		workItemName (String): The name of the Workitem
+		workItem (Workitem): The Workitem object
+		certification (Certification): The Certification Object
+		requesterName (String): The display name of the Identity that requested the
+		certification
+	</Description>
+  <Signature>
+    <Inputs>
+      <Argument name="workItemName" type="string">
+        <Description>The description property (also the name property) of
+					the certification WorkItem.</Description>
+      </Argument>
+      <Argument name="workItem" type="WorkItem">
+        <Description>The WorkItem object for the certification.</Description>
+      </Argument>
+      <Argument name="certification" type="Certification">
+        <Description>The Certification object.</Description>
+      </Argument>
+      <Argument name="requesterName" type="string">
+        <Description>The display name of the Identity that requested the
+					certification.</Description>
+      </Argument>
+      <Argument name="ownerName" type="string">
+        <Description>The display name of the Identity that owns the
+					certification.</Description>
+      </Argument>
+    </Inputs>
+  </Signature>
+  <Subject>ACTION REQUIRED NATIVE CHANGE ACCESS CERTIFICATION</Subject>
+</EmailTemplate>

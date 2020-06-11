@@ -1,0 +1,65 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Workflow PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Workflow configForm="Provisioning Workflow Config Form" handler="sailpoint.api.StandardWorkflowHandler" libraries="Identity,BatchRequest" name="Workflow-FrameWork-Wrapper-Create" taskType="LCM" type="LCMIdentity">
+  <Variable input="true" name="identityName"/>
+  <Variable initializer="script:(identityDisplayName != void) ? identityDisplayName : resolveDisplayName(identityName)" input="true" name="identityDisplayName"/>
+  <Variable initializer="false" input="true" name="endOnManualWorkItems"/>
+  <Variable initializer="false" input="true" name="endOnProvisioningForms"/>
+  <Variable input="true" name="batchRequestItemId"/>
+  <Variable input="true" name="plan"/>
+  <Variable input="true" name="flow"/>
+  <Variable editable="true" name="optimisticProvisioning"/>
+  <Variable editable="true" initializer="false" name="foregroundProvisioning"/>
+  <Variable editable="true" name="doRefresh"/>
+  <Variable initializer="Normal" input="true" name="workItemPriority"/>
+  <Variable initializer="user,requester" input="true" name="notificationScheme"/>
+  <Variable initializer="LCM User Notification" input="true" name="userEmailTemplate"/>
+  <Variable initializer="LCM Requester Notification" input="true" name="requesterEmailTemplate"/>
+  <Variable initializer="LCM Manager Notification" input="true" name="managerEmailTemplate"/>
+  <Variable input="true" name="securityOfficerEmailTemplate"/>
+  <Variable initializer="serial" input="true" name="approvalMode"/>
+  <Variable initializer="manager, newManager" input="true" name="approvalScheme"/>
+  <Variable initializer="spadmin" input="true" name="fallbackApprover"/>
+  <Variable initializer="LCM Identity Update Approval" input="true" name="approvalEmailTemplate"/>
+  <Variable input="true" name="securityOfficerName"/>
+  <Variable initializer="continue" input="true" name="policyScheme"/>
+  <Variable input="true" name="ticketManagementApplication"/>
+  <Variable name="ticketId"/>
+  <Variable input="true" name="policiesToCheck"/>
+  <Variable name="policyViolations"/>
+  <Variable initializer="LCM" input="true" name="source"/>
+  <Variable name="approvalSet"/>
+  <Variable initializer="false" name="trace"/>
+  <Variable name="project"/>
+  <Variable name="approvalForm"/>
+  <Variable name="identityRequestId" output="true"/>
+  <Variable input="true" name="approverElectronicSignature"/>
+  <Description>Accelerator Pack Create Identity Workflow</Description>
+  <Step icon="Start" name="Start">
+    <Transition to="Call Wrapper"/>
+  </Step>
+  <Step icon="Task" name="Call Wrapper">
+    <Arg name="launcher" value="ref:launcher"/>
+    <Arg name="requestor" value="ref:requestor"/>
+    <Arg name="source" value="ref:source"/>
+    <Arg name="identityName" value="ref:identityName"/>
+    <Arg name="identityDisplayName" value="ref:identityDisplayName"/>
+    <Arg name="plan" value="ref:plan"/>
+    <Arg name="flow" value="ref:flow"/>
+    <Arg name="endOnManualWorkItems" value="ref:endOnManualWorkItems"/>
+    <Arg name="endOnProvisioningForms" value="ref:endOnProvisioningForms"/>
+    <Arg name="workItemPriority" value="ref:workItemPriority"/>
+    <Arg name="policyScheme" value="ref:policyScheme"/>
+    <Arg name="approvalScheme" value="ref:approvalScheme"/>
+    <Arg name="batchRequestItemId" value="ref:batchRequestItemId"/>
+    <Arg name="ticketManagementApplication" value="ref:ticketManagementApplication"/>
+    <Arg name="ticketId" value="ref:ticketId"/>
+    <Return name="policyViolations" to="policyViolations"/>
+    <Return name="identityRequestId" to="identityRequestId"/>
+    <WorkflowRef>
+      <Reference class="sailpoint.object.Workflow" name="Workflow-FrameWork-Wrapper"/>
+    </WorkflowRef>
+    <Transition to="end"/>
+  </Step>
+  <Step icon="Stop" name="end"/>
+</Workflow>

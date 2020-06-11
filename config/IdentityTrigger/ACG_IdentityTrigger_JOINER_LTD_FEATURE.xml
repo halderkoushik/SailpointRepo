@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE IdentityTrigger PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<IdentityTrigger handler="sailpoint.api.WorkflowTriggerHandler" name="JOINER LTD FEATURE" type="Rule">
+  <Description>Joiner from Long Term Disability.</Description>
+  <HandlerParameters>
+    <Attributes>
+      <Map>
+        <entry key="workflow" value="Workflow-Lifecycle-Leaver-RTW-LTD-RequestObject-Wrapper"/>
+      </Map>
+    </Attributes>
+  </HandlerParameters>
+  <TriggerRule>
+    <Reference class="sailpoint.object.Rule" name="Rule-IdentityTrigger-Leaver-RTW-LTD"/>
+  </TriggerRule>
+</IdentityTrigger>

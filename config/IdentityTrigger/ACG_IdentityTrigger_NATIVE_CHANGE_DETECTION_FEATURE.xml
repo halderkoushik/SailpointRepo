@@ -1,0 +1,19 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE IdentityTrigger PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<IdentityTrigger handler="sailpoint.api.WorkflowTriggerHandler" name="NATIVE CHANGE DETECTION FEATURE" type="NativeChange">
+  <Description>A change to an account was processed in IdentityIQ that needs to be confirmed.</Description>
+  <HandlerParameters>
+    <Attributes>
+      <Map>
+        <entry key="workflow" value="Workflow-Lifecycle-NativeChangeDetection-RequestObject-Wrapper"/>
+      </Map>
+    </Attributes>
+  </HandlerParameters>
+  <Selector>
+    <IdentitySelector>
+      <PopulationRef>
+        <Reference class="sailpoint.object.GroupDefinition" name="Accelerator Pack Correlated Identities"/>
+      </PopulationRef>
+    </IdentitySelector>
+  </Selector>
+</IdentityTrigger>

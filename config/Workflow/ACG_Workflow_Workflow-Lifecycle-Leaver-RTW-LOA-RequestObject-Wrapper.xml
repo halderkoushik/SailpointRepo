@@ -1,0 +1,41 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Workflow PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Workflow explicitTransitions="true" name="Workflow-Lifecycle-Leaver-RTW-LOA-RequestObject-Wrapper" type="IdentityLifecycle">
+  <Variable input="true" name="trigger">
+    <Description>The IdentityTrigger</Description>
+  </Variable>
+  <Variable input="true" name="event" transient="true">
+    <Description>
+      The IdentityChangeEvent.  It can be used to build
+      the provisioning plan, but does not need to be
+      persisted with the case, so marked as transient.
+    </Description>
+  </Variable>
+  <Variable input="true" name="identityName">
+    <Description>The name of the identity.</Description>
+  </Variable>
+  <Variable initializer="false" name="trace">
+    <Description>
+      Used for debugging this workflow and when set to true trace
+      will be sent to stdout.
+    </Description>
+  </Variable>
+  <Variable initializer="true" name="transient"/>
+  <Description>Accelerator Pack Workflow</Description>
+  <Step icon="Start" name="Start">
+    <Transition to="Start Request Manager"/>
+    <Transition to="Stop"/>
+  </Step>
+  <Step icon="Task" name="Start Request Manager">
+    <Script>
+      <Source><![CDATA[
+      
+  			import sailpoint.rapidapponboarding.rule.WrapperRuleLibrary;
+  			WrapperRuleLibrary.startRequestManager(context,identityName,trigger,event,"Workflow-Lifecycle-Leaver-RTW-LOA",60,null);
+  			 
+  		]]></Source>
+    </Script>
+    <Transition to="Stop"/>
+  </Step>
+  <Step icon="Stop" name="Stop"/>
+</Workflow>

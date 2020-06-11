@@ -100,6 +100,8 @@
                 <AttributePropertyMapping getter="sailpoint.service.scim.LocationGetter" name="$ref" property="id" value="Users"/>
               </AttributePropertyMapping>
               <AttributePropertyMapping name="softwareVersion" property="softwareVersion" queryClass="sailpoint.service.scim.GenericFilterModifier" setter="sailpoint.service.scim.UserPropertySetter"/>
+              <AttributePropertyMapping generatedBySystem="true" getter="sailpoint.service.scim.ExtendedAttributeGetter" name="needsJoiner" property="needsJoiner" queryClass="sailpoint.service.scim.GenericFilterModifier" setter="sailpoint.service.scim.UserPropertySetter"/>
+              <AttributePropertyMapping generatedBySystem="true" getter="sailpoint.service.scim.ExtendedAttributeGetter" name="middleName" property="middleName" queryClass="sailpoint.service.scim.GenericFilterModifier" setter="sailpoint.service.scim.UserPropertySetter"/>
             </SchemaPropertyMapping>
             <SchemaPropertyMapping urn="urn:ietf:params:scim:schemas:sailpoint:1.0:Application">
               <AttributePropertyMapping name="id" property="id"/>

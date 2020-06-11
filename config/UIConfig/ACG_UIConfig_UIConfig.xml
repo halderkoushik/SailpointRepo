@@ -68,6 +68,7 @@
         <value>
           <List>
             <AccountIconConfig attribute="psAccount" source="/images/icons/status_privileged.png" title="Privileged Account" value="true"/>
+            <AccountIconConfig attribute="sAccount" source="/images/icons/status_system.png" title="Service Account" value="true"/>
           </List>
         </value>
       </entry>

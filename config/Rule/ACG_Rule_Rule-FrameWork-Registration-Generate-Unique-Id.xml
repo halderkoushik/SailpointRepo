@@ -1,0 +1,10 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule-FrameWork-Registration-Generate-Unique-Id">
+  <Source><![CDATA[
+  	
+	  //Generate Non-Employee Population Unique Id Here
+	   return Long.toString(java.lang.System.currentTimeMillis());
+   
+   ]]></Source>
+</Rule>

@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Custom PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Custom name="Custom-Identity-Verification-Form-Settings">
+  <Attributes>
+    <Map>
+      <entry key="needsJoiner" value="TRUE"/>
+      <entry key="saccountOwnerone" value="TRUE"/>
+      <entry key="serviceCube" value="TRUE"/>
+    </Map>
+  </Attributes>
+</Custom>

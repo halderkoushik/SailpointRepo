@@ -1,0 +1,47 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule-Allowed-NativeIds">
+  <Source><![CDATA[
+  
+	  import sailpoint.object.Identity;
+	  import sailpoint.object.Link;
+	  import sailpoint.api.IdentityService;
+	  import sailpoint.object.Field;
+	 import sailpoint.object.Form;
+	  List nativeIds = new ArrayList();
+	  if(form!=null)
+	  {
+	      Field roadApplicationSelectField = form.getField("roadApplicationSelect");
+	      Field roadIdentitySelectField = form.getField("roadIdentitySelect");
+	      if(roadApplicationSelectField!=null && roadIdentitySelectField!=null)
+	      {
+	         String roadApplicationSelect=roadApplicationSelectField.getValue();
+	         String roadIdentitySelect=roadIdentitySelectField.getValue();
+			  if(roadApplicationSelect!=null && roadIdentitySelect!=null)
+			  {
+			  		IdentityService idService = new IdentityService(context);
+					Identity roadIdentitySelectCube =context.getObjectByName(Identity.class,roadIdentitySelect);
+					if(roadIdentitySelectCube!=null)
+					{
+						List links = idService.getLinks(roadIdentitySelectCube,0,0);
+						if(links!=null && links.size()>0)
+						{
+							for (Link link : links) 
+							{
+							    	if(link.getApplicationName()!=null && link.getApplicationName().equalsIgnoreCase(roadApplicationSelect))
+							    	{
+							    	    List valueDisplay = new ArrayList();
+							    	    valueDisplay.add(link.getNativeIdentity());
+							    		valueDisplay.add(link.getName());
+							    		nativeIds.add(valueDisplay);
+							    	}
+							}
+						}
+					}
+			  }
+		  }
+	  }
+	  return nativeIds;
+   
+	]]></Source>
+</Rule>

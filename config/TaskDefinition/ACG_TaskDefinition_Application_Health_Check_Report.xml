@@ -1,0 +1,353 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE TaskDefinition PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<TaskDefinition executor="sailpoint.reporting.LiveReportExecutor" name="Application Health Check Report" progressMode="Percentage" resultAction="Delete" subType="Extended Reports" template="true" type="LiveReport">
+  <Attributes>
+    <Map>
+      <entry key="report">
+        <value>
+          <LiveReport disablePreview="true" title="Services Standard Application Health Check Report">
+            <DataSource defaultSort="name" objectType="Application" type="Filter">
+              <QueryParameters>
+                <Parameter argument="threads">
+                  <QueryScript>
+                    <Source><![CDATA[
+	if(value!=null)
+	{
+	Integer integerValue = Integer.valueOf(value);
+	context.setProperty("threads",integerValue);
+	}
+	return queryOptions;
+]]></Source>
+                  </QueryScript>
+                </Parameter>
+                <Parameter argument="timeout">
+                  <QueryScript>
+                    <Source><![CDATA[
+	if(value!=null)
+	{
+	Integer integerValue = Integer.valueOf(value);
+	context.setProperty("timeout",integerValue);
+	}
+	else {
+		context.setProperty("timeout",600000);
+	}
+	return queryOptions;
+]]></Source>
+                  </QueryScript>
+                </Parameter>
+                <Parameter argument="applications" property="name">
+                  <ValueScript>
+                    <Source><![CDATA[
+	import java.util.ArrayList;
+	import java.util.HashMap;
+	import java.util.Iterator;
+	import java.util.List;
+	import java.util.Map;
+	import sailpoint.rapidapponboarding.reports.AppHealthCheckReport;
+	import sailpoint.api.SailPointContext;
+	import sailpoint.integration.ListResult;
+	import sailpoint.object.Application;
+	import sailpoint.object.ApprovalSet;
+	import sailpoint.object.QueryOptions;
+	import sailpoint.tools.GeneralException;
+	import sailpoint.tools.Util;
+	Map mapAppType = new HashMap();
+	Map mapAppAttributes = new HashMap();
+	List listAppName = new ArrayList();
+	List columnsApplication = new ArrayList();
+	List allApplications = new ArrayList();
+	columnsApplication.add("name");
+	columnsApplication.add("type");
+	columnsApplication.add("attributes");
+	QueryOptions qoApplication = new QueryOptions();
+	Iterator resultApplication = context.search(Application.class,
+	qoApplication, columnsApplication);
+	if(resultApplication!=null)
+	{
+		while(resultApplication.hasNext()){
+			Object[] record = resultApplication.next();
+			if(record!=null && record.length==3)
+			{
+				if(record[0]!=null && record[1]!=null && record[2]!=null)
+				{
+				mapAppType.put( ""+record[0], ""+record[1]);
+				mapAppAttributes.put( ""+record[0], record[2]);
+				allApplications.add(record[0]);
+				}
+			}
+		}
+	}
+	Util.flushIterator(resultApplication); 
+	Map mapAppTier=new HashMap();
+	for(String strApp:mapAppType.keySet()){
+		if( mapAppType.get(strApp).equalsIgnoreCase("Logical") ){
+			ArrayList alTierOneApps = mapAppAttributes.get(strApp).get("compositeDefinition").getTierAppList();
+			if( alTierOneApps != null && !alTierOneApps.isEmpty() ){
+				String strTierAppName = alTierOneApps.get(0);
+				if(mapAppType.containsKey(strTierAppName)){
+					String strTierAppType=mapAppType.get(strTierAppName);
+					mapAppType.put(strApp, mapAppType.get(strApp)+" - "+strTierAppType);
+				}
+			}
+		}//if
+	}//for
+	context.setProperty("mapAppType", mapAppType);
+	Integer threads = context.getProperty("threads");
+	Integer timeout = context.getProperty("timeout");
+	if(threads==null)
+	{
+	threads=4;
+	}
+	else
+	{
+	threads=threads.intValue();
+	}
+	if(timeout==null)
+	{
+	timeout=5000;
+	}
+	else
+	{
+	timeout=timeout.intValue();
+	}
+	Map mapAppConnectionDetails = new HashMap();
+    ListResult listResult=null;
+	AppHealthCheckReport appHealthCheckReport=null;
+	if(value!=null  && value.size()>0)
+	{
+	  	 appHealthCheckReport = new AppHealthCheckReport(context,value,threads,timeout);
+		 listResult = appHealthCheckReport.getAppsInfo();
+	}
+	else if(allApplications!=null  && allApplications.size()>0)
+	{
+	 appHealthCheckReport = new AppHealthCheckReport(context,allApplications,threads,timeout);
+	 listResult = appHealthCheckReport.getAppsInfo();
+	}
+	if( listResult!=null)
+		{
+			    List  list = listResult.getObjects();
+				if(list!=null)
+				{
+				  for(Map mapTwo: list)
+				  {
+				 	  if(mapTwo!=null)
+					  {
+					    String appName=mapTwo.get("name");
+					    String connection=mapTwo.get("connection");
+					    String accounts=mapTwo.get("accounts");
+					    String groups=mapTwo.get("groups");
+					    String connectionKey=appName+" "+"connection";
+					    String accountsKey=appName+" "+"accounts";
+					     String groupsKey=appName+" "+"groups";
+					    if(connection!=null  && connection.equalsIgnoreCase("yellow"))
+					    {
+					       mapAppConnectionDetails.put(connectionKey,"NA");
+					    }
+					    else if(connection!=null)
+					    {
+					    mapAppConnectionDetails.put(connectionKey,connection);
+					    }
+					    if(accounts!=null  && accounts.equalsIgnoreCase("yellow"))
+					    {
+					      mapAppConnectionDetails.put(accountsKey,"NA");
+					    }
+					    else if(accounts!=null)
+					    {
+					    mapAppConnectionDetails.put(accountsKey,accounts);
+					    }
+					    if(groups!=null  && groups.equalsIgnoreCase("yellow"))
+					    {
+					      mapAppConnectionDetails.put(groupsKey,"NA");
+					    }
+					    else if(groups!=null)
+					    {
+					    mapAppConnectionDetails.put(groupsKey,groups);
+					    }
+					  }//End If MapTwo
+				  }//End For MapTwo
+				}//End If list
+		 }//End If listResult
+		 context.setProperty("mapAppConnectionDetails", mapAppConnectionDetails);
+	if(value!=null)
+	{
+	return value ;
+	}
+		]]></Source>
+                  </ValueScript>
+                </Parameter>
+              </QueryParameters>
+            </DataSource>
+            <ReportForm>
+              <Reference class="sailpoint.object.Form" name="Form-ApplicationHealthCheckForm"/>
+            </ReportForm>
+            <Columns>
+              <ReportColumnConfig field="Application  Name" header="Application Name" property="name" width="110"/>
+              <ReportColumnConfig field="Application Type" header="Application Type" property="type" scriptArguments="name" sortable="true" width="110">
+                <RenderScript>
+                  <Source><![CDATA[
+	import java.util.ArrayList;
+	import java.util.HashMap;
+	import java.util.Iterator;
+	import java.util.List;
+	import java.util.Map;
+	import sailpoint.api.SailPointContext;	
+	import sailpoint.tools.GeneralException;
+	HashMap mapAppType = context.getProperty("mapAppType");
+	if( value!=null && value.equalsIgnoreCase("Logical") && mapAppType!=null ){
+		value = ""+mapAppType.get(""+scriptArgs.get("name")  );
+	}
+	if(value!=null)
+	{
+   	return value;
+	}
+				]]></Source>
+                </RenderScript>
+              </ReportColumnConfig>
+              <ReportColumnConfig field="Application Owner" header="Application Owner" property="owner" sortable="true" width="110">
+                <RenderScript>
+                  <Source><![CDATA[
+	if( value!=null)
+	{
+		return value.getName();
+	}
+                                  ]]></Source>
+                </RenderScript>
+              </ReportColumnConfig>
+              <ReportColumnConfig field="Connection" header="Connection" property="name" sortable="true" width="110">
+                <RenderScript>
+                  <Source><![CDATA[
+	import java.util.ArrayList;
+	import java.util.HashMap;
+	import java.util.Iterator;
+	import java.util.List;
+	import java.util.Map;
+	import sailpoint.api.SailPointContext;	
+	import sailpoint.tools.GeneralException;
+	HashMap mapAppConnectionDetails = context.getProperty("mapAppConnectionDetails");
+	String connection=null;
+	if(mapAppConnectionDetails!=null )
+	{
+	connection= mapAppConnectionDetails.get(value+" "+"connection");
+	}
+	if( mapAppConnectionDetails!=null && value!=null && connection!=null && mapAppConnectionDetails.containsKey(value+" "+"connection"))
+	{
+		value = connection;
+		return value;
+	}
+                ]]></Source>
+                </RenderScript>
+              </ReportColumnConfig>
+              <ReportColumnConfig field="Accounts Connection" header="Accounts Connection" property="name" sortable="true" width="110">
+                <RenderScript>
+                  <Source><![CDATA[
+               		HashMap mapAppConnectionDetails = context.getProperty("mapAppConnectionDetails");   
+					String accounts=null;
+					if(mapAppConnectionDetails!=null )
+					{
+					accounts= mapAppConnectionDetails.get(value+" "+"accounts");
+					}
+					if( mapAppConnectionDetails!=null && value!=null &&accounts!=null && mapAppConnectionDetails.containsKey(value+" "+"accounts"))
+					{
+						value = accounts;
+						return value;   
+					}
+                                  ]]></Source>
+                </RenderScript>
+              </ReportColumnConfig>
+              <ReportColumnConfig field="Groups Connection" header="Groups Connection" property="name" sortable="true" width="110">
+                <RenderScript>
+                  <Source><![CDATA[
+                  	String groups=null;
+                  	HashMap mapAppConnectionDetails = context.getProperty("mapAppConnectionDetails");
+					if(mapAppConnectionDetails!=null )
+					{
+					groups= mapAppConnectionDetails.get(value+" "+"groups");
+					}
+					if( mapAppConnectionDetails!=null && value!=null && groups!=null && mapAppConnectionDetails.containsKey(value+" "+"groups"))
+					{
+						value = groups;
+						return value;
+					}
+                                  ]]></Source>
+                </RenderScript>
+              </ReportColumnConfig>
+              <ReportColumnConfig field="Remediators" header="Remediators" property="name" sortable="true" width="110">
+                <RenderScript>
+                  <Source><![CDATA[
+					import sailpoint.rapidapponboarding.reports.AppHealthCheckReport;
+					AppHealthCheckReport appHealthCheckReport = new AppHealthCheckReport(context);
+					List list = null;
+					if(value!=null)
+					{
+					list=appHealthCheckReport.getRemediators(value);
+					}
+					if(value!=null  && appHealthCheckReport!=null && list!=null)
+					{
+					return list;
+					}
+                                  ]]></Source>
+                </RenderScript>
+              </ReportColumnConfig>
+              <ReportColumnConfig field="Dual Channel" header="Dual Channel" property="name" sortable="true" width="110">
+                <RenderScript>
+                  <Source><![CDATA[
+				  import sailpoint.rapidapponboarding.reports.AppHealthCheckReport;
+					AppHealthCheckReport appHealthCheckReport = new AppHealthCheckReport(context);
+					String dualChannel=null;
+					if(value!=null)
+					{
+					dualChannel=appHealthCheckReport.getDualChannel(value);
+					}
+					if(value!=null  && appHealthCheckReport!=null && dualChannel!=null)
+					{
+					return dualChannel;
+					}
+                                  ]]></Source>
+                </RenderScript>
+              </ReportColumnConfig>
+            </Columns>
+            <ReportSummary title="Legend for Healthcheck Report">
+              <DataSourceScript>
+                <Source><![CDATA[
+Map map = new HashMap();
+map.put("green","Application connection passed");
+map.put("yellow","Application connection not supported");
+map.put("red","Application connection failed");
+return map;
+]]></Source>
+              </DataSourceScript>
+              <Values>
+                <LiveReportSummaryValue label="Green" name="green"/>
+                <LiveReportSummaryValue label="NA" name="yellow"/>
+                <LiveReportSummaryValue label="RED" name="red"/>
+              </Values>
+            </ReportSummary>
+          </LiveReport>
+        </value>
+      </entry>
+      <entry key="reportSortAsc">
+        <value>
+          <Boolean>true</Boolean>
+        </value>
+      </entry>
+      <entry key="reportSortBy" value="Application  Name"/>
+    </Map>
+  </Attributes>
+  <Description>Displays each application's connection status</Description>
+  <RequiredRights>
+    <Reference class="sailpoint.object.SPRight" name="FullAccessHealthCheckReport"/>
+  </RequiredRights>
+  <Signature>
+    <Inputs>
+      <Argument name="applications" type="String">
+        <Description>Applications</Description>
+      </Argument>
+      <Argument name="threads" type="Integer">
+        <Description>Applications</Description>
+      </Argument>
+      <Argument name="timeout" type="Integer">
+        <Description>Applications</Description>
+      </Argument>
+    </Inputs>
+  </Signature>
+</TaskDefinition>

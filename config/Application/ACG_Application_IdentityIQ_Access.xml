@@ -1,0 +1,228 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Application PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Application connector="sailpoint.rapidonboarding.connector.LoopbackConnector" featuresString="AUTHENTICATE, PASSWORD, SYNC_PROVISIONING, PROVISIONING, SEARCH" icon="databaseIcon" name="IdentityIQ Access" profileClass="" type="IdentityIQ Loopback Connector">
+  <Attributes>
+    <Map>
+      <entry key="accountCorrelationAttrExpression"/>
+      <entry key="accountCreateConditionalRule"/>
+      <entry key="accountCreateEntitlements"/>
+      <entry key="accountDeltaTimeStamp">
+        <value>
+          <Date>1520500276884</Date>
+        </value>
+      </entry>
+      <entry key="accountDisableAttrExpression"/>
+      <entry key="accountLockAttrExpression"/>
+      <entry key="additionalAppBusApprovalRule"/>
+      <entry key="additionalAppBusApprovers"/>
+      <entry key="afterProvisioningRule" value="Rule-Audit-Framework"/>
+      <entry key="afterpwdexpAttr"/>
+      <entry key="afterticketprovisioningExtendedrule"/>
+      <entry key="appBusApprovalRule"/>
+      <entry key="appBusApprovers"/>
+      <entry key="assignmentGroupname"/>
+      <entry key="attributeTransformMap">
+        <value>
+          <Map>
+            <entry key="capabilities.name" value="Capabilities"/>
+            <entry key="workgroups.name" value="workgroups"/>
+          </Map>
+        </value>
+      </entry>
+      <entry key="beforeProvisioningRule"/>
+      <entry key="beforemoveAccount" value="Do Nothing"/>
+      <entry key="beforemoverPrimaryaccount">
+        <value>
+          <Boolean/>
+        </value>
+      </entry>
+      <entry key="beforepwdexpAttr"/>
+      <entry key="birthrightEntAttrExpression"/>
+      <entry key="busApp">
+        <value>
+          <Boolean>true</Boolean>
+        </value>
+      </entry>
+      <entry key="capabilityDeltaTimeStamp">
+        <value>
+          <Date>1520500206394</Date>
+        </value>
+      </entry>
+      <entry key="commentsAttr"/>
+      <entry key="commentsValue"/>
+      <entry key="compositeDefinition"/>
+      <entry key="connectorClass" value="sailpoint.rapidonboarding.connector.LoopbackConnector"/>
+      <entry key="displayFormRule"/>
+      <entry key="eligibilityExpression"/>
+      <entry key="enablepsaValidation">
+        <value>
+          <Boolean/>
+        </value>
+      </entry>
+      <entry key="enablepswexpNotification"/>
+      <entry key="evaluateCreateprovpolicy"/>
+      <entry key="hardPolicyviolations"/>
+      <entry key="identiyFilter"/>
+      <entry key="ignoreIdentitiesWithNoEntitlements" value="true"/>
+      <entry key="ignoreNonCorrelatedIdentities" value="true"/>
+      <entry key="joinerEnabled"/>
+      <entry key="joinerPopulationRegex"/>
+      <entry key="joinerRoles"/>
+      <entry key="loaExtendedRule"/>
+      <entry key="loaProcess" value="Disable Only"/>
+      <entry key="ltdExtendedRule"/>
+      <entry key="ltdProcess" value="Disable Only"/>
+      <entry key="moveAccountContainer"/>
+      <entry key="moverExtendedRule"/>
+      <entry key="moverProcess" value="Manager Certification"/>
+      <entry key="moverRevocation" value="Disable"/>
+      <entry key="nativeChangeDetectionAttributeScope" value="entitlements"/>
+      <entry key="nativeChangeDetectionAttributes"/>
+      <entry key="nativeChangeDetectionEnabled">
+        <value>
+          <Boolean/>
+        </value>
+      </entry>
+      <entry key="nativeChangeDetectionOperations"/>
+      <entry key="nativeChangeProcess" value="Do Nothing"/>
+      <entry key="omitmanagerPrivgaccess">
+        <value>
+          <Boolean/>
+        </value>
+      </entry>
+      <entry key="policyType" value="Do Nothing"/>
+      <entry key="policytypeExceptions"/>
+      <entry key="primarySyncaccounts">
+        <value>
+          <Boolean/>
+        </value>
+      </entry>
+      <entry key="primarypasswordSyncaccounts">
+        <value>
+          <Boolean/>
+        </value>
+      </entry>
+      <entry key="privilegedAccountAttrExpression" value="name#IIQPrivileged#spadmin#IIQPrivileged#EQUALS"/>
+      <entry key="privilegedEntAttrExpression" value="capabilities.name#IIQEntitlementPrivileged#SystemAdministrator#IIQEntitlementPrivileged#EQUALS"/>
+      <entry key="pwdexpAttr"/>
+      <entry key="pwdexpAttrexpressionRule"/>
+      <entry key="rehireExtendedRule"/>
+      <entry key="rehirePrimaryaccount">
+        <value>
+          <Boolean/>
+        </value>
+      </entry>
+      <entry key="rehireProcess" value="Enable Immediately"/>
+      <entry key="removeEntitlementLeaverExceptionExpression"/>
+      <entry key="renameLDAPaccount">
+        <value>
+          <Boolean/>
+        </value>
+      </entry>
+      <entry key="reverseTerminationExtendedRule"/>
+      <entry key="reverseleaverProcess" value="Enable Immediately"/>
+      <entry key="rtwLOAExtendedRule"/>
+      <entry key="rtwLTDxtendedRule"/>
+      <entry key="rtwloaProcess" value="Enable Immediately"/>
+      <entry key="rtwltdProcess" value="Enable Immediately"/>
+      <entry key="sailpointObjectClassFilters">
+        <value>
+          <Map>
+            <entry key="Bundle" value="type.in({&quot;business&quot;})"/>
+            <entry key="Identity" value="workgroup == false"/>
+            <entry key="Workgroup" value="workgroup == true"/>
+          </Map>
+        </value>
+      </entry>
+      <entry key="scramblePasswordAttr"/>
+      <entry key="serviceAccountAttrExpression"/>
+      <entry key="skipSupervisorApproval"/>
+      <entry key="softPolicyviolations"/>
+      <entry key="sysDescriptions">
+        <value>
+          <Map>
+            <entry key="en_US"/>
+          </Map>
+        </value>
+      </entry>
+      <entry key="targetpasswordSync"/>
+      <entry key="templateApplication" value="IdentityIQ Loopback Connector"/>
+      <entry key="terminationExtendedRule"/>
+      <entry key="terminationProcess" value="Disable and Remove Entitlements"/>
+      <entry key="txCombinationName"/>
+      <entry key="workgroupDeltaTimeStamp">
+        <value>
+          <Date>1520500206239</Date>
+        </value>
+      </entry>
+      <entry key="xDays"/>
+      <entry key="xdaysresetPwd"/>
+    </Map>
+  </Attributes>
+  <CorrelationRule>
+    <Reference class="sailpoint.object.Rule" name="Rule-FrameWork-Correlation"/>
+  </CorrelationRule>
+  <CreationRule>
+    <Reference class="sailpoint.object.Rule" name="Rule-FrameWork-Creation"/>
+  </CreationRule>
+  <CustomizationRule>
+    <Reference class="sailpoint.object.Rule" name="Rule-Framework-RapidAppOnBoarding-Customization-Rule"/>
+  </CustomizationRule>
+  <ManagedAttributeCustomizationRule>
+    <Reference class="sailpoint.object.Rule" name="Rule-FrameWork-Promote-Managed-Attribute"/>
+  </ManagedAttributeCustomizationRule>
+  <Owner>
+    <Reference class="sailpoint.object.Identity" name="spadmin"/>
+  </Owner>
+  <ProvisioningForms>
+    <Form name="Form-Random-Passsword" objectType="account" type="Create">
+      <Attributes>
+        <Map>
+          <entry key="pageTitle" value="Form-Random-Passsword"/>
+        </Map>
+      </Attributes>
+      <Section name="Section Password">
+        <Field name="Password" type="string" value="Hello"/>
+      </Section>
+    </Form>
+  </ProvisioningForms>
+  <Schemas>
+    <Schema displayAttribute="name" identityAttribute="name" instanceAttribute="" nativeObjectType="Identity" objectType="account" permissionsRemediationModificationType="None">
+      <AttributeDefinition name="name" remediationModificationType="None" required="true" type="string">
+        <Description>Account name</Description>
+      </AttributeDefinition>
+      <AttributeDefinition name="firstname" remediationModificationType="None" type="string">
+        <Description>First name</Description>
+      </AttributeDefinition>
+      <AttributeDefinition name="lastname" remediationModificationType="None" type="string">
+        <Description>Last name</Description>
+      </AttributeDefinition>
+      <AttributeDefinition name="displayName" remediationModificationType="None" type="string">
+        <Description>Display name</Description>
+      </AttributeDefinition>
+      <AttributeDefinition entitlement="true" multi="true" name="workgroups.name" remediationModificationType="None" schemaObjectType="workgroup" type="string">
+        <Description>Identity's workgroups</Description>
+      </AttributeDefinition>
+      <AttributeDefinition entitlement="true" multi="true" name="capabilities.name" remediationModificationType="None" schemaObjectType="capability" type="string">
+        <Description>Identity's capabilities</Description>
+      </AttributeDefinition>
+      <AttributeDefinition name="inactive" remediationModificationType="None" type="string">
+        <Description>Identity's inactive flag</Description>
+      </AttributeDefinition>
+    </Schema>
+    <Schema aggregationType="group" displayAttribute="name" identityAttribute="name" instanceAttribute="" nativeObjectType="Workgroup" objectType="workgroup" permissionsRemediationModificationType="None">
+      <AttributeDefinition name="name" remediationModificationType="None" required="true" type="string">
+        <Description>Workgroup name</Description>
+      </AttributeDefinition>
+      <AttributeDefinition name="displayName" remediationModificationType="None" type="string">
+        <Description>Display name</Description>
+      </AttributeDefinition>
+    </Schema>
+    <Schema aggregationType="group" displayAttribute="name" identityAttribute="name" instanceAttribute="" nativeObjectType="Capability" objectType="capability" permissionsRemediationModificationType="None">
+      <AttributeDefinition name="name" remediationModificationType="None" required="true" type="string">
+        <Description>Capability name</Description>
+      </AttributeDefinition>
+    </Schema>
+  </Schemas>
+  <ApplicationScorecard/>
+</Application>

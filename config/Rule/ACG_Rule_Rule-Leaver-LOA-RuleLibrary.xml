@@ -1,0 +1,188 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule-Leaver-LOA-RuleLibrary">
+  <Source><![CDATA[
+	
+	import java.util.List;
+	import java.util.Map;
+	import java.util.Set;
+	import org.apache.commons.logging.Log;
+	import org.apache.commons.logging.LogFactory;
+	import sailpoint.api.IdentityService;
+	import sailpoint.api.ObjectUtil;
+	import sailpoint.api.SailPointContext;
+	import sailpoint.object.Application;
+	import sailpoint.object.Custom;
+	import sailpoint.object.Identity;
+	import sailpoint.object.Link;
+	import sailpoint.object.ProvisioningPlan;
+	import sailpoint.object.ProvisioningPlan.AccountRequest;
+	import sailpoint.object.ProvisioningPlan.AttributeRequest;
+	import sailpoint.object.Workflow;
+	import sailpoint.tools.GeneralException;
+	import sailpoint.tools.Util;
+	import sailpoint.rapidapponboarding.rule.WrapperRuleLibrary;
+	import sailpoint.rapidapponboarding.rule.ROADUtil;
+	import sailpoint.object.ClassLists;
+	import sailpoint.object.SailPointObject;
+	import sailpoint.object.ProvisioningProject;
+	import java.lang.reflect.Method;
+	import sailpoint.object.ManagedAttribute;
+	import sailpoint.object.Bundle;
+	import sailpoint.object.QueryOptions;
+	import sailpoint.object.Filter;
+	import sailpoint.object.Rule;
+	import sailpoint.object.ObjectConfig;
+	import sailpoint.object.Attributes;
+	import sailpoint.object.WorkItem;
+	import sailpoint.object.ApprovalSet;
+	import sailpoint.object.ApprovalItem;
+	import sailpoint.api.Workflower;
+	import sailpoint.rapidapponboarding.logger.LogEnablement;
+	private Log logger = LogFactory.getLog("rapidapponboarding.rules");
+    /**
+	 * Build Leave Of Absence Plan
+	 * @param context
+	 * @param identityName
+	 * @param workflow
+	 * @return
+	 */
+    public ProvisioningPlan buildLOAPlan(SailPointContext context, String identityName, Workflow workflow) throws Exception {
+        LogEnablement.isLogDebugEnabled(logger,"Enter buildLOAPlan");
+       	Identity identity = context.getObjectByName(Identity.class, identityName);
+        String applicationProcess = "loaProcess";
+        LogEnablement.isLogDebugEnabled(logger,"...Process from Applications = " + applicationProcess);
+		IdentityService idService = new IdentityService(context);
+ 		int countLinks=0;
+        countLinks=idService.countLinks(identity);
+        List links;
+        ProvisioningPlan plan = new ProvisioningPlan();
+        if (countLinks>0 && identity!=null) {
+	        links = idService.getLinks(identity,0,0);
+			if (identity != null) {
+	            plan.setIdentity(identity);
+	        }
+	    	for (Link link : links) {
+	    		List ar = new ArrayList();
+					String nativeId = "";
+					String appName = "";
+					String iiqDisabled = "";
+					String iiqLocked = "";
+					String psa="";
+					if (link != null) 
+					{
+					    psa=((String)link.getAttribute("psAccount"));
+						nativeId = link.getNativeIdentity();
+        				appName = link.getApplicationName();
+						iiqDisabled=ROADUtil.isLinkDisabled(link);
+						iiqLocked=ROADUtil.isLinkLocked(link);
+					}
+					ar = addToLOAPlan(context, psa, applicationProcess, nativeId, appName, identity, iiqDisabled, iiqLocked, workflow);
+		    		if (!ar.isEmpty() && plan != null) {
+		               	for (AccountRequest acctReq : ar) {
+		               		plan.add(acctReq);
+		               	}
+	            	}
+	  		}
+	  	}
+	  	if(identity!=null)
+        {
+        context.decache(identity);
+        }
+ 		if (plan != null) {
+	        if (plan.getAllRequests() == null) {
+	            plan = null;
+	        }
+	    }
+        LogEnablement.isLogDebugEnabled(logger,"Exit buildLOAPlan");
+        return plan;
+    }
+   /**
+	 * Build Provisioning Plan Per Application Link
+	 * @param context
+	 * @param psa
+	 * @param applicationProcess
+	 * @param nativeId
+	 * @param appName
+	 * @param identity
+	 * @param iiqDisabled
+	 * @param iiqLocked
+	 * @param workflow
+	 * @return
+	 */
+    private List addToLOAPlan(SailPointContext context, String psa, String applicationProcess, String nativeId, String appName, Identity identity, String iiqDisabled, String iiqLocked, Workflow workflow) {
+    	LogEnablement.isLogDebugEnabled(logger,"Enter addToLOAPlan");
+		AccountRequest acctReq;
+		List allRequests = new ArrayList();
+		// GET THE INFORMATION ABOUT EACH LINK AND THEN THE PROCESS
+        LogEnablement.isLogDebugEnabled(logger,"...Application Name = " + appName);
+        Application app = context.getObjectByName(Application.class, appName);
+		if (app != null) {
+			Object extObj = app.getAttributeValue(applicationProcess);
+	        String extSetting = (String) extObj;
+	        String extendedRule = "";
+	        String reqType = "";
+	        if (extSetting == null) {
+	            ObjectConfig config = Application.getObjectConfig();
+	            if (config != null) {
+	                extSetting = (String) config.getObjectAttribute(applicationProcess).getDefaultValue();
+	            }
+	        }
+	        if (applicationProcess.equalsIgnoreCase("loaProcess")) 
+	        {
+	        	extendedRule = "loaExtendedRule";
+	        	reqType = getRequestTypeNameLeaverLOA(context, workflow);
+	        }
+	       	else 
+	       	{
+	       		extendedRule = "";
+	       	}
+	        LogEnablement.isLogDebugEnabled(logger,"...Application Name = " + appName + ", Process = " + extSetting); 
+			allRequests = getAccountRequest(psa,extSetting, extendedRule, appName, nativeId, identity, iiqDisabled, iiqLocked, reqType,workflow,null);
+	    }
+        if(app!=null)
+        {
+        context.decache(app);
+        } 
+        LogEnablement.isLogDebugEnabled(logger,"Exit addToLOAPlan");
+        return allRequests;
+    }
+    /**
+	 * Get Request Type
+	 * @param context
+	 * @param workflow
+	 * @return
+	 */
+     public String getRequestTypeNameLeaverLOA(SailPointContext context, Workflow workflow) 
+     {
+        String requestType = "LEAVER LOA FEATURE";
+        return requestType;
+     }
+     /**
+	 * Execute Post LOA Rule
+	 * @param identityName
+	 * @param project
+	 * @param requestType
+	 */
+    public void postLOARule(String identityName, String requestType, ProvisioningProject project)
+    {
+    	LogEnablement.isLogDebugEnabled(logger,"Start  postLOARule" );
+    	LogEnablement.isLogDebugEnabled(logger,"..identityName..."+identityName );
+    	LogEnablement.isLogDebugEnabled(logger,"..requestType..."+requestType );
+    	LogEnablement.isLogDebugEnabled(logger,"..project..."+project );
+    	Map map = new HashMap();
+	    //Common Configuration
+        map = ROADUtil.getCustomGlobalMap(context);
+        if(map!=null && map.containsKey("postLOARule"))
+		{
+		    String ruleName=map.get("postLOARule");
+		    if(ruleName!=null && ruleName.length()>0)
+		    {
+		    ROADUtil.invokePostExtendedRuleNoObjectReferences(context,null,ruleName, null,  requestType, null, null, null, identityName,null, project);
+		    }
+		 }
+	 	LogEnablement.isLogDebugEnabled(logger,"End  postLOARule" );
+    }
+	
+	]]></Source>
+</Rule>

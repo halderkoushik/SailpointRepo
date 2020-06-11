@@ -1,0 +1,22 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE IdentityTrigger PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<IdentityTrigger disabled="true" handler="sailpoint.api.CertificationTriggerHandler" name="NATIVE CHANGE CERTIFICATION EVENT" type="NativeChange">
+  <Description>Native Change Certification Trigger</Description>
+  <Owner>
+    <Reference class="sailpoint.object.Identity" name="spadmin"/>
+  </Owner>
+  <HandlerParameters>
+    <Attributes>
+      <Map>
+        <entry key="certificationDefinitionId" value="##NATIVECERTDEF002##"/>
+      </Map>
+    </Attributes>
+  </HandlerParameters>
+  <Selector>
+    <IdentitySelector>
+      <PopulationRef>
+        <Reference class="sailpoint.object.GroupDefinition" name="Accelerator Pack Correlated Identities"/>
+      </PopulationRef>
+    </IdentitySelector>
+  </Selector>
+</IdentityTrigger>

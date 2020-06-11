@@ -1,0 +1,130 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Workflow PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Workflow explicitTransitions="true" handler="sailpoint.api.StandardWorkflowHandler" name="Workflow-QuickLink-Discover-Provisioning-Policies" type="LCMProvisioning">
+  <Variable initializer="true" name="transient"/>
+  <Variable name="confirmationForm">
+    <Description>
+    </Description>
+  </Variable>
+  <Variable name="miningResultsForm">
+    <Description>
+    </Description>
+  </Variable>
+  <Variable initializer="false" name="trace">
+    <Description>
+			Used for debugging this workflow and when set to true
+			trace
+			will be sent to stdout.
+		</Description>
+  </Variable>
+  <Variable initializer="ref:launcher" name="owner">
+    <Description>Name of the user that will recieve the forms.</Description>
+  </Variable>
+  <Variable name="roadDiscoverProvisioningPolicyResultForm">
+    <Script>
+      <Source><![CDATA[
+	     
+	     	return "Form-Discovery-Provisioning-Policies-Results";
+				
+	      ]]></Source>
+    </Script>
+  </Variable>
+  <Variable name="roadDiscoverProvisioningPolicyBaselineForm">
+    <Script>
+      <Source><![CDATA[
+	     
+	     	return "Form-Discovery-Provisioning-Policies-Baseline";
+				
+	      ]]></Source>
+    </Script>
+  </Variable>
+  <Variable name="roadApplicationSelect"/>
+  <Variable name="roadIdentitySelect"/>
+  <Variable name="roadNativeIdSelect"/>
+  <Variable name="roadDateFormatSelect"/>
+  <Variable name="roadMiningProvisioningPoliciesModel"/>
+  <Variable name="roadMiningProvisioningResultsPoliciesModel"/>
+  <Description>Accelerator Pack Mine Provisioning Policies Workflow</Description>
+  <RuleLibraries>
+    <Reference class="sailpoint.object.Rule" name="Rule-Discover-ProvisioningPolicy-RuleLibrary"/>
+  </RuleLibraries>
+  <Step icon="Start" name="Start" posX="28" posY="10">
+    <Transition to="Initialize Model"/>
+  </Step>
+  <Step name="Initialize Model">
+    <Script>
+      <Source><![CDATA[
+				 
+				initializeMiningModel(workflow);
+				
+			]]></Source>
+    </Script>
+    <Transition to="Discover Provisioning Policy Baseline Form"/>
+  </Step>
+  <Step name="Discover Provisioning Policy Baseline Form">
+    <Approval name="Baseline Discovery Provisioning Policies" owner="ref:requester" return="" send="roadMiningProvisioningPoliciesModel">
+      <Arg name="workItemFormBasePath" value="roadMiningProvisioningPoliciesModel"/>
+      <Arg name="workItemType" value="Form"/>
+      <Arg name="workItemDescription" value="Baseline Discovery Provisioning Policies"/>
+      <Form name="Form-Discovery-Provisioning-Policies-Baseline">
+        <FormRef name="Form-Discovery-Provisioning-Policies-Baseline"/>
+      </Form>
+    </Approval>
+    <Transition to="End" when="!approved"/>
+    <Transition to="Build Baseline Confirmation Form" when="approved"/>
+  </Step>
+  <Step action="call:buildReadOnlyForm" name="Build Baseline Confirmation Form" resultVariable="confirmationForm">
+    <Arg name="form" value="ref:roadDiscoverProvisioningPolicyBaselineForm"/>
+    <Arg name="nextButtonLabel" value="label_confirm"/>
+    <Arg name="backButtonLabel" value="Change Baseline Selection"/>
+    <Arg name="cancelButtonLabel" value="Cancel"/>
+    <Description>
+       Create the confirmation form to be displayed.
+    </Description>
+    <Transition to="Show Baseline Confirmation Form"/>
+  </Step>
+  <Step icon="Approval" name="Show Baseline Confirmation Form">
+    <Approval mode="serial" owner="ref:launcher" return="roadMiningProvisioningPoliciesModel" send="">
+      <Arg name="workItemType" value="Form"/>
+      <Arg name="workItemDescription" value="Confirmation form"/>
+      <Arg name="workItemForm" value="ref:confirmationForm"/>
+      <Arg name="workItemFormBasePath" value="roadMiningProvisioningPoliciesModel"/>
+    </Approval>
+    <Description>Show Baseline Confirmation Form</Description>
+    <Transition to="Discover Provisioning Policy Baseline Form" when="!approved"/>
+    <Transition to="Discover" when="approved"/>
+  </Step>
+  <Step name="Discover" resultVariable="miningResultsForm">
+    <Script>
+      <Source><![CDATA[
+					 
+					 initializeMiningResultsModel(workflow);
+				     List minigResults=minePolicies(roadMiningProvisioningPoliciesModel, workflow.get("roadMiningProvisioningResultsPoliciesModel"));
+				     return buildMiningResultsForm(minigResults,roadDiscoverProvisioningPolicyResultForm,roadMiningProvisioningPoliciesModel,workflow.get("roadMiningProvisioningResultsPoliciesModel"));
+					
+				]]></Source>
+    </Script>
+    <Transition to="Show Discovery Results Form"/>
+  </Step>
+  <Step name="Show Discovery Results Form">
+    <Approval mode="serial" owner="ref:launcher" send="roadMiningProvisioningResultsPoliciesModel">
+      <Arg name="workItemType" value="Form"/>
+      <Arg name="workItemDescription" value="Discovery Results"/>
+      <Arg name="workItemForm" value="ref:miningResultsForm"/>
+      <Arg name="workItemFormBasePath" value="roadMiningProvisioningResultsPoliciesModel"/>
+    </Approval>
+    <Transition to="Save" when="approved"/>
+    <Transition to="End"/>
+  </Step>
+  <Step name="Save">
+    <Script>
+      <Source><![CDATA[
+				 
+				saveMinedResuls(roadMiningProvisioningPoliciesModel,roadMiningProvisioningResultsPoliciesModel);
+				
+			]]></Source>
+    </Script>
+    <Transition to="End"/>
+  </Step>
+  <Step icon="Stop" name="End"/>
+</Workflow>

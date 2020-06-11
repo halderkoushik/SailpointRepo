@@ -286,4 +286,145 @@
   <ObjectAttribute categoryName="Joiner" defaultValue="" displayName="On Rehire Restore Only Primary Account" editMode="Permanent" name="rehirePrimaryaccount" type="boolean">
     <Description>Move Only Primary Account</Description>
   </ObjectAttribute>
+  <ObjectAttribute categoryName="Leaver" defaultValue="" displayName="Leave Of Absence Options" editMode="Permanent" name="loaProcess" namedColumn="true" required="true">
+    <AllowedValues>
+      <String>Do Nothing</String>
+      <String>Disable Only</String>
+      <String>Disable and Remove Entitlements</String>
+      <String>Remove Entitlements</String>
+      <String>Delete Immediately</String>
+      <String>Lock Only</String>
+      <String>Extended Rule</String>
+    </AllowedValues>
+    <Description>Leave of Absence Options</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Leaver" defaultValue="" displayName="Leave Of Absence Extended Rule" editMode="Permanent" name="loaExtendedRule">
+    <Description>This rule will be executed in case selected Leave of Absence Options is Extended Rule</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Leaver" defaultValue="" displayName="Long Term Disability Options" editMode="Permanent" name="ltdProcess" namedColumn="true" required="true">
+    <AllowedValues>
+      <String>Do Nothing</String>
+      <String>Disable Only</String>
+      <String>Disable and Remove Entitlements</String>
+      <String>Remove Entitlements</String>
+      <String>Delete Immediately</String>
+      <String>Lock Only</String>
+      <String>Extended Rule</String>
+    </AllowedValues>
+    <Description>Long Term Disability Options</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Leaver" defaultValue="" displayName="Long Term Disability Extended Rule" editMode="Permanent" name="ltdExtendedRule">
+    <Description>This rule will be executed in case Long Term Disability Options is Extended Rule</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Native Change Detection" defaultValue="" displayName="Native Change Detection Options" editMode="Permanent" name="nativeChangeProcess" namedColumn="true" required="true">
+    <AllowedValues>
+      <String>Do Nothing</String>
+      <String>Automated Recovery and Revocation</String>
+      <String>Manager Certification Revocation</String>
+      <String>Manager Certification Revocation and Automated Recovery</String>
+    </AllowedValues>
+    <Description>Native Change Detection Options</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Password Synchronization" defaultValue="" displayName="Comma Separated Target Applications" editMode="Permanent" name="targetpasswordSync">
+    <Description>SUPPORTED FORMAT:[Application Name],[Application Name]</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Password Synchronization" defaultValue="" displayName="Enterprise Directory" editMode="Permanent" name="entDir" type="boolean"/>
+  <ObjectAttribute categoryName="Policy Violation" defaultValue="" displayName="Multiple Accounts Policy Type Options" editMode="Permanent" name="policyType" required="true">
+    <AllowedValues>
+      <String>Do Nothing</String>
+      <String>Single Entitlement</String>
+      <String>Multiple Entitlement Toxic Combinations</String>
+    </AllowedValues>
+    <Description>Policy Type Options</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Policy Violation" defaultValue="" displayName="Single Entitlement Exceptions Artifact Name" editMode="Permanent" name="policytypeExceptions" type="string">
+    <Description>Single Entitlement Exceptions</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Policy Violation" defaultValue="" displayName="Toxic Combinations Artifact Name" editMode="Permanent" name="txCombinationName" type="string">
+    <Description>Toxic Combination Custom Name</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Policy Violation" defaultValue="" displayName="Eligibility Policy Violation Population Identification" editMode="Permanent" name="eligibilityExpression" type="string">
+    <Description>SUPPORTED FORMATS: [Cube Attribute Name]#IIQPolicyEligibility#[Java Regular Expression] OR Population Name</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Approval" defaultValue="" displayName="Omit Manager's Approval for Privileged Access" editMode="Permanent" name="omitmanagerPrivgaccess" type="boolean">
+    <Description>Skip Manager Approval For Privileged Access</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Approval" defaultValue="" displayName="Validate Privileged Access Request" editMode="Permanent" name="enablepsaValidation" type="boolean">
+    <Description>Access Request For Privileged Access To Privileged Accounts</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Privileged Account" defaultValue="" displayName="Enable Password Expiration Notification" editMode="Permanent" name="enablepswexpNotification" namedColumn="true" type="string">
+    <Description>Enable Password Expiration Notification</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Privileged Account" defaultValue="" displayName="Password Reset After X Days" editMode="Permanent" name="xdaysresetPwd" type="string">
+    <Description>Password Reset After X days</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Privileged Account" defaultValue="" displayName="Password Expiration Application Attribute" editMode="Permanent" name="pwdexpAttr" type="string">
+    <Description>Password Expiration Attribute</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Privileged Account" defaultValue="" displayName="Password Before Expiration Days (Daily Notfications)" editMode="Permanent" name="beforepwdexpAttr" type="string">
+    <Description>Password Before Expiration Day (Daily Notfications)</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Privileged Account" defaultValue="" displayName="Password After Expiration Days (Action on Account)" editMode="Permanent" name="afterpwdexpAttr" type="string">
+    <Description>Password After Expiration Day (Action on Account)</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Privileged Account" defaultValue="" displayName="Password Expiration Date Format Options" editMode="Permanent" name="pwdexpAttrexpression">
+    <AllowedValues>
+      <String>Windows NT Time Format</String>
+      <String>YYYYMMDDHHMMSST Format</String>
+      <String>Extended Rule</String>
+    </AllowedValues>
+    <Description>Password Format to be converted to Date</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Privileged Account" defaultValue="" displayName="Password Expiration Date Rule" editMode="Permanent" name="pwdexpAttrexpressionRule" type="string">
+    <Description>Return Password Expiration Date</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Privileged Account" defaultValue="" displayName="Scramble Password Application Attribute" editMode="Permanent" name="scramPwdattr" type="string">
+    <Description>Password Attribute to be scrambled, not required for connectors that supports password operation</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Privileged Account" defaultValue="" displayName="After Password Expiration Options" editMode="Permanent" name="afterPassExpProcess" namedColumn="true">
+    <AllowedValues>
+      <String>Do Nothing</String>
+      <String>Scramble Password</String>
+      <String>Disable Account and Scramble Password</String>
+    </AllowedValues>
+    <Description>After Password Expiration Options</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Joiner" defaultValue="" displayName="Return To Work From Leave of Absence Options" editMode="Permanent" name="rtwloaProcess" namedColumn="true" required="true">
+    <AllowedValues>
+      <String>Do Nothing</String>
+      <String>Enable Immediately</String>
+      <String>Unlock Only</String>
+      <String>Extended Rule</String>
+    </AllowedValues>
+    <Description>This is a reverse of LOA, Pending X Days Requests will be removed</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Joiner" defaultValue="" displayName="Return To Work From Leave of Absence Extended Rule" editMode="Permanent" name="rtwLOAExtendedRule">
+    <Description>This rule will be executed in case selected Return To Work from Leave of Absence Options is Extended Rule</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Joiner" defaultValue="" displayName="Return To Work From Long Term Disability Options" editMode="Permanent" name="rtwltdProcess" namedColumn="true" required="true">
+    <AllowedValues>
+      <String>Do Nothing</String>
+      <String>Enable Immediately</String>
+      <String>Unlock Only</String>
+      <String>Extended Rule</String>
+    </AllowedValues>
+    <Description>This is a reverse of LTD, Pending X Days Requests will be removed</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Joiner" defaultValue="" displayName="Return To Work From Long Term Disability Extended Rule" editMode="Permanent" name="rtwLTDxtendedRule">
+    <Description>This rule will be executed in case selected Return To Work from Long Term Disability Options is Extended Rule</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Aggregate" defaultValue="" displayName="Service Account Identification" editMode="Permanent" name="serviceAccountAttrExpression">
+    <Description>SUPPORTED FORMATS: [Schema Attribute Name]#IIQService#[Schema Attribute Value]#IIQService#[Operation] OR [Schema Attribute Name]#IIQService#[Java Regular Expression]</Description>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Aggregate" defaultValue="" displayName="Service Account Authoritative Source" editMode="Permanent" name="authoritativeServiceAccount"/>
+  <ObjectAttribute categoryName="Aggregate" defaultValue="" displayName="Service Account Unique Name Attribute " editMode="Permanent" name="apServiceAccountUniqueName"/>
+  <ObjectAttribute categoryName="Aggregate" defaultValue="" displayName="Append Application Name To Service Account Cube Name" editMode="Permanent" name="apAppendApplicationName" type="boolean"/>
+  <ObjectAttribute categoryName="Ticket Integration" defaultValue="" displayName="Ticket Assignment Group Name" editMode="Permanent" name="assignmentGroupname" type="string"/>
+  <ObjectAttribute categoryName="Ticket Integration" defaultValue="" displayName="After Ticket Provisioning Options" editMode="Permanent" name="afterTicketProvisioningOptions" type="string">
+    <AllowedValues>
+      <String>Do Nothing</String>
+      <String>Extended Rule</String>
+    </AllowedValues>
+  </ObjectAttribute>
+  <ObjectAttribute categoryName="Ticket Integration" defaultValue="" displayName="After Ticket Provisioning Extended Rule" editMode="Permanent" name="afterticketprovisioningExtendedrule" type="string"/>
 </ObjectConfig>

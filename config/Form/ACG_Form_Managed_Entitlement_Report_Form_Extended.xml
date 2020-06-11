@@ -1,0 +1,31 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Form PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Form hidden="true" name="Managed Entitlement Report Form Extended" type="Report">
+  <Section columns="1" label="Managed Entitlement Arguments" name="customProperties">
+    <Field displayName="Requestable" helpKey="Requestable" name="requestable" type="string" value="ref:requestable">
+      <AllowedValues>
+        <List>
+          <String>null</String>
+          <String>All</String>
+        </List>
+        <List>
+          <String>true</String>
+          <String>Requestable Only</String>
+        </List>
+        <List>
+          <String>false</String>
+          <String>Non Requestable</String>
+        </List>
+      </AllowedValues>
+    </Field>
+    <Field displayName="applications" helpKey="help_rept_identity_entitlement_applications" multi="true" name="application" type="Application" value="ref:application"/>
+    <Field displayName="Entitlement Create Date" helpKey="Entitlement Create Date" name="creationDateStart" type="date" value="ref:creationDateStart"/>
+    <Field displayName="Entitlement End Date" helpKey="Entitlement End Date" name="creationDateEnd" type="date" value="ref:creationDateEnd">
+      <Attributes>
+        <Map>
+          <entry key="endDate" value="true"/>
+        </Map>
+      </Attributes>
+    </Field>
+  </Section>
+</Form>

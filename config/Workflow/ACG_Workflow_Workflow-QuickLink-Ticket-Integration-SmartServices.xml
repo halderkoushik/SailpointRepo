@@ -1,0 +1,113 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Workflow PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Workflow explicitTransitions="true" handler="sailpoint.api.StandardWorkflowHandler" name="Workflow-QuickLink-Ticket-Integration-SmartServices" type="LCMProvisioning">
+  <Variable initializer="true" name="transient"/>
+  <Variable name="confirmationForm">
+    <Description>
+      A form that gets displayed for confirming the registration.
+    </Description>
+  </Variable>
+  <Variable initializer="false" name="trace">
+    <Description>
+			Used for debugging this workflow and when set to true
+			trace
+			will be sent to stdout.
+		</Description>
+  </Variable>
+  <Variable initializer="ref:launcher" name="owner">
+    <Description>Name of the user that will recieve the forms.</Description>
+  </Variable>
+  <Variable name="ticketIntegrationFieldHiddenAttrs"/>
+  <Variable name="roadTicketForm">
+    <Script>
+      <Source><![CDATA[
+	     
+	     	return "Form-Ticket-Integration";
+				
+	      ]]></Source>
+    </Script>
+  </Variable>
+  <Variable name="roadIntegrationConfigSelect"/>
+  <Variable name="roadTicketModel"/>
+  <Description>Accelerator Pack Ticket Integration Workflow</Description>
+  <RuleLibraries>
+    <Reference class="sailpoint.object.Rule" name="Rule-Ticket-Integration-RuleLibrary"/>
+  </RuleLibraries>
+  <Step icon="Start" name="Start" posX="28" posY="10">
+    <Transition to="Show Ticket Integration Selection Form"/>
+  </Step>
+  <Step name="Show Ticket Integration Selection Form">
+    <Approval name="SmartServices-Ticket-Integration" owner="ref:requester" return="roadIntegrationConfigSelect" send="roadTicketModel">
+      <Form name="SmartServices-Ticket-Integration" type="Workflow">
+        <Description>Ticket Integration</Description>
+        <Section label="Integration Configuration" name="roadIntegrationConfig">
+          <Field displayName="Select Ticket Integration Configuration" name="roadIntegrationConfigSelect" required="true" type="IntegrationConfig">
+            <Attributes>
+              <Map>
+                <entry key="valueProperty" value="name"/>
+              </Map>
+            </Attributes>
+          </Field>
+        </Section>
+        <Button action="cancel" label="Cancel"/>
+        <Button action="next" label="Next"/>
+      </Form>
+    </Approval>
+    <Transition to="End" when="!approved"/>
+    <Transition to="Initialize Model" when="approved"/>
+  </Step>
+  <Step name="Initialize Model">
+    <Script>
+      <Source><![CDATA[
+				 
+				initializeTicketIntegrationRoadModel( workflow, roadIntegrationConfigSelect);
+				
+			]]></Source>
+    </Script>
+    <Transition to="Show Integration Configuration Form"/>
+  </Step>
+  <Step name="Show Integration Configuration Form">
+    <Approval mode="serial" owner="ref:requester" return="roadTicketModel" send="roadIntegrationConfigSelect,ticketIntegrationFieldHiddenAttrs">
+      <Arg name="workItemFormBasePath" value="roadTicketModel"/>
+      <Arg name="workItemType" value="Form"/>
+      <Arg name="workItemDescription" value="Ticket Integration"/>
+      <Arg name="workItemForm" value="ref:roadTicketForm"/>
+    </Approval>
+    <Transition to="Show Ticket Integration Selection Form" when="!approved"/>
+    <Transition to="Build Confirmation Form" when="approved"/>
+  </Step>
+  <Step action="call:buildReadOnlyForm" name="Build Confirmation Form" resultVariable="confirmationForm">
+    <Arg name="form" value="ref:roadTicketForm"/>
+    <Arg name="nextButtonLabel" value="label_confirm"/>
+    <Arg name="backButtonLabel" value="Back"/>
+    <Arg name="cancelButtonLabel" value="Cancel"/>
+    <Description>
+       Create the confirmation form to be displayed.
+    </Description>
+    <Transition to="Confirmation Form"/>
+  </Step>
+  <Step icon="Approval" name="Confirmation Form">
+    <Approval mode="serial" owner="ref:launcher" return="roadTicketModel" send="roadIntegrationConfigSelect,ticketIntegrationFieldHiddenAttrs">
+      <Arg name="workItemType" value="Form"/>
+      <Arg name="workItemDescription" value="Confirmation form"/>
+      <Arg name="workItemForm" value="ref:confirmationForm"/>
+      <Arg name="workItemFormBasePath" value="roadTicketModel"/>
+    </Approval>
+    <Description>
+       Display the confirmation form.
+    </Description>
+    <Transition to="Show Integration Configuration Form" when="!approved"/>
+    <Transition to="Save" when="approved"/>
+  </Step>
+  <Step name="Save">
+    <Script>
+      <Source><![CDATA[
+				 
+			saveIntegrationConfig( confirmationForm,  roadTicketModel, roadIntegrationConfigSelect, ticketIntegrationFieldHiddenAttrs);
+				
+			]]></Source>
+    </Script>
+    <Transition to="End"/>
+  </Step>
+  <Step icon="Stop" name="End"/>
+</Workflow>

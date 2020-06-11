@@ -1,0 +1,848 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Form PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Form name="Accelerator Pack Create Identity" type="CreateIdentity">
+  <Attributes>
+    <Map>
+      <entry key="pageTitle" value="Create Identity"/>
+    </Map>
+  </Attributes>
+  <Description>Create Identity Form</Description>
+  <Section label="IDENTITY ATTRIBUTES" name="IDENTITY ATTRIBUTES">
+    <Field displayName="Identity Cube Type" name="type" postBack="true" required="true" type="string" value="contractor">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+			import org.apache.commons.logging.Log;
+			import org.apache.commons.logging.LogFactory;
+	  		import sailpoint.tools.GeneralException;
+			import sailpoint.rapidapponboarding.rule.ROADUtil;
+			import sailpoint.rapidapponboarding.logger.LogEnablement;
+	   		Log formLogger = LogFactory.getLog("rapidapponboarding.rules");
+   	   		//Check to See if Create Service Account Functionality is Enabled
+	  	  	public boolean createServiceCubes() throws GeneralException
+		    {
+		    	LogEnablement.isLogDebugEnabled(formLogger,"Enter createServiceCubes");
+		    	boolean createServiceCubes=false;
+	    	    Map entryObj = ROADUtil.getCustomGlobalMap(context);
+	            if (entryObj!= null) 
+	            {
+	                String createServiceCubesStr = entryObj.get("createServiceCubes").toString(); 
+	                if(createServiceCubesStr!=null && createServiceCubesStr.equalsIgnoreCase("TRUE"))
+	                {
+	                	createServiceCubes= true;
+	                }
+	            }
+		        LogEnablement.isLogDebugEnabled(formLogger,"Exit createServiceCubes: "+createServiceCubes);
+		        return createServiceCubes;
+		    }	
+		    //Contractors
+		  	List displayList = new ArrayList();
+		  	List masterList = new ArrayList();
+	    	masterList.add("contractor");
+	    	masterList.add("Contractor");
+	    	displayList.add(masterList);
+	   		if(createServiceCubes())
+			{
+			//Service Accounts
+			masterList = new ArrayList();
+	    	masterList.add("service");
+	    	masterList.add("Service Accounts");
+	    	displayList.add(masterList);
+			}
+			return displayList;
+			]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+    </Field>
+    <Field displayName="Is Service Cube" dynamic="true" name="serviceCube" readOnly="true" type="string">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+                	import sailpoint.rapidapponboarding.rule.ObjectConfigAttributesRuleLibrary;
+                 	//Identity TYPE ENABLED
+					String identityTypeEnabled = ObjectConfigAttributesRuleLibrary.extendedAttrIdentityTypeEnabled(context);
+					boolean identityTypeEnab=false;
+					if(identityTypeEnabled!=null && identityTypeEnabled.length()>0 && identityTypeEnabled.equalsIgnoreCase("TRUE"))
+					{
+						identityTypeEnab=true;
+					}
+					if(identityTypeEnab)
+					{
+						return true;
+					}
+                    if(form!=null && form.getField("type")!=null)
+                    {
+						String isServiceHumanCube=form.getField("type").getValue();
+						if (null != isServiceHumanCube && isServiceHumanCube.equalsIgnoreCase("service")) 
+						{   
+						return false;             
+						}
+						else
+						{
+						return true;
+						}
+					}
+					else
+					{
+					return true;
+					}
+				]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+      <Script>
+        <Source><![CDATA[
+	    import org.apache.commons.logging.Log;
+		import org.apache.commons.logging.LogFactory;
+	 	import sailpoint.tools.GeneralException;
+	 	import sailpoint.object.Field;
+		import sailpoint.rapidapponboarding.logger.LogEnablement;
+		Log formLogger = LogFactory.getLog("rapidapponboarding.rules");
+	    LogEnablement.isLogDebugEnabled(formLogger,"Is Service Cube Start..");
+		String result=null;
+	    if(form!=null && form.getField("type")!=null)
+	    {
+			Field isServiceHumanCube=form.getField("type");
+			if (null != isServiceHumanCube && isServiceHumanCube.getValue()!=null && isServiceHumanCube.getValue().toString()!=null
+			&& isServiceHumanCube.getValue().toString().equalsIgnoreCase("service")) 
+			{   
+			 result="True";             
+			}
+			else
+			{
+			 result="False";
+			}
+		}
+		else
+		{
+			 result="False";
+		}
+		return result;
+	]]></Source>
+      </Script>
+    </Field>
+    <Field displayName="Password" name="password" type="secret">
+      <Attributes>
+        <Map>
+          <entry key="hidden" value="true"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Password Confirmation" name="passwordConfirm" type="secret">
+      <Attributes>
+        <Map>
+          <entry key="hidden" value="true"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Application Name" name="platformName" postBack="true" required="true" type="Application">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+                    if(form!=null && form.getField("type")!=null)
+                    {
+						String isServiceHumanCube=form.getField("type").getValue();
+						if (null != isServiceHumanCube && isServiceHumanCube.equalsIgnoreCase("service")) 
+						{   
+						return false;             
+						}
+						else
+						{
+						return true;
+						}
+					}
+					else
+					{
+						return true;
+					}
+					]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Unique Cube Name" dynamic="true" name="name" postBack="true" required="true" type="string">
+      <RuleRef>
+        <Reference class="sailpoint.object.Rule" name="Rule-FrameWork-Generate-Unique-Id"/>
+      </RuleRef>
+    </Field>
+    <Field displayName="Service Account Unique Id" dynamic="true" name="sCubeName" readOnly="true" required="true" type="string">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+                    if(form!=null && form.getField("type")!=null)
+                    {
+						String isServiceHumanCube=form.getField("type").getValue();
+						if (null != isServiceHumanCube && isServiceHumanCube.equalsIgnoreCase("service")) 
+						{   
+						return false;             
+						}
+						else
+						{
+						return true;
+						}
+					}
+					else
+					{
+					return true;
+					}
+					]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+      <Script>
+        <Source><![CDATA[
+        		import sailpoint.object.Application;
+        		import sailpoint.object.Identity;
+        		if(form!=null && form.getField("type")!=null)
+                {
+	              	String isServiceHumanCube=form.getField("type").getValue();                                                          
+					if (null != isServiceHumanCube && isServiceHumanCube.equalsIgnoreCase("service")) 
+					{   
+					  String input=form.getField("name").getValue();
+					  String applicationName=form.getField("platformName").getValue();
+					  if(applicationName!=null && input!=null)
+					  {
+						  String replaceCharsAppName=applicationName.replaceAll("[^a-zA-Z0-9]", "");
+						  String calculatedId=replaceCharsAppName + input;
+						  if(input!=null && replaceCharsAppName!=null && !input.contains(replaceCharsAppName))
+						  {
+						  	form.getField("name").setValue(calculatedId);
+						  }
+						  form.getField("firstname").setValue(replaceCharsAppName);
+						  form.getField("lastname").setValue(input);
+						  form.getField("email").setRequired(false);
+						  form.getField("manager").setRequired(false);
+						  return calculatedId;
+					  }  
+					}
+				}
+	    ]]></Source>
+      </Script>
+    </Field>
+    <Field displayName="First Name" name="firstname" required="true" type="string"/>
+    <Field displayName="Last Name" name="lastname" required="true" type="string"/>
+    <Field displayName="Middle Name" name="middleName" type="string">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+                    if(form!=null && form.getField("type")!=null)
+                    {
+						String isServiceHumanCube=form.getField("type").getValue();
+						if (null != isServiceHumanCube && isServiceHumanCube.equalsIgnoreCase("Contractor")) 
+						{   
+						return false;             
+						}
+						else
+						{
+						return true;
+						}
+					}
+					else
+					{
+					return true;
+					}
+					]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Email" name="email" required="true" type="string">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+                    if(form!=null && form.getField("type")!=null)
+                    {
+						String isServiceHumanCube=form.getField("type").getValue();
+						if (null != isServiceHumanCube && isServiceHumanCube.equalsIgnoreCase("Contractor")) 
+						{   
+						return false;             
+						}
+						else
+						{
+						return true;
+						}
+					}
+					else
+					{
+					return true;
+					}
+					]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Administrator" name="administrator" required="true" type="sailpoint.object.Identity">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+                import sailpoint.rapidapponboarding.rule.ObjectConfigAttributesRuleLibrary;
+                boolean identityTypeEnab=false;
+                String identityTypeEnabled = ObjectConfigAttributesRuleLibrary.extendedAttrIdentityTypeEnabled(context);
+				if(identityTypeEnabled!=null && identityTypeEnabled.length()>0 && identityTypeEnabled.equalsIgnoreCase("TRUE"))
+				{
+					identityTypeEnab=true;
+				}
+				if(identityTypeEnab)
+				{
+					if(form!=null && form.getField("type")!=null)
+	                {
+						String isServiceHumanCube=form.getField("type").getValue();
+						if (null != isServiceHumanCube && isServiceHumanCube.equalsIgnoreCase("service")) 
+						{   
+						return false;             
+						}
+						else
+						{
+						return true;
+						}
+					}
+					else
+					{
+					return true;
+					}
+				}
+				else
+				{
+				return true;
+				}
+				]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Service Account Owner" name="saccountOwnerone" required="true" type="sailpoint.object.Identity">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+	                import sailpoint.rapidapponboarding.rule.ObjectConfigAttributesRuleLibrary;
+	                boolean identityTypeEnab=false;
+	                String identityTypeEnabled = ObjectConfigAttributesRuleLibrary.extendedAttrIdentityTypeEnabled(context);
+					if(identityTypeEnabled!=null && identityTypeEnabled.length()>0 && identityTypeEnabled.equalsIgnoreCase("TRUE"))
+					{
+						identityTypeEnab=true;
+					}
+			        if(!identityTypeEnab)
+                    {
+	                    if(form!=null && form.getField("type")!=null)
+	                    {
+							String isServiceHumanCube=form.getField("type").getValue();
+							if (null != isServiceHumanCube && isServiceHumanCube.equalsIgnoreCase("service")) 
+							{   
+							return false;             
+							}
+							else
+							{
+							return true;
+							}
+						}
+						else
+						{
+						return true;
+						}
+					}
+				    else
+					{
+						return true;
+					}
+				]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+  </Section>
+  <Section label="CONTRACTOR ATTRIBUTES" name="CONTRACTOR ATTRIBUTES">
+    <Attributes>
+      <Map>
+        <entry key="hidden">
+          <value>
+            <Script>
+              <Source><![CDATA[
+				if(form != null && form.getField("type") != null)
+				{
+					String isServiceHumanCube = form.getField("type").getValue();
+					if(null != isServiceHumanCube && isServiceHumanCube.equalsIgnoreCase("Contractor")) 
+					{   
+						return false;             
+					}
+					else
+					{
+						return true;
+					}
+				}
+				else
+				{
+					return true;
+				}
+				]]></Source>
+            </Script>
+          </value>
+        </entry>
+        <entry key="subtitle" value="Joiner Lifecycle Event will be kicked upon Contractor Creation"/>
+      </Map>
+    </Attributes>
+    <Field name="contractorPluginExists" postBack="true" type="boolean">
+      <Attributes>
+        <Map>
+          <entry key="hidden" value="true"/>
+          <entry key="readOnly" value="true"/>
+        </Map>
+      </Attributes>
+      <RuleRef>
+        <Reference class="sailpoint.object.Rule" name="Rule-FieldValue-ContractorPluginExists"/>
+      </RuleRef>
+    </Field>
+    <Field displayName="Contractor Type" helpKey="Select Vendor Contractor for contractors that work for a vendor company." name="contractorType" postBack="true" type="string" value="Vendor Contractor">
+      <AllowedValues>
+        <String>Vendor Contractor</String>
+        <String>Independent Contractor</String>
+      </AllowedValues>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+					form.getField("ctrMgr").setValue(null);
+					form.getField("ctrexpDt").setValue(null);
+					if(form != null && form.getField("contractorPluginExists") != null && form.getField("contractorPluginExists").getValue())
+					{
+						return false;             
+					}
+					else
+					{
+						return true;
+					}
+					]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Assignment" dynamic="true" name="ctrProfid" postBack="true" required="true" type="string">
+      <AllowedValuesDefinition>
+        <RuleRef>
+          <Reference class="sailpoint.object.Rule" name="Rule-AllowedValues-ContractorProfiles"/>
+        </RuleRef>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+					if(form != null && form.getField("contractorPluginExists") != null && form.getField("contractorPluginExists").getValue() && form.getField("contractorType") != null)
+					{
+						String contractorType = form.getField("contractorType").getValue();
+						if(null != contractorType && contractorType.equalsIgnoreCase("Vendor Contractor")) 
+						{   
+							return false;             
+						}
+						else
+						{
+							return true;
+						}
+					}
+					else
+					{
+						return true;
+					}
+					]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Department" dynamic="true" name="ctrDptid" postBack="true" required="true" type="string">
+      <AllowedValuesDefinition>
+        <RuleRef>
+          <Reference class="sailpoint.object.Rule" name="Rule-AllowedValues-ContractorDepartments"/>
+        </RuleRef>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+					if(form != null && form.getField("contractorPluginExists") != null && form.getField("contractorPluginExists").getValue() && form.getField("contractorType") != null)
+					{
+						form.getField("ctrMgr").setValue(null);
+						String contractorType = form.getField("contractorType").getValue();
+						if(null != contractorType && contractorType.equalsIgnoreCase("Vendor Contractor")) 
+						{   
+							return false;             
+						}
+						else
+						{
+							return true;
+						}
+					}
+					else
+					{
+						return true;
+					}
+					]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Contractor Agency" dynamic="true" name="ctrVendorid" postBack="true" required="true" type="string">
+      <AllowedValuesDefinition>
+        <RuleRef>
+          <Reference class="sailpoint.object.Rule" name="Rule-AllowedValues-ContractorVendors"/>
+        </RuleRef>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+					if(form != null && form.getField("contractorPluginExists") != null && form.getField("contractorPluginExists").getValue() && form.getField("contractorType") != null)
+					{
+						String contractorType = form.getField("contractorType").getValue();
+						if(null != contractorType && contractorType.equalsIgnoreCase("Vendor Contractor")) 
+						{   
+							return false;             
+						}
+						else
+						{
+							return true;
+						}
+					}
+					else
+					{
+						return true;
+					}
+					]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Contractor Sponsor Manager" name="manager" required="true" type="sailpoint.object.Identity">
+      <Attributes>
+        <Map>
+          <entry key="readOnly">
+            <value>
+              <Script>
+                <Source><![CDATA[
+						import sailpoint.object.QueryOptions;
+						import sailpoint.object.Identity;
+						import sailpoint.object.Filter;
+						import sailpoint.tools.Util;
+						import sailpoint.search.ExternalAttributeFilterBuilder;
+						if(form.getField("contractorPluginExists") != null && form.getField("contractorPluginExists").getValue() && form.getField("contractorType") != null && form.getField("contractorType").getValue() != null && form.getField("contractorType").getValue().toString().equalsIgnoreCase("Vendor Contractor")) {
+							if(form.getField("ctrDptid") != null && form.getField("ctrDptid").getValue() != null && form.getField("ctrDptid").getValue().toString().trim().length() > 0) {
+								String deptId = form.getField("ctrDptid").getValue().toString(); 
+								Filter f = ExternalAttributeFilterBuilder.buildAndFilter(ExternalAttributeFilterBuilder.IDENTITY_EXTERNAL, ExternalAttributeFilterBuilder.IDENTITY_JOIN , "ctrAcctspndpids", Util.csvToList(deptId), "EQ");
+								QueryOptions qo = new QueryOptions();
+								qo.addFilter(f);
+								//Count how many identities fit the criteria for being profile manager
+								int objCount = context.countObjects(Identity.class, qo);
+								//If exactly one match is found, set it as read only.
+								//If multiple identities found, then set as editable so that user can choose
+								if(objCount == 1) {
+									return true;
+								}
+								else {
+									return false;
+								}
+							}
+							else {
+								return true;
+							}
+						}
+						else {
+							return false;
+						}
+						]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+      <Script>
+        <Source><![CDATA[
+				import sailpoint.object.QueryOptions;
+				import sailpoint.object.Identity;
+				import sailpoint.object.Filter;
+				import sailpoint.tools.Util;
+				import sailpoint.search.ExternalAttributeFilterBuilder;
+				if(form.getField("contractorPluginExists") != null && form.getField("contractorPluginExists").getValue() && form.getField("contractorType") != null && form.getField("contractorType").getValue() != null && form.getField("contractorType").getValue().toString().equalsIgnoreCase("Vendor Contractor")) {
+					if(form.getField("ctrDptid") != null && form.getField("ctrDptid").getValue() != null && form.getField("ctrDptid").getValue().toString().trim().length() > 0) {
+						String deptId = form.getField("ctrDptid").getValue().toString(); 
+						Filter f = ExternalAttributeFilterBuilder.buildAndFilter(ExternalAttributeFilterBuilder.IDENTITY_EXTERNAL, ExternalAttributeFilterBuilder.IDENTITY_JOIN , "ctrAcctspndpids", Util.csvToList(deptId), "EQ");
+						QueryOptions qo = new QueryOptions();
+						qo.addFilter(f);
+						//Count how many identities fit the criteria for being profile manager
+						int objCount = context.countObjects(Identity.class, qo);
+						//If exactly one match is found, set it as the value for this field.
+						//If multiple identities found, then set a filter so that user can choose
+						if(objCount == 1) 
+						{
+							String id = "";
+							String name= "";
+							Iterator idResult = context.search(Identity.class, qo, "id, name"); 
+							if(idResult != null && idResult.hasNext())
+							 {
+								Object[] obj = (Object[]) idResult.next();
+								if(obj != null && obj.length >= 1) 
+								{
+									id = obj[0];
+									name = obj[1];
+								}
+							}
+							field.setFilterString(f.toString());
+							return name;
+						}
+						else 
+						{
+							field.setFilterString(f.toString());
+							return null;
+						}
+					}
+					else 
+					{
+						//Create a Filter that will not return any results, if no Department is selected
+						Filter f = Filter.isnull("id");
+						field.setFilterString(f.toString());
+						return null;
+					}
+				}
+				else 
+				{
+					//If contractor plugin doesn't exist, then set an empty filter to make all Identity objects available for choosing
+					field.setFilterString("");
+					return null;
+				}
+				]]></Source>
+      </Script>
+    </Field>
+    <Field displayName="Contractor Assignment Manager" dynamic="true" name="ctrMgr" required="true" type="Identity">
+      <Attributes>
+        <Map>
+          <entry key="readOnly">
+            <value>
+              <Script>
+                <Source><![CDATA[
+						import sailpoint.object.QueryOptions;
+						import sailpoint.object.Identity;
+						import sailpoint.object.Filter;
+						import sailpoint.tools.Util;
+						import sailpoint.search.ExternalAttributeFilterBuilder;
+						if(form.getField("contractorPluginExists") != null && form.getField("contractorPluginExists").getValue() && form.getField("contractorType") != null && form.getField("contractorType").getValue() != null && form.getField("contractorType").getValue().toString().equalsIgnoreCase("Vendor Contractor")) {
+							if(form.getField("ctrDptid") != null && form.getField("ctrDptid").getValue() != null && form.getField("ctrDptid").getValue().toString().trim().length() > 0) {
+								String deptId = form.getField("ctrDptid").getValue().toString(); 
+								Filter f = ExternalAttributeFilterBuilder.buildAndFilter(ExternalAttributeFilterBuilder.IDENTITY_EXTERNAL, ExternalAttributeFilterBuilder.IDENTITY_JOIN , "ctrPrfmgrdpids", Util.csvToList(deptId), "EQ");
+								QueryOptions qo = new QueryOptions();
+								qo.addFilter(f);
+								//Count how many identities fit the criteria for being profile manager
+								int objCount = context.countObjects(Identity.class, qo);
+								//If exactly one match is found, set it as read only.
+								//If multiple identities found, then set as editable so that user can choose
+								if(objCount == 1) {
+									return true;
+								}
+								else {
+									return false;
+								}
+							}
+							else {
+								return true;
+							}
+						}
+						else {
+							return false;
+						}
+						]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+      <Script>
+        <Source><![CDATA[
+				import sailpoint.object.QueryOptions;
+				import sailpoint.object.Identity;
+				import sailpoint.object.Filter;
+				import sailpoint.tools.Util;
+				import sailpoint.search.ExternalAttributeFilterBuilder;
+				if(form.getField("contractorPluginExists") != null && form.getField("contractorPluginExists").getValue() && form.getField("contractorType") != null && form.getField("contractorType").getValue() != null && form.getField("contractorType").getValue().toString().equalsIgnoreCase("Vendor Contractor")) {
+					if(form.getField("ctrDptid") != null && form.getField("ctrDptid").getValue() != null && form.getField("ctrDptid").getValue().toString().trim().length() > 0) {
+						String deptId = form.getField("ctrDptid").getValue().toString(); 
+						Filter f = ExternalAttributeFilterBuilder.buildAndFilter(ExternalAttributeFilterBuilder.IDENTITY_EXTERNAL, ExternalAttributeFilterBuilder.IDENTITY_JOIN , "ctrPrfmgrdpids", Util.csvToList(deptId), "EQ");
+						QueryOptions qo = new QueryOptions();
+						qo.addFilter(f);
+						//Count how many identities fit the criteria for being profile manager
+						int objCount = context.countObjects(Identity.class, qo);
+						//If exactly one match is found, set it as the value for this field.
+						//If multiple identities found, then set a filter so that user can choose
+						if(objCount == 1) 
+						{
+							String id = "";
+							String name= "";
+							Iterator idResult = context.search(Identity.class, qo, "id, name"); 
+							if(idResult != null && idResult.hasNext()) 
+							{
+								Object[] obj = (Object[]) idResult.next();
+								if(obj != null && obj.length > 1) 
+								{
+									id = obj[0];
+									name = obj[1];
+								}
+							}
+							field.setFilterString(f.toString());
+							return name;
+						}
+						else 
+						{
+							field.setFilterString(f.toString());
+							return null;
+						}
+					}
+					else 
+					{
+						//Create a Filter that will not return any results, if no Department is selected
+						Filter f = Filter.isnull("id");
+						field.setFilterString(f.toString());
+						return null;
+					}
+				}
+				else 
+				{
+					//If contractor plugin doesn't exist, then set an empty filter to make all Identity objects available for choosing
+					field.setFilterString("");
+					return null;
+				}
+				]]></Source>
+      </Script>
+    </Field>
+    <Field displayName="Contractor Expiration Date" dynamic="true" name="ctrexpDt" required="true" type="date">
+      <Attributes>
+        <Map>
+          <entry key="readOnly">
+            <value>
+              <Script>
+                <Source><![CDATA[
+					if(form.getField("contractorPluginExists") != null && form.getField("contractorPluginExists").getValue() && form.getField("contractorType") != null && form.getField("contractorType").getValue() != null && form.getField("contractorType").getValue().toString().equalsIgnoreCase("Vendor Contractor")) {
+						return true;             
+					}
+					else
+					{
+						return false;
+					}
+					]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+      <Script>
+        <Source><![CDATA[
+			import org.apache.commons.logging.Log;
+			import org.apache.commons.logging.LogFactory;
+			import sailpoint.object.QueryOptions;
+			import sailpoint.object.ManagedAttribute;
+			import sailpoint.object.Filter;
+			import java.text.SimpleDateFormat;
+			import java.text.ParseException;
+			import sailpoint.rapidapponboarding.rule.ROADUtil;
+			import sailpoint.rapidapponboarding.logger.LogEnablement;
+	   		 Log formLogger = LogFactory.getLog("rapidapponboarding.rules");
+			 Date expDate = null;
+			 Map entryObj = ROADUtil.getCustomGlobalMap(context);
+			 String createEditCtrDateFormat=null;
+	         if (entryObj!= null && entryObj.get("createEditCtrDateFormat")!=null) 
+	         {
+	                 createEditCtrDateFormat = entryObj.get("createEditCtrDateFormat").toString(); 
+	          }
+	         LogEnablement.isLogDebugEnabled(formLogger,"createEditCtrDateFormat..."+createEditCtrDateFormat);
+			if(form != null && form.getField("ctrProfid") != null && form.getField("ctrProfid").getValue() != null)
+			{
+				String expDateStr = "";
+				String profileId = form.getField("ctrProfid").getValue().toString(); 
+				QueryOptions qo = new QueryOptions();
+				qo.addFilter(Filter.eq("type","profile"));
+				qo.addFilter(Filter.eq("value", profileId));
+				Iterator profileResult = context.search(ManagedAttribute.class, qo); 
+				while(profileResult != null && profileResult.hasNext()) 
+				{
+					ManagedAttribute ma = (ManagedAttribute) profileResult.next();
+					if(ma.getAttribute("expiry_date") != null) 
+					{
+						expDateStr = ma.getAttribute("expiry_date").toString();
+					}
+				} 
+				if(expDateStr != null && expDateStr.trim().length() > 0) 
+				{
+					SimpleDateFormat sdf=null;
+				    if(createEditCtrDateFormat!=null)
+				    {
+					 sdf = new SimpleDateFormat(createEditCtrDateFormat);
+					}
+					else
+					{
+					 sdf = new SimpleDateFormat("MM/dd/yyyy K:m:s a z");
+					}
+					try 
+					{
+						expDate = sdf.parse(expDateStr);
+					}
+					catch(ParseException pe) 
+					{
+						expDate = null;
+					}
+				}
+			}
+			return expDate;
+			]]></Source>
+      </Script>
+    </Field>
+  </Section>
+</Form>

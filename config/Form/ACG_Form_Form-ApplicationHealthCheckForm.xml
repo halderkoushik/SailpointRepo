@@ -1,0 +1,71 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Form PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Form name="Form-ApplicationHealthCheckForm">
+  <Section columns="1" label="Application Health Check Options" name="ApplicationHealthCheckProperties">
+    <Field columnSpan="1" displayName="Applications" helpKey="Select Applications" multi="true" name="applications" type="String" value="ref:applications">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+	import java.util.ArrayList;
+	import java.util.HashMap;
+	import java.util.Iterator;
+	import java.util.List;
+	import java.util.Map;
+	import sailpoint.api.SailPointContext;
+	import sailpoint.object.Application;
+	import sailpoint.object.QueryOptions;
+	import sailpoint.tools.Util;
+//Getting application connector Map
+	Map mapAppType = new HashMap();
+	List columnsApplication = new ArrayList();
+	columnsApplication.add("name");
+	columnsApplication.add("type");
+	QueryOptions qoApplication = new QueryOptions();
+	Iterator resultApplication = context.search(Application.class, qoApplication, columnsApplication);
+	if(resultApplication!=null)
+	{
+		while(resultApplication.hasNext())
+		{
+			Object[] record = resultApplication.next();
+			if(record!=null && record.length==2)
+			{
+			    if(record[0]!=null && record[1]!=null)
+			    {
+				mapAppType.put( ""+record[0], ""+record[1]);
+				}
+			}
+		}
+	}
+	Util.flushIterator(resultApplication); 
+	List applicationsList = new ArrayList();
+	QueryOptions qo = new QueryOptions();
+	qo.setDistinct(true);
+	qo.addOrdering("name", true);
+	List props = new ArrayList();
+	props.add("name");
+	Iterator result =context.search(Application.class, qo, props);
+	if(result!=null)
+	{
+		while (result.hasNext())
+		{
+			Object [] record = result.next();
+			if(record!=null && record.length==1)
+			{
+				String strApp= (String) record[0];
+				if(strApp!=null)
+				{
+				applicationsList.add(strApp);
+				}
+			}
+		}
+	}
+	Util.flushIterator(result);
+	return applicationsList;
+					]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+    </Field>
+    <Field displayName="Threads" helpKey="Number of threads to process the report" name="threads" type="String" value="ref:threads"/>
+    <Field displayName="Time Out in Milli Seconds" helpKey="Time out the connection in case there is no response from target system" name="timeout" type="String" value="ref:timeout"/>
+  </Section>
+</Form>

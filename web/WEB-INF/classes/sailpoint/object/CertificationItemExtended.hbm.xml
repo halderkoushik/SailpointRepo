@@ -34,9 +34,9 @@ You normally want to have the same mappings as LinkExtended.hbm.xml.
 -->
 <!--OOTB END--> 
 <!--AGGREGATION, REPORTING START-->     
-<!--<property name="sAccount" type="string" length="450"
+<property name="sAccount" type="string" length="450"
               access="sailpoint.persistence.ExtendedPropertyAccessor"
-              index="spt_certitem_sAccount_ci"/>-->
+              index="spt_certitem_sAccount_ci"/>
 <property name="disabledAccount" type="string" length="450"
               access="sailpoint.persistence.ExtendedPropertyAccessor"
               index="spt_certitem_disAcct_ci"/>
@@ -50,7 +50,7 @@ You normally want to have the same mappings as LinkExtended.hbm.xml.
               index="spt_certitem_psAccount_ci"/>
 <!--AGGREGATION, PRIVILEGED SERVICE ACCOUNT, MOVER, JOINER, LEAVER, ATTRIBUTE SYNC, PASSWORD SYNC, REPORTING END-->
 <!--PRIVILEGED ACCOUNT TYPE START UNCOMMENT THIS FOR PRIVILEGED ACCOUNT FEATURE-->
-<!--<property name="apaccountType" type="string" length="450"
+<property name="apaccountType" type="string" length="450"
           access="sailpoint.persistence.ExtendedPropertyAccessor"
-          index="spt_certitem_apAccttype_ci"/>-->
+          index="spt_certitem_apAccttype_ci"/>
 <!--PRIVILEGED ACCOUNT TYPE END-->

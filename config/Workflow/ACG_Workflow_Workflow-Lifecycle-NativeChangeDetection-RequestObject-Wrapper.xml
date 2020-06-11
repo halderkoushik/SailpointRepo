@@ -1,0 +1,67 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Workflow PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Workflow explicitTransitions="true" name="Workflow-Lifecycle-NativeChangeDetection-RequestObject-Wrapper" type="IdentityLifecycle">
+  <Variable input="true" name="trigger">
+    <Description>The IdentityTrigger</Description>
+  </Variable>
+  <Variable input="true" name="event" transient="true">
+    <Description>
+      The IdentityChangeEvent.  It can be used to build
+      the provisioning plan, but does not need to be
+      persisted with the case, so marked as transient.
+    </Description>
+  </Variable>
+  <Variable input="true" name="identityName">
+    <Description>The name of the identity.</Description>
+  </Variable>
+  <Variable initializer="false" name="trace">
+    <Description>
+      Used for debugging this workflow and when set to true trace
+      will be sent to stdout.
+    </Description>
+  </Variable>
+  <Variable initializer="true" name="transient"/>
+  <Variable input="true" name="nativeChangeList">
+    <Script>
+      <Source><![CDATA[
+     	
+        import sailpoint.object.Identity;
+        List listNativeChangeDetections=null;
+        //First find NativeChanges in the Lifecycle Event
+        if ( event!=void && event != null ) 
+        {
+         listNativeChangeDetections = event.getNativeChanges();
+        }
+        else
+        {
+            //Fall Back To Identity Cube
+			Identity identity = context.getObjectByName(Identity.class, identityName);
+			listNativeChangeDetections=identity.getNativeChangeDetections();
+			if(identity!=null)
+			{
+			context.decache(identity);
+			}
+		}
+		return listNativeChangeDetections;
+		
+		]]></Source>
+    </Script>
+  </Variable>
+  <Description>Accelerator Pack Workflow</Description>
+  <Step icon="Start" name="Start">
+    <Transition to="Start Request Manager"/>
+    <Transition to="Stop"/>
+  </Step>
+  <Step icon="Task" name="Start Request Manager">
+    <Script>
+      <Source><![CDATA[
+      
+  			import sailpoint.rapidapponboarding.rule.WrapperRuleLibrary;
+  			WrapperRuleLibrary.startRequestManager(context,identityName,trigger,event,"Workflow-Lifecycle-NativeChangeDetection",60,nativeChangeList);
+  			 
+  		]]></Source>
+    </Script>
+    <Transition to="Stop"/>
+  </Step>
+  <Step icon="Stop" name="Stop"/>
+</Workflow>

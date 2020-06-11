@@ -1,0 +1,32 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Custom PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Custom name="Custom-Native-Change-Settings">
+  <Attributes>
+    <Map>
+      <entry key="NATIVE CHANGE SETTINGS">
+        <value>
+          <Map>
+            <entry key="certificationSettingsMappings">
+              <value>
+                <Map>
+                  <entry key="NATIVE CHANGE DETECTION FEATURE">
+                    <value>
+                      <List>
+                        <Map>
+                          <entry key="certificationNamePrefix" value="Native Change Detected For "/>
+                          <entry key="certificationNameSuffix" value=" Assigned To"/>
+                          <entry key="securityGroupName"/>
+                          <entry key="stagingEnabled" value="false"/>
+                        </Map>
+                      </List>
+                    </value>
+                  </entry>
+                </Map>
+              </value>
+            </entry>
+          </Map>
+        </value>
+      </entry>
+    </Map>
+  </Attributes>
+</Custom>

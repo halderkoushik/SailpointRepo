@@ -1,0 +1,42 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule-AllowedValues-ContractorProfiles" type="AllowedValues">
+  <Description>
+	Returns a List with the allowed values for Contractor Profile, based on the contractor account(s) that the logged in user is an administrator for.
+  </Description>
+  <ReferencedRules>
+    <Reference class="sailpoint.object.Rule" name="Rule-FrameWork-ContractorLibrary"/>
+  </ReferencedRules>
+  <Signature returnType="Object"/>
+  <Source><![CDATA[
+	
+	import sailpoint.tools.GeneralException;
+	String userName = context.getUserName();
+	if(userName != null) 
+	{
+		List valueList = null;
+		try
+		{
+			valueList = getProfileValues(context, userName);
+		}
+		catch(GeneralException ge) 
+		{
+		throw new Exception(ge.getMessage());
+		}
+		if(valueList != null && valueList.size() == 1)
+		{
+			List innerValueList = (List) valueList.get(0);
+			if(innerValueList != null && innerValueList.size() >= 1) 
+			{
+				field.setValue(innerValueList.get(0).toString()); 
+			}
+		}
+		return valueList;
+	}
+	else 
+	{
+		return null;
+	}
+	
+  ]]></Source>
+</Rule>

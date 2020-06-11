@@ -1,0 +1,16 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE DynamicScope PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<DynamicScope name="Help Desk Privileged Access">
+  <ApplicationRequestControl>
+    <Reference class="sailpoint.object.Rule" name="Objects in Requestor's Authorized Scopes"/>
+  </ApplicationRequestControl>
+  <ManagedAttributeRequestControl>
+    <Reference class="sailpoint.object.Rule" name="Rule-FrameWorkPrivilegedEntitlements"/>
+  </ManagedAttributeRequestControl>
+  <PopulationRequestAuthority>
+    <MatchConfig customControl="(correlated == true)" enableCustomControl="true" matchAll="true"/>
+  </PopulationRequestAuthority>
+  <RoleRequestControl>
+    <Reference class="sailpoint.object.Rule" name="Rule-FrameWorkPrivilegedRoles"/>
+  </RoleRequestControl>
+</DynamicScope>

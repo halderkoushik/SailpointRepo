@@ -1,0 +1,208 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule-RTW-LOA-RuleLibrary">
+  <Source><![CDATA[
+	
+	import java.util.List;
+	import java.util.Map;
+	import java.util.Set;
+	import org.apache.commons.logging.Log;
+	import org.apache.commons.logging.LogFactory;
+	import sailpoint.api.IdentityService;
+	import sailpoint.api.ObjectUtil;
+	import sailpoint.api.SailPointContext;
+	import sailpoint.object.Application;
+	import sailpoint.object.Custom;
+	import sailpoint.object.Identity;
+	import sailpoint.object.Link;
+	import sailpoint.object.ProvisioningPlan;
+	import sailpoint.object.ProvisioningPlan.AccountRequest;
+	import sailpoint.object.ProvisioningPlan.AttributeRequest;
+	import sailpoint.object.Workflow;
+	import sailpoint.tools.GeneralException;
+	import sailpoint.tools.Util;
+	import sailpoint.rapidapponboarding.rule.WrapperRuleLibrary;
+	import sailpoint.object.ClassLists;
+	import sailpoint.object.SailPointObject;
+	import java.lang.reflect.Method;
+	import sailpoint.object.ManagedAttribute;
+	import sailpoint.object.ProvisioningProject;
+	import sailpoint.object.Bundle;
+	import sailpoint.object.QueryOptions;
+	import sailpoint.object.Filter;
+	import sailpoint.object.Rule;
+	import sailpoint.object.ObjectConfig;
+	import sailpoint.object.Attributes;
+	import sailpoint.object.WorkItem;
+	import sailpoint.object.ApprovalSet;
+	import sailpoint.object.ApprovalItem;
+	import sailpoint.api.Workflower;
+	import sailpoint.rapidapponboarding.rule.ROADUtil;
+	import sailpoint.rapidapponboarding.logger.LogEnablement;
+	 private Log logger = LogFactory.getLog("rapidapponboarding.rules");
+    /**
+	 * Build Return To Work Leave Of Absence Plan
+	 * @param context
+	 * @param identityName
+	 * @param workflow
+	 * @return
+	 */
+    public ProvisioningPlan buildRTWLOAPlan(SailPointContext context, String identityName, Workflow workflow) throws Exception {
+        LogEnablement.isLogDebugEnabled(logger,"Enter buildRTWLOAPlan");
+        Identity identity = context.getObjectByName(Identity.class, identityName);
+		IdentityService idService = new IdentityService(context);
+ 		int countLinks=0;
+        countLinks=idService.countLinks(identity);
+        ProvisioningPlan plan = null;
+        LogEnablement.isLogDebugEnabled(logger,"...Start building ProvisioningPlan");
+        List applicationsForRTWLOA = new ArrayList();
+        String extendedRule = "rtwLOAExtendedRule";
+        List links;
+        if (countLinks>0 && identity!=null) 
+        {
+			links = idService.getLinks(identity,0,0);
+	        for (Link link : links) 
+	        {
+   			applicationsForRTWLOA.add(link.getApplicationName());
+	  		}
+	  		 LogEnablement.isLogDebugEnabled(logger,"applicationsForRTWLOA "+applicationsForRTWLOA);
+	  	    if (applicationsForRTWLOA != null && !(applicationsForRTWLOA.isEmpty())) 
+	        {
+	            plan = new ProvisioningPlan();
+	            if (identity != null) {
+		            plan.setIdentity(identity);
+		            for (String singleApp : applicationsForRTWLOA) 
+		            {
+		                String nativeId = "";
+		                AccountRequest acctReq = null;
+		                List ar = addToProvisioningRTWLOAPlan(singleApp, identity, extendedRule,workflow);
+			    		if (!ar.isEmpty() && plan != null) {
+			               	for (AccountRequest acctRequest : ar) {
+			               		plan.add(acctRequest);
+			               	}
+		            	}
+		            }
+		       	}
+	        }
+		}
+   		if(identity!=null)
+        {
+        context.decache(identity);
+        }
+		if (null != plan && plan.getAllRequests() == null) 
+		{
+	    	plan = null;
+	    }
+        return plan;
+    }
+    /**
+	 * Build Provisioning Plan Per Application Link
+	 * @param appName
+	 * @param identity
+	 * @param extendedRule
+	 * @param workflow
+	 * @return
+	 */
+    	public List addToProvisioningRTWLOAPlan(String appName, Identity identity, String extendedRule, Workflow workflow) {
+        LogEnablement.isLogDebugEnabled(logger,"Enter addToProvisioningRTWLOAPlan");
+        List allRequests = new ArrayList();
+       	IdentityService idService = new IdentityService(context);
+	    String nativeId = "";
+	    Application app = context.getObjectByName(Application.class, appName);
+	    AccountRequest acctReq = null;
+	    if (idService.countLinks(identity, app) == 0) {
+	        LogEnablement.isLogDebugEnabled(logger,"...Link Not Found = CREATE");
+	        nativeId = ROADUtil.getNativeIdentity(context, appName, identity);
+	        if (nativeId != null && !nativeId.equals("")) {
+		        acctReq = new AccountRequest(AccountRequest.Operation.Create, appName, null, nativeId);
+		        allRequests.add(acctReq);
+	        }
+	    }
+	    else {
+	    	LogEnablement.isLogDebugEnabled(logger,"...Link Found = FOLLOW REHIRE PROCESS");
+            List list = idService.getLinks(identity, app);
+            if (list != null && list.size() > 0) 
+            {
+             for (Link link:list)
+               {
+	            if(link!=null)
+	            {
+	            nativeId = link.getNativeIdentity();
+				Object extObj = app.getAttributeValue("rtwloaProcess");
+	        	String extSetting = (String) extObj;
+	        	String reqType = "";
+	        	reqType = getRequestTypeNameLeaverRTWLOA(context, workflow);
+				if (extSetting == null) {
+					ObjectConfig config = Application.getObjectConfig();
+				    if (config != null) {
+				    	extSetting = (String) config.getObjectAttribute("rtwloaProcess").getDefaultValue();
+		        		extendedRule = "rtwLOAExtendedRule";
+				    }
+		       	}	                	  	
+				if (extSetting != null) {
+	            	LogEnablement.isLogDebugEnabled(logger,"...extSetting=" + extSetting);
+	        		//extSetting, extendedRule, appName, nativeId, identity, iiqDisabled, iiqLocked, reqType
+					String iiqDisabled = "";
+					String iiqLocked = "";
+					String psa="";
+					if (link != null) 
+					{
+					    psa=((String)link.getAttribute("psAccount"));
+						iiqDisabled=ROADUtil.isLinkDisabled(link);
+						iiqLocked=ROADUtil.isLinkLocked(link);
+					}             	
+	                List result = getAccountRequest(psa, extSetting, extendedRule, appName, nativeId, identity, iiqDisabled, iiqLocked, reqType,workflow,null);
+	                if(result!=null)
+	                {
+	               	 allRequests.addAll(result);
+	                }
+		          }//Ext Setting Not null
+		          }//link not null
+	         }// Iterate through all Links
+           }
+      	}
+		if(app!=null)
+        {
+        context.decache(app);
+        }        
+	    return allRequests;
+	}
+	 /**
+	 * Get Request Type
+	 * @param context
+	 * @param workflow
+	 * @return
+	 */
+    public String getRequestTypeNameLeaverRTWLOA(SailPointContext context, Workflow workflow)
+   {
+        String requestType = "JOINER LOA FEATURE";
+        return requestType;
+    }
+     /**
+	 * Execute Post RTW LOA Rule
+	 * @param identityName
+	 * @param project
+	 * @param requestType
+	 */
+    public void postRTWLOARule(String identityName, String requestType, ProvisioningProject project)
+    {
+    	LogEnablement.isLogDebugEnabled(logger,"Start  postRTWLOARule" );
+    	LogEnablement.isLogDebugEnabled(logger,"..identityName..."+identityName );
+    	LogEnablement.isLogDebugEnabled(logger,"..requestType..."+requestType );
+    	LogEnablement.isLogDebugEnabled(logger,"..project..."+project );
+    	Map map = new HashMap();
+	    //Common Configuration
+        map = ROADUtil.getCustomGlobalMap(context);
+        if(map!=null && map.containsKey("postRTWLOARule"))
+		{
+		    String ruleName=map.get("postRTWLOARule");
+		    if(ruleName!=null && ruleName.length()>0)
+		    {
+		    ROADUtil.invokePostExtendedRuleNoObjectReferences(context,null,ruleName, null,  requestType, null, null, null, identityName,null, project);
+		    }
+		 }
+	 	LogEnablement.isLogDebugEnabled(logger,"End  postRTWLOARule" );
+    }
+	
+	]]></Source>
+</Rule>

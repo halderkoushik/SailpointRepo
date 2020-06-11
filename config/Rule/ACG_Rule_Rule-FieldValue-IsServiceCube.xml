@@ -1,0 +1,60 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule-FieldValue-IsServiceCube" type="FieldValue">
+  <Description>
+	Returns true if Service Cube functionality is enabled and cube is a service cube.
+  </Description>
+  <Signature returnType="Object"/>
+  <Source><![CDATA[
+	
+	import sailpoint.tools.GeneralException;
+	import sailpoint.rapidapponboarding.rule.ROADUtil;
+	import sailpoint.rapidapponboarding.rule.ObjectConfigAttributesRuleLibrary;
+	import org.apache.commons.logging.Log;
+    import org.apache.commons.logging.LogFactory;
+	import sailpoint.rapidapponboarding.logger.LogEnablement;
+	Log ruleLogger = LogFactory.getLog("rapidapponboarding.rules");
+	String result=null;
+	public boolean editServiceCubes() throws GeneralException
+	{
+	   		String editServiceCubes=null;
+	  	    Map entryObj = ROADUtil.getCustomGlobalMap(context);
+          	if (entryObj!= null) 
+         	{
+              editServiceCubes = entryObj.get("editServiceCubes").toString(); 
+              if(editServiceCubes!=null && editServiceCubes.equalsIgnoreCase("TRUE"))
+              {     
+              	return true;
+              }
+           }
+	       return false;
+	}
+	String serviceAccountEnabled = ObjectConfigAttributesRuleLibrary.extendedAttrServiceAccountEnabled(context);
+	boolean servAccEnabled=false;
+	if(serviceAccountEnabled!=null && serviceAccountEnabled.length()>0 && serviceAccountEnabled.equalsIgnoreCase("TRUE"))
+	{
+		servAccEnabled=true;
+	}
+	if(servAccEnabled)
+	{
+		LogEnablement.isLogDebugEnabled(ruleLogger,"servAccEnabled...."+servAccEnabled);
+		boolean editServiceCubes=editServiceCubes();
+		if (editServiceCubes)
+		{
+			LogEnablement.isLogDebugEnabled(ruleLogger,"editServiceCubes...."+editServiceCubes);
+			result = "TRUE";
+		}
+		else
+		{
+			 result = "FALSE";
+		}
+	}
+	else
+	{
+		 result = "FALSE";
+	}
+	LogEnablement.isLogDebugEnabled(ruleLogger,"result....Disable Service Account.."+result);
+	return result;
+	
+  ]]></Source>
+</Rule>

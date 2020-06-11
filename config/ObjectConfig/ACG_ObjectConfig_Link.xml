@@ -34,4 +34,14 @@
   <ObjectAttribute categoryName="Privileged Account" displayName="Privileged Account Type" editMode="ReadOnly" name="apaccountType" namedColumn="true" type="string">
     <Description>Privileged Account Type</Description>
   </ObjectAttribute>
+  <ObjectAttribute displayName="Service Account" editMode="ReadOnly" name="sAccount" namedColumn="true" type="string">
+    <RuleRef>
+      <Reference class="sailpoint.object.Rule" name="Rule-FrameWork-SA"/>
+    </RuleRef>
+    <AttributeSource name="GlobalRule:Rule-FrameWork-SA">
+      <RuleRef>
+        <Reference class="sailpoint.object.Rule" name="Rule-FrameWork-SA"/>
+      </RuleRef>
+    </AttributeSource>
+  </ObjectAttribute>
 </ObjectConfig>

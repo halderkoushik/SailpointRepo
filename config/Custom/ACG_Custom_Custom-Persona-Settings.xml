@@ -1,0 +1,16 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Custom PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Custom name="Custom-Persona-Settings">
+  <Attributes>
+    <Map>
+      <entry key="PERSONA SETTINGS">
+        <value>
+          <Map>
+            <entry key="enabledPersona" value="FALSE"/>
+            <entry key="moverRelationshipsDropIgnore"/>
+          </Map>
+        </value>
+      </entry>
+    </Map>
+  </Attributes>
+</Custom>

@@ -1,0 +1,30 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule-FrameWork-Generate-Unique-Id">
+  <Source><![CDATA[
+  	
+  	import org.apache.commons.logging.Log;
+	import org.apache.commons.logging.LogFactory;
+	import sailpoint.object.Field;
+	import sailpoint.object.Form;
+	import sailpoint.rapidapponboarding.logger.LogEnablement;
+	Log logger = LogFactory.getLog("rapidapponboarding.rules");
+	if(form!=null )
+	{
+		Field serviceHumanCube=form.getField("type");
+		if(serviceHumanCube!=null && serviceHumanCube!=void && serviceHumanCube.getValue()!=null && serviceHumanCube.getValue().toString().equalsIgnoreCase("contractor"))
+		{
+		  //Generate Non-Employee Population Unique Id Here
+		   LogEnablement.isLogDebugEnabled(logger,"Generating Human Cube Id..");
+		   return Long.toString(java.lang.System.currentTimeMillis());
+		}
+		else if(serviceHumanCube!=null  && serviceHumanCube!=void && serviceHumanCube.getValue()!=null && serviceHumanCube.getValue().toString().equalsIgnoreCase("service"))
+		{
+			//Generate Service Account Unique Id Here
+			LogEnablement.isLogDebugEnabled(logger,"Generating Non-Human Cube Id..");
+   			return sailpoint.tools.Util.uuid();
+		}
+	}
+   
+   ]]></Source>
+</Rule>

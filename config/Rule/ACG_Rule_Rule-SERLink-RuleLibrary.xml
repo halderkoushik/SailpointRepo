@@ -1,0 +1,172 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule-SERLink-RuleLibrary">
+  <Description>All the SER Link Logic for Eligibility and Plan Building.</Description>
+  <Signature returnType="Map"/>
+  <Source><![CDATA[
+	
+	import sailpoint.api.SailPointContext;
+	import sailpoint.object.Identity;
+	import sailpoint.object.ProvisioningPlan;
+	import sailpoint.object.ProvisioningPlan.AttributeRequest;
+	import sailpoint.object.ProvisioningPlan.AccountRequest;
+	import sailpoint.object.ProvisioningPlan.AccountRequest.Operation;
+	import sailpoint.object.Workflow;
+	import sailpoint.object.Attributes;
+	import sailpoint.tools.Util;
+	import sailpoint.tools.Message;
+	import sailpoint.tools.GeneralException;
+	import sailpoint.api.IdentityService;
+	import org.apache.commons.logging.Log;
+	import org.apache.commons.logging.LogFactory;
+	import sailpoint.rapidapponboarding.rule.WrapperRuleLibrary;
+	import sailpoint.rapidapponboarding.rule.ROADUtil;
+	import sailpoint.rapidapponboarding.logger.LogEnablement;
+	Log serLogger = LogFactory.getLog("rapidapponboarding.rules");
+   	/**
+	 * Link EMP and SER
+	 * @param context
+	 * @param identityName
+	 * @param workflow
+	 * @return
+	 * @throws Exception
+	 */
+	 public ProvisioningPlan buildSERLinkPlan(SailPointContext context, String identityName, Workflow workflow) throws Exception {
+	        LogEnablement.isLogDebugEnabled(serLogger,"Enter buildSERLinkPlan");
+	        Identity identity = context.getObjectByName(Identity.class, identityName);
+			Attributes attributes=ROADUtil.getEpicSERAttributes(context);
+			ProvisioningPlan plan = new ProvisioningPlan();
+			String epicAppName=null;
+			String epicIdAttr=null;
+			String serAppName=null;
+			String serIdAttr=null;
+			if(attributes!=null)
+			{
+				epicAppName=attributes.get("epicAppName");
+				 epicIdAttr=attributes.get("epicIdAttr");
+				 serAppName=attributes.get("serAppName");
+				 serIdAttr=attributes.get("serIdAttr");
+			    if(epicAppName!=null && epicAppName.length()>0
+					&&epicIdAttr!=null && epicIdAttr.length()>0
+					&&serAppName!=null && serAppName.length()>0
+					&&serIdAttr!=null && serIdAttr.length()>0
+					)
+				{
+			        LogEnablement.isLogDebugEnabled(serLogger,"...Start building ProvisioningPlan");
+			        plan.setIdentity(identity);
+			        String nativeId="";
+			        nativeId = ROADUtil.getNativeIdentity(context, epicAppName, identity);
+			        LogEnablement.isLogDebugEnabled(serLogger,"...Start building ProvisioningPlan with nativeId "+nativeId);
+			        if(nativeId!=null)
+			        {
+					    AccountRequest acctReq = new AccountRequest(AccountRequest.Operation.Modify, epicAppName, null, nativeId);
+				        String epicIdFromSERAppLink = WrapperRuleLibrary.getLinkAttributeValue(context, identity, serAppName, serIdAttr);
+				        LogEnablement.isLogDebugEnabled(serLogger,"...epicIdFromSERAppLink "+epicIdFromSERAppLink);
+				        if(epicIdFromSERAppLink!=null)
+				        {
+					        AttributeRequest attrProvIdAttrRequest = new AttributeRequest(epicIdAttr, ProvisioningPlan.Operation.Set, epicIdFromSERAppLink);
+					        acctReq.add(attrProvIdAttrRequest);
+							plan.add(acctReq);
+					    }
+				    }
+			    }
+		    }
+		    if (null != plan && plan.getAllRequests() == null) 
+			{
+			   // Return Nothing, In case there are no account requests within a plan
+		    	plan = null;
+		    }
+		    LogEnablement.isLogDebugEnabled(serLogger,"End buildSERLinkPlan");
+	        return plan;
+	    }
+	    /**
+	     * Unlink SER and EMP
+	     * @param context
+	     * @param identityName
+	     * @param workflow
+	     * @return
+	     * @throws Exception
+	     */
+	    public ProvisioningPlan buildSERUnlinkPlan(SailPointContext context, String identityName, Workflow workflow) throws Exception {
+	        LogEnablement.isLogDebugEnabled(serLogger,"Enter buildSERUnlinkPlan");
+	            Identity identity = context.getObjectByName(Identity.class, identityName);
+			Attributes attributes=ROADUtil.getEpicSERAttributes(context);
+			ProvisioningPlan plan = new ProvisioningPlan();
+			String epicAppName=null;
+			String epicIdAttr=null;
+			String serAppName=null;
+			String serIdAttr=null;
+			if(attributes!=null)
+			{
+				 epicAppName=attributes.get("epicAppName");
+				 epicIdAttr=attributes.get("epicIdAttr");
+				 serAppName=attributes.get("serAppName");
+				 serIdAttr=attributes.get("serIdAttr");
+			    if(epicAppName!=null && epicAppName.length()>0
+					&&epicIdAttr!=null && epicIdAttr.length()>0
+					&&serAppName!=null && serAppName.length()>0
+					&&serIdAttr!=null && serIdAttr.length()>0
+					)
+				{
+			        LogEnablement.isLogDebugEnabled(serLogger,"...Start building ProvisioningPlan");
+			        plan.setIdentity(identity);
+			        String nativeId="";
+			        nativeId = ROADUtil.getNativeIdentity(context, epicAppName, identity);
+			        LogEnablement.isLogDebugEnabled(serLogger,"...Start building ProvisioningPlan with nativeId "+nativeId);
+			        if(nativeId!=null)
+			        {
+			           // Remove From Epic
+					    AccountRequest acctReq = new AccountRequest(AccountRequest.Operation.Modify, epicAppName, null, nativeId);
+				        String epicIdFromEpicAppLink = WrapperRuleLibrary.getLinkAttributeValue(context, identity, epicAppName, epicIdAttr);
+				        LogEnablement.isLogDebugEnabled(serLogger,"...epicIdFromEpicAppLink "+epicIdFromEpicAppLink);
+				        if(epicIdFromEpicAppLink!=null)
+				        {
+					        AttributeRequest attrProvIdAttrRequest = new AttributeRequest(epicIdAttr, ProvisioningPlan.Operation.Remove, epicIdFromEpicAppLink);
+					        acctReq.add(attrProvIdAttrRequest);
+							plan.add(acctReq);
+					    }
+					    // Remove From SER
+					    String serNativeId="";
+			            serNativeId = ROADUtil.getNativeIdentity(context, serAppName, identity);
+					    AccountRequest acctReqSER = new AccountRequest(AccountRequest.Operation.Modify, serAppName, null, serNativeId);
+				        String epicIdFromSERAppLink = WrapperRuleLibrary.getLinkAttributeValue(context, identity, serAppName, serIdAttr);
+				        LogEnablement.isLogDebugEnabled(serLogger,"...epicIdFromSERAppLink "+epicIdFromSERAppLink);
+				        if(epicIdFromSERAppLink!=null)
+				        {
+					        AttributeRequest attrSerProvIdAttrRequest = new AttributeRequest(serIdAttr, ProvisioningPlan.Operation.Remove, epicIdFromSERAppLink);
+					        acctReqSER.add(attrSerProvIdAttrRequest);
+							plan.add(acctReqSER);
+					    }
+				    }
+			    }
+		    }
+		    if (null != plan && plan.getAllRequests() == null) 
+			{
+			   // Return Nothing, In case there are no account requests within a plan
+		    	plan = null;
+		    }
+	        LogEnablement.isLogDebugEnabled(serLogger,"Exit buildSERUnlinkPlan");
+	        return plan;
+	    }
+	    /**
+		* Returns a String representing the request type, depending on the flow workflow variable.
+		*
+		* @param context the SailPointContext object
+		* @param workflow the Workflow object that is launched during the LCE
+		* @return a String representing the request type
+		* @throws Exception
+		*/ 
+	    public String getRequestTypeName(SailPointContext context, Workflow workflow) {
+	        String requestType = "SER LINK FEATURE";
+	        String requestTypeWorkflow = workflow.get("requestType");
+	         LogEnablement.isLogDebugEnabled(serLogger,"getRequestTypeName "+requestTypeWorkflow);
+	        if(requestTypeWorkflow!=null)
+	        {
+	        requestType=requestTypeWorkflow;
+	        workflow.put("flow", requestTypeWorkflow);
+	        }
+	        return requestType;
+	    }
+	
+	]]></Source>
+</Rule>

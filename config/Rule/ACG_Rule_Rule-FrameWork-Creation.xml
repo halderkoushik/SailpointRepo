@@ -1,0 +1,125 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule-FrameWork-Creation" type="IdentityCreation">
+  <Description>
+    Creation rule
+  </Description>
+  <Signature returnType="Map">
+    <Inputs>
+      <Argument name="log">
+        <Description>
+	         Log
+	        </Description>
+      </Argument>
+      <Argument name="context">
+        <Description>
+	          A sailpoint.api.SailPointContext object that can be used to
+	          query the database to aid in correlation.
+	        </Description>
+      </Argument>
+      <Argument name="environment" type="Map">
+        <Description>
+	          Arguments passed to the aggregation task.
+	        </Description>
+      </Argument>
+      <Argument name="application">
+        <Description>
+	          Application being aggregated.
+	        </Description>
+      </Argument>
+      <Argument name="account">
+        <Description>
+	          A sailpoint.object.ResourceObject returned from the
+	          collector.
+	        </Description>
+      </Argument>
+      <Argument name="identity">
+        <Description>
+	          Identity Object
+	        </Description>
+      </Argument>
+    </Inputs>
+  </Signature>
+  <Source><![CDATA[
+    
+    import sailpoint.rapidapponboarding.rule.AggregationRuleLibrary;
+    import sailpoint.rapidapponboarding.rule.ROADUtil;
+	import sailpoint.rapidapponboarding.rule.ObjectConfigAttributesRuleLibrary;
+	import sailpoint.rapidapponboarding.logger.LogEnablement;
+	import org.apache.commons.logging.Log;
+	import org.apache.commons.logging.LogFactory;
+	Log aggLogger = LogFactory.getLog("rapidapponboarding.rules");
+	String serviceAccountEnabled = ObjectConfigAttributesRuleLibrary.extendedAttrServiceAccountEnabled(context);
+	boolean servAccEnabled=false;
+	if(serviceAccountEnabled!=null && serviceAccountEnabled.length()>0 && serviceAccountEnabled.equalsIgnoreCase("TRUE"))
+	{
+		servAccEnabled=true;
+	}
+	 //Identity TYPE ENABLED
+	String identityTypeEnabled = ObjectConfigAttributesRuleLibrary.extendedAttrIdentityTypeEnabled(context);
+	boolean identityTypeEnab=false;
+	if(identityTypeEnabled!=null && identityTypeEnabled.length()>0 && identityTypeEnabled.equalsIgnoreCase("TRUE"))
+	{
+		identityTypeEnab=true;
+	}
+	LogEnablement.isLogDebugEnabled(aggLogger,"identityTypeEnab.."+identityTypeEnab);
+	LogEnablement.isLogDebugEnabled(aggLogger,"servAccEnabled.."+servAccEnabled);
+	if(servAccEnabled)
+	{
+		//If not Human, create Service Account with standard naming convention 
+		String saText=AggregationRuleLibrary.isSAAccountMatched( application,account);
+		LogEnablement.isLogDebugEnabled(aggLogger,"saText.."+saText);
+		if(saText!=null)
+		{
+				boolean appendAppName=false;
+				String uniqueSAAttributeNameValue=null;
+				appendAppName=AggregationRuleLibrary.appendApplicationNameToServiceAccountName(application);
+				LogEnablement.isLogDebugEnabled(aggLogger,"appendAppName.."+appendAppName);
+				uniqueSAAttributeNameValue=AggregationRuleLibrary.getSAAttributeValue(application,account);
+				LogEnablement.isLogDebugEnabled(aggLogger,"uniqueSAAttributeNameValue.."+uniqueSAAttributeNameValue);
+				if(uniqueSAAttributeNameValue!=null)
+				{
+				uniqueSAAttributeNameValue=uniqueSAAttributeNameValue.trim();
+				}
+				if(uniqueSAAttributeNameValue!=null && uniqueSAAttributeNameValue.length()>0)
+				{
+					saText=uniqueSAAttributeNameValue;
+				}
+				saText=ROADUtil.getDNFormattedValue(saText);
+				LogEnablement.isLogDebugEnabled(aggLogger,"DN saText.."+saText);
+				if(appendAppName)
+				{
+			    	identity.setName(application.getName().replaceAll("[^a-zA-Z0-9]", "")+saText);
+			    }
+			    else
+			    {
+			     	identity.setName(saText);
+			    }
+			    identity.setFirstname(application.getName().replaceAll("[^a-zA-Z0-9]",""));
+			    identity.setLastname(saText);
+			    identity.setCorrelated(true);
+			    identity.setCorrelatedOverridden(true); 
+			    identity.setAttribute("serviceCube", "TRUE");
+			    if(identityTypeEnab)
+			    {
+			    	LogEnablement.isLogDebugEnabled(aggLogger,"Type..Service");
+			     	identity.setType("service");
+			    }
+	    }
+	    else
+	    {
+	     //This is to handle change in Service Account Expressions
+	     identity.setAttribute("serviceCube", "FALSE");
+	    }
+	//Let's Run Application Specific Rule Here
+	HashMap params = new HashMap();
+	params.put("context", context);
+	params.put("environment", environment);
+	params.put("application", application);
+	params.put("account", account);
+	params.put("identity", identity);
+	AggregationRuleLibrary.runApCreationRule(context,application,identity,params);
+    }
+  
+  ]]></Source>
+</Rule>

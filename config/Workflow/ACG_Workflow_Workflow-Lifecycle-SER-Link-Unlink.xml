@@ -1,0 +1,224 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Workflow PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Workflow explicitTransitions="true" name="Workflow-Lifecycle-SER-Link-Unlink" type="IdentityLifecycle">
+  <Variable input="true" name="trigger">
+    <Description>The IdentityTrigger</Description>
+  </Variable>
+  <Variable input="true" name="event" transient="true">
+    <Description>
+	      The IdentityChangeEvent.  It can be used to build
+	      the provisioning plan, but does not need to be
+	      persisted with the case, so marked as transient.
+	    </Description>
+  </Variable>
+  <Variable initializer="false" name="trace">
+    <Description>
+			Used for debugging this workflow and when set to true trace
+			will be sent to stdout.
+		</Description>
+  </Variable>
+  <Variable input="true" name="identityName">
+    <Description>The name of the identity.</Description>
+  </Variable>
+  <Variable initializer="Lifecycle" input="true" name="flow">
+    <Description>The name of the flow.</Description>
+  </Variable>
+  <Variable initializer="string:LCM" name="source">
+    <Description>The name of the identity.</Description>
+  </Variable>
+  <Variable initializer="script:resolveDisplayName(identityName)" input="true" name="identityDisplayName">
+    <Description>
+			The displayName of the identity being updated.
+			Query for this using a projection query and fall back to the name.
+		</Description>
+  </Variable>
+  <Variable name="spExtAttrs"/>
+  <Variable name="identityModel"/>
+  <Variable initializer="string:true" name="foregroundProvisioning"/>
+  <Variable name="provisioningErrors"/>
+  <Variable editable="true" input="true" name="requestType"/>
+  <Variable name="plan"/>
+  <Variable name="project"/>
+  <Variable input="true" name="workItemComments"/>
+  <Description>
+		Accelerator Pack SER Link Unlik Workflow
+	</Description>
+  <RuleLibraries>
+    <Reference class="sailpoint.object.Rule" name="Rule-SERLink-RuleLibrary"/>
+    <Reference class="sailpoint.object.Rule" name="Rule-Framework-NotificationRuleLibrary"/>
+  </RuleLibraries>
+  <Step icon="Start" name="Start" posX="28" posY="10">
+    <Transition to="Get Request Type"/>
+  </Step>
+  <Step name="Get Request Type" posX="98" posY="10" resultVariable="requestType">
+    <Script>
+      <Source><![CDATA[
+				
+				return getRequestTypeName(context, workflow);
+				
+			]]></Source>
+    </Script>
+    <Transition to="Build Plan"/>
+  </Step>
+  <Step name="Build Plan" posX="374" posY="10" resultVariable="plan">
+    <Arg name="requestType" value="ref:requestType"/>
+    <Script>
+      <Source><![CDATA[
+						
+				import sailpoint.object.ProvisioningPlan;
+				ProvisioningPlan plan = null;
+				if(requestType.equalsIgnoreCase("SER LINK FEATURE")) {
+					plan = buildSERLinkPlan(context, identityName, workflow);
+				}
+				else if(requestType.equalsIgnoreCase("SER UNLINK FEATURE")) {
+					plan = buildSERUnlinkPlan(context, identityName, workflow);
+				}
+				return plan;
+			
+			]]></Source>
+    </Script>
+    <Transition to="Process Plan" when="(plan != null)"/>
+    <Transition to="Stop"/>
+  </Step>
+  <Step icon="Task" name="Process Plan" posX="642" posY="10">
+    <Arg name="flow" value="ref:flow"/>
+    <Arg name="source" value="ref:source"/>
+    <Arg name="identityName" value="ref:identityName"/>
+    <Arg name="identityDisplayName" value="ref:identityDisplayName"/>
+    <Arg name="launcher" value="ref:launcher"/>
+    <Arg name="plan" value="ref:plan"/>
+    <Arg name="trace" value="ref:trace"/>
+    <Arg name="requestType" value="ref:requestType"/>
+    <Arg name="requestor" value="ref:requestor"/>
+    <Arg name="foregroundProvisioning" value="ref:foregroundProvisioning"/>
+    <Arg name="workItemComments" value="ref:workItemComments"/>
+    <Return name="approvalSet" to="approvalSet"/>
+    <Return name="project" to="project"/>
+    <Return name="spExtAttrs" to="spExtAttrs"/>
+    <WorkflowRef>
+      <Reference class="sailpoint.object.Workflow" name="Workflow-FrameWork-Wrapper"/>
+    </WorkflowRef>
+    <Transition to="Post Provision" when="approvalSet.hasApproved();"/>
+    <Transition to="Stop"/>
+  </Step>
+  <Step name="Post Provision" posX="768" posY="10">
+    <Script>
+      <Source><![CDATA[
+      ]]></Source>
+    </Script>
+    <Transition to="Notify Operations">
+      <Script>
+        <Source><![CDATA[
+    			
+    			    import sailpoint.rapidapponboarding.rule.ROADUtil;
+    			    import sailpoint.rapidapponboarding.rule.SERLinkRuleLibrary;
+    				Map map =ROADUtil.getCustomGlobalMap(context);
+    				String apSendEmailToOperationsEpicSER="False";
+					if(map!=null && map.containsKey(SERLinkRuleLibrary.SENDEMAILOPERATIONSEPICSER) && map.get(SERLinkRuleLibrary.SENDEMAILOPERATIONSEPICSER)!=null )
+					{
+						apSendEmailToOperationsEpicSER=(String) map.get(SERLinkRuleLibrary.SENDEMAILOPERATIONSEPICSER);
+					}
+					if(apSendEmailToOperationsEpicSER!=null && apSendEmailToOperationsEpicSER.equalsIgnoreCase("TRUE"))
+					{
+						return true;
+					}
+    				Map resultMap = getProvisioningStatusMap(project);
+			        if (resultMap != null && resultMap.size() > 0) 
+			        {
+			        	if ((boolean)resultMap.get("isProvgSuccessful")) 
+			        	{
+			        		return false;
+			        	}
+			        	else 
+			        	{
+			        		return true;
+			        	}
+			        }
+    			
+    		]]></Source>
+      </Script>
+    </Transition>
+    <Transition to="Stop"/>
+  </Step>
+  <Step action="sendEmail" icon="Default" name="Notify Operations" posX="886" posY="10">
+    <Arg name="template">
+      <Script>
+        <Source><![CDATA[
+        	
+        	getWrapperEmailTemplateName(workflow, project, "OperationsSER");
+        	
+        ]]></Source>
+      </Script>
+    </Arg>
+    <Arg name="refIdentityDisplayName">
+      <Script>
+        <Source><![CDATA[
+        
+        	getIdentityDisplayName(workflow,identityName, null, false);
+        
+        ]]></Source>
+      </Script>
+    </Arg>
+    <Arg name="dynamicAppContent">
+      <Script>
+        <Source><![CDATA[
+				
+					getDynamicTextEmailTemplate( project,"OperationsSER", requestType);
+				
+		  		]]></Source>
+      </Script>
+    </Arg>
+    <Arg name="plan" value="ref:plan"/>
+    <Arg name="recipientDisplayName">
+      <Script>
+        <Source><![CDATA[
+        
+        	getIdentityDisplayName(workflow,identityName, project,false,false);
+        
+        ]]></Source>
+      </Script>
+    </Arg>
+    <Arg name="to">
+      <Script>
+        <Source><![CDATA[
+			
+				getIdentityNameForNotification(workflow,identityName, project,false,false);
+			
+	  		]]></Source>
+      </Script>
+    </Arg>
+    <Arg name="cc">
+      <Script>
+        <Source><![CDATA[
+			
+				import sailpoint.rapidapponboarding.rule.EmailNotificationRuleLibrary;
+				Map resultMap = getProvisioningStatusMap(project);
+			    if (resultMap != null && resultMap.size() > 0)
+			    {
+				    if ((boolean)resultMap.get("isProvgSuccessful"))
+				    {
+						return EmailNotificationRuleLibrary.getCCEmailForAllWorkflowsFromRule(context,identityName,requestType, plan,project);
+					}
+					else
+					{
+					return "";
+					}
+				}
+				
+			]]></Source>
+      </Script>
+    </Arg>
+    <Arg name="requestId">
+      <Script>
+        <Source><![CDATA[
+				
+					getRequestId(plan);
+				
+		  		]]></Source>
+      </Script>
+    </Arg>
+    <Arg name="provisioningErrors" value="ref:provisioningErrors"/>
+    <Transition to="Stop"/>
+  </Step>
+  <Step icon="Stop" name="Stop" posX="1186" posY="10"/>
+</Workflow>

@@ -1,0 +1,258 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Form PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Form name="Form-Discovery-Provisioning-Policies-Baseline" type="Workflow">
+  <Description>Baseline Discovery Provisioning Policies</Description>
+  <Section columns="2" label="Mine Application Provisioning Policies" name="roadBaselineSection">
+    <Field displayName="Select Application" name="roadApplicationSelect" postBack="true" required="true" type="Application">
+      <Attributes>
+        <Map>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="1" displayName="Baseline Identity" helpKey="Select Baseline Identity" name="roadIdentitySelect" postBack="true" required="true" type="Identity">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+                	import sailpoint.object.Filter;
+                	if(roadApplicationSelect!=void && roadApplicationSelect !=null)
+                	{
+                	   Filter filter= Filter.and(Filter.eq("links.application.name", roadApplicationSelect));
+                	   field.setFilterString(filter.toString());
+                	}
+                    return false;  
+								]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="1" displayName="Baseline Account" dynamic="true" helpKey="Select Account Native Id" name="roadNativeIdSelect" required="true" type="string">
+      <AllowedValuesDefinition>
+        <RuleRef>
+          <Reference class="sailpoint.object.Rule" name="Rule-Allowed-NativeIds"/>
+        </RuleRef>
+      </AllowedValuesDefinition>
+    </Field>
+    <Field columnSpan="1" displayName="Add IdentityIQ Tracking Id To Target System on Any Account Action" dynamic="true" helpKey="IdentityIQ Request Id will be passed to selected field, This will be applied to all policies" name="roadCommentSelect" postBack="true" type="string">
+      <AllowedValuesDefinition>
+        <RuleRef>
+          <Reference class="sailpoint.object.Rule" name="Rule-Self-Service-Mine-Application-Schema"/>
+        </RuleRef>
+      </AllowedValuesDefinition>
+    </Field>
+    <Field columnSpan="1" displayName="Add Start Date on New Account Creation" dynamic="true" helpKey="This will be applied to create policy" name="roadStartField" postBack="true" type="string">
+      <AllowedValuesDefinition>
+        <RuleRef>
+          <Reference class="sailpoint.object.Rule" name="Rule-Self-Service-Mine-Application-Schema"/>
+        </RuleRef>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+                if(form!=null && value!=null)
+                {
+                form.getField("roadDateFormatSelect").setRequired(true);
+				}
+				return false;      
+				]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="1" displayName="Add End Date on Termination To Target System" dynamic="true" helpKey="This will be applied to disable policy" name="roadEndField" postBack="true" type="string">
+      <AllowedValuesDefinition>
+        <RuleRef>
+          <Reference class="sailpoint.object.Rule" name="Rule-Self-Service-Mine-Application-Schema"/>
+        </RuleRef>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+                if(form!=null && value!=null)
+                {
+                form.getField("roadDateFormatSelect").setRequired(true);
+				}
+				return false;   
+				]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="1" displayName="Add Random Password on New Account To Target System" helpKey="This will be applied to Change Password Policy" name="roadPasssWordScramble" type="string">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+			List list = new ArrayList();	
+			List displayList = new ArrayList();
+			displayList.add("True");
+			displayList.add("ON");
+			list.add(displayList);
+			displayList = new ArrayList();
+			displayList.add("False");
+			displayList.add("OFF");
+			list.add(displayList);
+			return list;
+			]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+    </Field>
+    <Field columnSpan="1" displayName="Add Password Change Date To Target System" dynamic="true" helpKey="This will be applied to change password policy" name="roadPasssWordChangeField" postBack="true" type="string">
+      <AllowedValuesDefinition>
+        <RuleRef>
+          <Reference class="sailpoint.object.Rule" name="Rule-Self-Service-Mine-Application-Schema"/>
+        </RuleRef>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+                if(form!=null && value!=null)
+                {
+                form.getField("roadDateFormatSelect").setRequired(true);
+				}
+				return false;   
+				]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field columnSpan="1" displayName="Application Password Field" helpKey="IdentityIQ Random Password Generator will gnenerate random password, Attribute Name is only Required for Custom and In House Applications" name="roadPasswordSelect" type="string">
+      <ValidationScript>
+        <Source><![CDATA[
+         
+        import java.util.regex.Matcher;
+		import java.util.regex.Pattern;
+         String regex = "^[a-zA-Z]+$";
+ 		 Pattern pattern = Pattern.compile(regex);
+         if(value!=null)
+         {
+	          Matcher matcher = pattern.matcher(value);
+	          if(!matcher.matches())
+	          {
+	          return "Numeric and Special Characters are Not Allowed";
+	          }
+         }
+	  
+        ]]></Source>
+      </ValidationScript>
+    </Field>
+    <Field columnSpan="1" displayName="Date Format" helpKey="Enter Start, End, Password Change Attributes Simple Date Format" name="roadDateFormatSelect" type="string">
+      <ValidationScript>
+        <Source><![CDATA[
+         
+                import java.text.SimpleDateFormat;
+                import java.text.ParseException;
+                if(value!=null)
+				{
+					try 
+					{
+					    Calendar cal = Calendar.getInstance();
+						SimpleDateFormat sdf = new SimpleDateFormat(value);
+						Date today = Calendar.getInstance().getTime(); 
+						String dateString = sdf.format( today );
+						Date covertedDate = sdf.parse(dateString);
+						Date newDate = new Date();
+						long timeDiffInMs = covertedDate.getTime() - newDate.getTime();	        
+						int days = (int) (timeDiffInMs / (1000 * 60 * 60 * 24));	
+	          			if(days != 0)
+						{
+							return "Invalid Date Format";
+						}
+					} 
+					catch (ParseException e) 
+					{
+           				 return "Invalid Date Format";
+       				 }
+					catch (Exception ex) 
+					{
+					   return "Invalid Date Format";
+					}
+				}
+		  
+        ]]></Source>
+      </ValidationScript>
+    </Field>
+    <Field columnSpan="1" displayName="Mining Tokens" displayType="radio" helpKey="Space Token is included Implicitly" multi="true" name="roadTokensSelect" type="string">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+			List list = new ArrayList();	
+			List displayList = new ArrayList();
+			displayList.add(",");
+			displayList.add("Comma");
+			list.add(displayList);
+			displayList = new ArrayList();
+			displayList.add("#");
+			displayList.add("Hash");
+			list.add(displayList);
+			displayList = new ArrayList();
+			displayList.add("%");
+			displayList.add("Percentage");
+			list.add(displayList);
+			displayList = new ArrayList();
+			displayList.add("~");
+		    displayList.add("Tilde");
+			list.add(displayList);
+			displayList = new ArrayList();
+			displayList.add("|");
+		    displayList.add("Pipe");
+			list.add(displayList);
+			displayList = new ArrayList();
+			displayList.add("$");
+		    displayList.add("Dollar");
+			list.add(displayList);
+		    displayList = new ArrayList();
+		    displayList.add("@");
+		    displayList.add("AtTheRateOf");
+			list.add(displayList);
+			displayList = new ArrayList();
+		    displayList.add("^");
+		    displayList.add("Caret");
+			list.add(displayList);
+			return list;
+			]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+    </Field>
+    <Field columnSpan="1" displayName="Overwrite or Merge Provisioning Policies" helpKey="Policies will be either overwritten or merged" name="roadOverwriteOrMerge" required="true" type="string">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+			List list = new ArrayList();	
+			List displayList = new ArrayList();
+			displayList.add("OVERWRITE");
+			displayList.add("OVERWRITE");
+			list.add(displayList);
+			displayList = new ArrayList();
+			displayList.add("MERGE");
+			displayList.add("MERGE");
+			list.add(displayList);
+			return list;
+			]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+    </Field>
+  </Section>
+  <Button action="cancel" label="Cancel"/>
+  <Button action="next" label="Next"/>
+</Form>

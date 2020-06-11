@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule-FieldValue-ContractorPluginExists" type="FieldValue">
+  <Description>
+	Returns true if the Contractor Plugin exists in the current IdentityIQ instance, or false otherwise.
+  </Description>
+  <Signature returnType="Object"/>
+  <Source><![CDATA[
+	
+	import sailpoint.object.QueryOptions;
+	import sailpoint.object.Filter;
+	import sailpoint.object.Plugin;
+	import org.apache.commons.logging.Log;
+    import org.apache.commons.logging.LogFactory;
+	import sailpoint.rapidapponboarding.logger.LogEnablement;
+	Log ruleLogger = LogFactory.getLog("rapidapponboarding.rules");
+	QueryOptions qo = new QueryOptions();
+	qo.addFilter(Filter.eq("name","contractorplugin"));
+	boolean result=false;
+	int objCount = context.countObjects(Plugin.class, qo);
+	if(objCount > 0)
+	{
+		result = true;             
+	}
+	else
+	{
+		result = false;
+	}
+	LogEnablement.isLogDebugEnabled(ruleLogger,"result plugin...."+result);
+	return result;
+	
+  ]]></Source>
+</Rule>

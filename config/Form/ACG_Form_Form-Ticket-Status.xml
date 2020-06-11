@@ -1,0 +1,74 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Form PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Form name="Form-Ticket-Status" type="Workflow">
+  <Attributes>
+    <Map>
+      <entry key="title" value="Check Ticket Status"/>
+    </Map>
+  </Attributes>
+  <Description>Ticket Status</Description>
+  <Section name="roadTicketIntegration">
+    <Attributes>
+      <Map>
+        <entry key="subtitle">
+          <value>
+            <Script>
+              <Source><![CDATA[
+	  	 String subtitle="Check Ticket Status For Integration ";
+	  	 if(autoSelectIntegrationConfig!=void && autoSelectIntegrationConfig!=null)
+	  	 {
+		 subtitle = subtitle +autoSelectIntegrationConfig;
+		 }
+		 else if(roadIntegrationConfigSelect!=void && roadIntegrationConfigSelect!=null)
+		 {
+		 subtitle = subtitle +roadIntegrationConfigSelect;
+		 }
+		 return subtitle;
+	]]></Source>
+            </Script>
+          </value>
+        </entry>
+      </Map>
+    </Attributes>
+    <Field displayName="Ticket Id" helpKey="Please Enter Ticket Id and Click Check Ticket Status Button" name="ticketId" required="true" type="string"/>
+  </Section>
+  <Section columns="2" label="Ticket Status and Connection" name="roadTicketStatus" type="datatable">
+    <Field displayName="Provided Ticket Id" dynamic="true" name="ticketIdSelected" type="string">
+      <Script>
+        <Source><![CDATA[
+	           return ticketId;
+	     	]]></Source>
+      </Script>
+    </Field>
+    <Field displayName="IdentityIQ Ticket Status Code" dynamic="true" name="ticketStatus" type="string">
+      <Script>
+        <Source><![CDATA[
+        		import sailpoint.rapidapponboarding.rule.CheckTicketStatusExecutor;
+	           if(ticketId!=null)
+	           {
+	              String configName=null;
+		          if(autoSelectIntegrationConfig!=void && autoSelectIntegrationConfig!=null)
+		  	 	  {
+		          configName=autoSelectIntegrationConfig;
+		          }
+		          else if(roadIntegrationConfigSelect!=void && roadIntegrationConfigSelect!=null)
+		  	 	  {
+		          configName=roadIntegrationConfigSelect;
+		          }
+		          if(configName!=null)
+		          {
+		             return CheckTicketStatusExecutor.getStatusFromTicketIntegration(context,ticketId,configName);
+				  }
+		       }
+			]]></Source>
+      </Script>
+    </Field>
+  </Section>
+  <Section columns="3" label="IdentityIQ Ticket Status Code Translation" name="roadTicketStatusInformation" type="datatable">
+    <Field displayName="committed" name="committed" type="string" value="Ticket is Fulfilled"/>
+    <Field displayName="failure" name="failure" type="string" value="Ticket Id is Invalid or Ticket Not Fulfilled"/>
+    <Field displayName="inProcess" name="inProcess" type="string" value="Ticket is Pending"/>
+  </Section>
+  <Button action="cancel" label="Cancel"/>
+  <Button action="refresh" label="Check Ticket Status"/>
+</Form>

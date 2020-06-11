@@ -1,0 +1,25 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Form PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Form hidden="true" name="Form-SODMatrixReportForm" type="Report">
+  <Section columns="1" label="Report Properties" name="customProperties">
+    <Field displayName="List of applications" helpKey="Manually select the applications to include in the report" multi="true" name="applications" type="String" value="ref:applications">
+      <AllowedValuesDefinition>
+        <Script>
+          <Source><![CDATA[
+						
+						import sailpoint.rapidapponboarding.rule.PolicyViolationsRuleLibrary;
+						List appList= new ArrayList();
+						List pvAppList = PolicyViolationsRuleLibrary.getPVAppList(context);
+						if(pvAppList!=null && pvAppList.size()>0)
+						{
+						appList.addAll(pvAppList);
+						return appList;
+						}
+						
+					]]></Source>
+        </Script>
+      </AllowedValuesDefinition>
+    </Field>
+    <Field displayName="Use all applications" helpKey="Automatically include all  applications" name="selectAllApplications" type="boolean" value="ref:selectAllApplications"/>
+  </Section>
+</Form>

@@ -1,0 +1,193 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule-FrameWork-ContractorLibrary">
+  <Description>Rule library for Contractor Onboarding</Description>
+  <Signature returnType="void">
+    <Inputs>
+      <Argument name="log">
+        <Description>
+          The log object associated with the SailPointContext.
+        </Description>
+      </Argument>
+      <Argument name="context">
+        <Description>
+          A sailpoint.api.SailPointContext object that can be used to query the database if necessary.
+        </Description>
+      </Argument>
+    </Inputs>
+  </Signature>
+  <Source><![CDATA[
+  
+	import sailpoint.object.QueryOptions;
+	import sailpoint.object.ManagedAttribute;
+	import sailpoint.object.Filter;
+	import sailpoint.api.SailPointContext;
+	import sailpoint.object.Identity;
+	import sailpoint.tools.GeneralException;
+	import sailpoint.tools.Util;
+	/**
+	* Returns a List of department IDs where the current user is set as an account administrator.
+	* @param context the SailPointContext object
+	* @param userName the identity name of the currently logged in user
+	* @return a List of department IDs where the current user is set as an account administrator.
+	* @throws GeneralException
+	*/
+	public List getAccountAdminDeptIds(SailPointContext context, String userName) throws GeneralException {
+		List returnList = new ArrayList();
+		Identity identity = context.getObjectByName(Identity.class, userName);
+		if(identity != null && identity.getAttribute("ctrAcctadmdpids") != null) {
+			returnList.addAll((List)identity.getAttribute("ctrAcctadmdpids"));
+			context.decache(identity);
+		}
+		return returnList;
+	}
+	/**
+	* Returns a List of department IDs where the current user is set as an account sponsor.
+	* @param context the SailPointContext object
+	* @param userName the identity name of the currently logged in user
+	* @return a List of department IDs where the current user is set as an account sponsor.
+	* @throws GeneralException
+	*/
+	public List getAccountSponsorDeptIds(SailPointContext context, String userName) throws GeneralException {
+		List returnList = new ArrayList();
+		Identity identity = context.getObjectByName(Identity.class, userName);
+		if(identity != null && identity.getAttribute("ctrAcctspndpids") != null) {
+			returnList.addAll((List)identity.getAttribute("ctrAcctspndpids"));
+			context.decache(identity);
+		}
+		return returnList;
+	}
+	/**
+	* Returns a List of profile values based on the departments where the current user is either an account admin or sponsor.
+	* @param context the SailPointContext object
+	* @param userName the identity name of the currently logged in user
+	* @return a List of profile values based on the departments where the current user is either an account admin or sponsor.
+	* @throws GeneralException
+	*/
+	public List getProfileValues(SailPointContext context, String userName) throws GeneralException {
+		List values = new ArrayList();
+		List acctAdmDepIds = getAccountAdminDeptIds(context,userName);
+		List acctSpnDepIds = getAccountSponsorDeptIds(context,userName);
+		List allowedDeptIds = new ArrayList();
+		allowedDeptIds.addAll(acctAdmDepIds);
+		allowedDeptIds.addAll(acctSpnDepIds);
+		QueryOptions qo = new QueryOptions();
+		qo.addFilter(Filter.eq("type","profile"));
+		Iterator maResult = context.search(ManagedAttribute.class, qo); 
+		while(maResult != null && maResult.hasNext()) {
+			List pmOrgIds = null;
+			ManagedAttribute ma = (ManagedAttribute) maResult.next();
+			String profileId = ma.getValue();
+			String profileName = ma.getDisplayName();
+			if(ma.getAttribute("pm_org_id") != null) {
+				if(ma.getAttribute("pm_org_id") instanceof List) {
+					pmOrgIds = (List) ma.getAttribute("pm_org_id");
+				}
+				else {
+					pmOrgIds = new ArrayList();
+					pmOrgIds.add(ma.getAttribute("pm_org_id").toString());
+				}
+			}
+			//Check if the user is an account administrator for the department to which these profiles belong to
+			if(pmOrgIds != null && allowedDeptIds != null && Util.containsAny(allowedDeptIds, pmOrgIds)) {
+				List innerList = new ArrayList();
+				innerList.add(profileId);
+				innerList.add(profileName);
+				values.add(innerList);
+			}
+		}
+		return values;
+	}
+	/**
+	* Returns a List of department values based on the currently selected profile.
+	* @param context the SailPointContext object
+	* @param userName the identity name of the currently logged in user
+	* @param profileId the currently selected profile id
+	* @return a List of department values based on the currently selected profile.
+	* @throws GeneralException
+	*/
+	public List getDepartmentValues(SailPointContext context, String userName, String profileId) throws GeneralException {
+  	    List values = new ArrayList();
+		if(profileId != null) {
+			QueryOptions qo = new QueryOptions();
+			qo.addFilter(Filter.eq("type","profile"));
+			qo.addFilter(Filter.eq("value", profileId));
+			List profileOrgIds = null;
+			Iterator profileResult = context.search(ManagedAttribute.class, qo); 
+			while(profileResult != null && profileResult.hasNext()) {
+				ManagedAttribute ma = (ManagedAttribute) profileResult.next();
+				if(ma.getAttribute("pm_org_id") != null) {
+					if(ma.getAttribute("pm_org_id") instanceof List) {
+						profileOrgIds = (List) ma.getAttribute("pm_org_id");
+					}
+					else {
+						profileOrgIds = new ArrayList();
+						profileOrgIds.add(ma.getAttribute("pm_org_id").toString());
+					}
+				}
+			} 
+			qo = new QueryOptions();
+			qo.addFilter(Filter.eq("type","department"));
+			Iterator maResult = context.search(ManagedAttribute.class, qo); 
+			while(maResult != null && maResult.hasNext()) {
+				ManagedAttribute ma = (ManagedAttribute) maResult.next();
+				String deptId = ma.getValue();
+				String deptName = ma.getDisplayName();
+				//Check if the department is tied to the selected profile
+				if(profileOrgIds != null && profileOrgIds.contains(deptId)) {
+					List innerList = new ArrayList();
+					innerList.add(deptId);
+					innerList.add(deptName);
+					values.add(innerList);
+				}
+			}
+		}
+		return values;
+	}
+	/**
+	* Returns a List of vendor values based on the currently selected department.
+	* @param context the SailPointContext object
+	* @param userName the identity name of the currently logged in user
+	* @param deptId the currently selected dept id
+	* @return a List of vendor values based on the currently selected department.
+	* @throws GeneralException
+	*/
+	public List getVendorValues(SailPointContext context, String userName, String deptId) throws GeneralException {
+  	    List values = new ArrayList();
+		if(deptId != null) {
+			QueryOptions qo = new QueryOptions();
+			qo.addFilter(Filter.eq("type","department"));
+			qo.addFilter(Filter.eq("value", deptId));
+			List deptCompanyIds = null;
+			Iterator deptResult = context.search(ManagedAttribute.class, qo); 
+			if(deptResult != null && deptResult.hasNext()) {
+				ManagedAttribute ma = (ManagedAttribute) deptResult.next();
+				if(ma.getAttribute("pm_company_id") != null) {
+					if(ma.getAttribute("pm_company_id") instanceof List) {
+						deptCompanyIds = (List) ma.getAttribute("pm_company_id");
+					}
+					else {
+						deptCompanyIds = new ArrayList();
+						deptCompanyIds.add(ma.getAttribute("pm_company_id").toString());
+					}
+				}
+			} 
+			qo = new QueryOptions();
+			qo.addFilter(Filter.eq("type","vendor"));
+			qo.addFilter(Filter.in("value",deptCompanyIds));
+			Iterator maResult = context.search(ManagedAttribute.class, qo); 
+			while(maResult != null && maResult.hasNext()) {
+				ManagedAttribute ma = (ManagedAttribute) maResult.next();
+				String vendorId = ma.getValue();
+				String vendorName = ma.getDisplayName();
+				List innerList = new ArrayList();
+				innerList.add(vendorId);
+				innerList.add(vendorName);
+				values.add(innerList);
+			}
+		}
+		return values;
+	}
+   
+  ]]></Source>
+</Rule>

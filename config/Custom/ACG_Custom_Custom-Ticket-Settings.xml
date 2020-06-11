@@ -1,0 +1,25 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Custom PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Custom name="Custom-Ticket-Settings">
+  <Attributes>
+    <Map>
+      <entry key="TICKET SETTINGS">
+        <value>
+          <Map>
+            <entry key="optimisticProvisioningTicket" value="True"/>
+            <entry key="provisioningMaxStatusChecks">
+              <value>
+                <Integer>3</Integer>
+              </value>
+            </entry>
+            <entry key="provisioningStatusCheckInterval">
+              <value>
+                <Integer>720</Integer>
+              </value>
+            </entry>
+          </Map>
+        </value>
+      </entry>
+    </Map>
+  </Attributes>
+</Custom>

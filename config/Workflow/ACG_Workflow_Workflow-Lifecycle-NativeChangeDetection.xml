@@ -1,0 +1,267 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Workflow PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Workflow explicitTransitions="true" name="Workflow-Lifecycle-NativeChangeDetection" type="IdentityLifecycle">
+  <Variable input="true" name="trigger">
+    <Description>The IdentityTrigger</Description>
+  </Variable>
+  <Variable input="true" name="event" transient="true">
+    <Description>
+      The IdentityChangeEvent.  It can be used to build
+      the provisioning plan, but does not need to be
+      persisted with the case, so marked as transient.
+    </Description>
+  </Variable>
+  <Variable initializer="false" name="trace">
+    <Description>
+      Used for debugging this workflow and when set to true trace
+      will be sent to stdout.
+    </Description>
+  </Variable>
+  <Variable input="true" name="identityName">
+    <Description>The name of the identity.</Description>
+  </Variable>
+  <Variable initializer="Lifecycle" name="flow">
+    <Description>The name of the identity.</Description>
+  </Variable>
+  <Variable initializer="string:LCM" name="source">
+    <Description>The name of the identity.</Description>
+  </Variable>
+  <Variable input="true" name="launcher">
+    <Description>Launcher</Description>
+  </Variable>
+  <Variable initializer="script:resolveDisplayName(identityName)" input="true" name="identityDisplayName">
+    <Description>
+      The displayName of the identity being updated.
+      Query for this using a projection query and fall back to the name.
+    </Description>
+  </Variable>
+  <Variable name="spExtAttrs"/>
+  <Variable initializer="string:true" name="foregroundProvisioning"/>
+  <Variable input="true" name="nativeChangeList">
+    <Script>
+      <Source><![CDATA[
+     	
+        import sailpoint.object.Identity;
+        import org.apache.commons.logging.Log;
+		import org.apache.commons.logging.LogFactory;
+		import sailpoint.rapidapponboarding.logger.LogEnablement;
+		Log logger = LogFactory.getLog("rapidapponboarding.rules");
+		LogEnablement.isLogDebugEnabled(logger,"This is going to null or void from Operational Tasks");
+		if( nativeChangeList==void || nativeChangeList==null)
+        {
+             List listNativeChangeDetections=null;
+	        //First find NativeChanges in the Lifecycle Event
+	        if ( event!=void && event != null ) 
+	        {
+	         	listNativeChangeDetections = event.getNativeChanges();
+	        }
+	        else
+	        {
+	            //Fall Back To Identity Cube
+				Identity identity = context.getObjectByName(Identity.class, identityName);
+				listNativeChangeDetections=identity.getNativeChangeDetections();
+				if(identity!=null)
+				{
+				context.decache(identity);
+				}
+			}
+			return listNativeChangeDetections;
+		}
+		else
+		{
+		    LogEnablement.isLogDebugEnabled(logger,"Passed In nativeChangeList from Wrapper Object");
+			return nativeChangeList;
+		}
+		
+		]]></Source>
+    </Script>
+  </Variable>
+  <Variable editable="true" name="requestType"/>
+  <Variable name="plan"/>
+  <Variable name="project"/>
+  <Variable input="true" name="workItemComments"/>
+  <Variable name="provisioningErrors"/>
+  <Description>Accelerator Pack Native Change Workflow</Description>
+  <RuleLibraries>
+    <Reference class="sailpoint.object.Rule" name="Rule-Framework-NotificationRuleLibrary"/>
+  </RuleLibraries>
+  <Step icon="Start" name="Start" posX="28" posY="10">
+    <Transition to="Get Request Type" when="!(nativeChangeList==null || nativeChangeList.isEmpty())"/>
+    <Transition to="Stop"/>
+  </Step>
+  <Step name="Get Request Type" posX="98" posY="10" resultVariable="requestType">
+    <Script>
+      <Source><![CDATA[
+        
+        import sailpoint.rapidapponboarding.rule.NativeChangeRuleLibrary;
+      	return NativeChangeRuleLibrary.getRequestTypeName();
+      	
+      ]]></Source>
+    </Script>
+    <Transition to="Build Plan"/>
+  </Step>
+  <Step name="Build Plan" posX="374" posY="10" resultVariable="plan">
+    <Script>
+      <Source><![CDATA[
+      
+  			import sailpoint.object.ProvisioningPlan;
+  			import sailpoint.rapidapponboarding.rule.NativeChangeRuleLibrary;
+  			ProvisioningPlan plan = NativeChangeRuleLibrary.buildNativeChangePlan(context, identityName, workflow, nativeChangeList, launcher);
+  			return plan;
+  			
+  		]]></Source>
+    </Script>
+    <Transition to="Stop" when="plan == null || plan.getAccountRequests() == null || plan.getAccountRequests().size() &lt; 1"/>
+    <Transition to="Process Plan"/>
+  </Step>
+  <Step icon="Task" name="Process Plan" posX="642" posY="10">
+    <Arg name="flow" value="ref:flow"/>
+    <Arg name="source" value="ref:source"/>
+    <Arg name="identityName" value="ref:identityName"/>
+    <Arg name="identityDisplayName" value="ref:identityDisplayName"/>
+    <Arg name="launcher" value="ref:launcher"/>
+    <Arg name="plan" value="ref:plan"/>
+    <Arg name="trace" value="ref:trace"/>
+    <Arg name="requestType" value="ref:requestType"/>
+    <Arg name="requestor" value="ref:requestor"/>
+    <Arg name="foregroundProvisioning" value="ref:foregroundProvisioning"/>
+    <Arg name="workItemComments" value="ref:workItemComments"/>
+    <Return name="approvalSet" to="approvalSet"/>
+    <Return name="project" to="project"/>
+    <Return name="spExtAttrs" to="spExtAttrs"/>
+    <WorkflowRef>
+      <Reference class="sailpoint.object.Workflow" name="Workflow-FrameWork-Wrapper"/>
+    </WorkflowRef>
+    <Transition to="Post Provision" when="approvalSet.hasApproved();"/>
+    <Transition to="Stop"/>
+  </Step>
+  <Step name="Post Provision" posX="768" posY="10">
+    <Script>
+      <Source><![CDATA[
+      ]]></Source>
+    </Script>
+    <Transition to="Notify Operations">
+      <Script>
+        <Source><![CDATA[
+    			
+    			    import sailpoint.rapidapponboarding.rule.ROADUtil;
+    			    import sailpoint.rapidapponboarding.rule.NativeChangeRuleLibrary;
+    				Map map =ROADUtil.getCustomGlobalMap(context);
+    				String apSendEmailToOperationsNC="False";
+					if(map!=null && map.containsKey(NativeChangeRuleLibrary.SENDEMAILOPERATIONSNC) && map.get(NativeChangeRuleLibrary.SENDEMAILOPERATIONSNC)!=null )
+					{
+						apSendEmailToOperationsNC=(String) map.get(NativeChangeRuleLibrary.SENDEMAILOPERATIONSNC);
+					}
+					if(apSendEmailToOperationsNC!=null && apSendEmailToOperationsNC.equalsIgnoreCase("TRUE"))
+					{
+						return true;
+					}
+    				Map resultMap = getProvisioningStatusMap(project);
+			        if (resultMap != null && resultMap.size() > 0) 
+			        {
+			        	if ((boolean)resultMap.get("isProvgSuccessful")) 
+			        	{
+			        		return false;
+			        	}
+			        	else 
+			        	{
+			        		return true;
+			        	}
+			        }
+    			
+    		]]></Source>
+      </Script>
+    </Transition>
+    <Transition to="Stop"/>
+  </Step>
+  <Step action="sendEmail" icon="Default" name="Notify Operations" posX="886" posY="10">
+    <Arg name="template">
+      <Script>
+        <Source><![CDATA[
+        
+        	getWrapperEmailTemplateName(workflow, project, "OperationsNativeChange");
+        	
+        ]]></Source>
+      </Script>
+    </Arg>
+    <Arg name="dynamicAppContent">
+      <Script>
+        <Source><![CDATA[
+				
+					getDynamicTextEmailTemplate( project,"OperationsNativeChange", requestType);
+					
+		  		]]></Source>
+      </Script>
+    </Arg>
+    <Arg name="refIdentityDisplayName">
+      <Script>
+        <Source><![CDATA[
+        	getIdentityDisplayName(workflow,identityName, null, false);
+        ]]></Source>
+      </Script>
+    </Arg>
+    <Arg name="plan" value="ref:plan"/>
+    <Arg name="recipientDisplayName">
+      <Script>
+        <Source><![CDATA[
+        
+        	getIdentityDisplayName(workflow,identityName, project, false,false);
+        
+        ]]></Source>
+      </Script>
+    </Arg>
+    <Arg name="to">
+      <Script>
+        <Source><![CDATA[
+			 
+				getIdentityNameForNotification(workflow,identityName, project, false,false);
+			
+	  		]]></Source>
+      </Script>
+    </Arg>
+    <Arg name="cc">
+      <Script>
+        <Source><![CDATA[
+			
+				import sailpoint.rapidapponboarding.rule.EmailNotificationRuleLibrary;
+				Map resultMap = getProvisioningStatusMap(project);
+			    if (resultMap != null && resultMap.size() > 0)
+			    {
+				    if ((boolean)resultMap.get("isProvgSuccessful"))
+				    {
+						return EmailNotificationRuleLibrary.getCCEmailForAllWorkflowsFromRule(context,identityName,requestType, plan,project);
+					}
+					else
+					{
+					return "";
+					}
+				}
+				
+			]]></Source>
+      </Script>
+    </Arg>
+    <Arg name="requestId">
+      <Script>
+        <Source><![CDATA[
+				 
+					getRequestId(plan);
+				
+		  		]]></Source>
+      </Script>
+    </Arg>
+    <Arg name="provisioningErrors" value="ref:provisioningErrors"/>
+    <Transition to="Execute Post Native Change Rule"/>
+  </Step>
+  <Step name="Execute Post Native Change Rule">
+    <Script>
+      <Source><![CDATA[
+      
+      import sailpoint.rapidapponboarding.rule.NativeChangeRuleLibrary;
+      NativeChangeRuleLibrary.postNativeChangeRule(context,identityName,requestType, project);
+      	
+  	]]></Source>
+    </Script>
+    <Transition to="Stop"/>
+  </Step>
+  <Step icon="Stop" name="Stop" posX="1186" posY="10"/>
+</Workflow>

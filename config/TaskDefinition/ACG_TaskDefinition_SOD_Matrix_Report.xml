@@ -1,0 +1,48 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE TaskDefinition PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<TaskDefinition executor="sailpoint.reporting.LiveReportExecutor" name="SOD Matrix Report" progressMode="String" resultAction="Rename" subType="Extended Reports" template="true" type="LiveReport">
+  <Attributes>
+    <Map>
+      <entry key="disableDetail" value="false"/>
+      <entry key="disableSummary" value="false"/>
+      <entry key="report">
+        <value>
+          <LiveReport title="SoD Matrix Report">
+            <DataSource dataSourceClass="sailpoint.rapidapponboarding.reports.SODMatrixReport" type="Java"/>
+            <ReportForm>
+              <Reference class="sailpoint.object.Form" name="Form-SODMatrixReportForm"/>
+            </ReportForm>
+            <Columns>
+              <ReportColumnConfig field="ApplicationName" header="Application Name" sortable="true" width="110"/>
+              <ReportColumnConfig field="GroupId" header="Group ID" width="110"/>
+              <ReportColumnConfig field="Entitlements" header="Conflicting Entitlements" width="110"/>
+              <ReportColumnConfig field="Description" header="Description" width="110"/>
+            </Columns>
+          </LiveReport>
+        </value>
+      </entry>
+    </Map>
+  </Attributes>
+  <Description>Displays information about each SOD Matrix configured for each application in detailed format.</Description>
+  <RequiredRights>
+    <Reference class="sailpoint.object.SPRight" name="FullAccessSODMatrixReport"/>
+  </RequiredRights>
+  <Signature>
+    <Inputs>
+      <Argument name="resultScope" type="Scope">
+        <Description>rept_input_result_scope</Description>
+      </Argument>
+      <Argument multi="true" name="emailIdentities" type="Identity">
+        <Description>rept_input_email_recips</Description>
+      </Argument>
+      <Argument multi="true" name="applications" type="String">
+        <Description>Manually select the applications to include in the report</Description>
+        <Prompt>List of applications</Prompt>
+      </Argument>
+      <Argument name="selectAllApplications" type="boolean">
+        <Description>Automatically include all applications</Description>
+        <Prompt>Use all applications</Prompt>
+      </Argument>
+    </Inputs>
+  </Signature>
+</TaskDefinition>

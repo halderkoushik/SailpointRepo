@@ -26,6 +26,7 @@
             <String>Recovery</String>
             <String>BatchOwner</String>
             <String>PasswordExpiration</String>
+            <String>Interceptor</String>
           </List>
         </value>
       </entry>
@@ -70,6 +71,11 @@
       <entry key="allowWorkgroupsInIdListBean" value="false"/>
       <entry key="allowiFrame" value="false"/>
       <entry key="applicationTemplateAccountUsages" value="Create,Update,Delete,Enable,Disable,Unlock,ChangePassword"/>
+      <entry key="asyncCacheRefresh">
+        <value>
+          <Boolean>true</Boolean>
+        </value>
+      </entry>
       <entry key="attachmentsAllowedFileTypes" value="[&quot;txt&quot;,&quot;jpg&quot;,&quot;png&quot;]"/>
       <entry key="attachmentsEnabled" value="false"/>
       <entry key="attachmentsMaxFileSize" value="5"/>
@@ -118,9 +124,9 @@
       <entry key="automaticClosingSigner" value="spadmin"/>
       <entry key="batchRequestAccessRequest" value="Workflow-FrameWork-Wrapper"/>
       <entry key="batchRequestAccountsRequest" value="Workflow-FrameWork-Wrapper"/>
-      <entry key="batchRequestIdentityCreateRequest" value="LCM Create and Update"/>
-      <entry key="batchRequestIdentityEditRequest" value="LCM Create and Update"/>
-      <entry key="batchRequestPasswordsRequest" value="LCM Manage Passwords"/>
+      <entry key="batchRequestIdentityCreateRequest" value="Workflow-FrameWork-Wrapper-Create"/>
+      <entry key="batchRequestIdentityEditRequest" value="Workflow-FrameWork-Wrapper-Edit"/>
+      <entry key="batchRequestPasswordsRequest" value="Workflow-FrameWork-Wrapper"/>
       <entry key="blockForwardWorkItemSelfCertification" value="false"/>
       <entry key="bulkReassignmentEmailTemplate" value="EmailTemplate-FrameworkAccessReviewBulkReassignment"/>
       <entry key="bulkSelectionCountForConfirmation" value="25"/>
@@ -233,6 +239,7 @@
       </entry>
       <entry key="completeCertificationHierarchy" value="false"/>
       <entry key="confirmRiskyCertificationSchedules" value="false"/>
+      <entry key="createIdentityForm" value="Accelerator Pack Create Identity"/>
       <entry key="customThemeCodeMirror" value="scripts/codemirror-4.3/theme/custom.css"/>
       <entry key="defaultElectronicSignature"/>
       <entry key="defaultEmailFromAddress" value="admin@example.com"/>
@@ -265,6 +272,11 @@
       <entry key="enableProvisioningTransactionLog" value="true"/>
       <entry key="enableRoleSunActivate" value="false"/>
       <entry key="enableRoleSunAssign">
+        <value>
+          <Boolean>true</Boolean>
+        </value>
+      </entry>
+      <entry key="enableSelfServiceRegistration">
         <value>
           <Boolean>true</Boolean>
         </value>
@@ -392,6 +404,15 @@
       <entry key="notifyRemediation" value="false"/>
       <entry key="numAuthQuestionAnswersRequired" value="3"/>
       <entry key="numAuthQuestionsForAuthn" value="2"/>
+      <entry key="oAuthConfiguration">
+        <value>
+          <OAuthConfiguration accessTokenExpiresInSeconds="1200">
+            <OAuthClient clientId="7LO5sX44aZaioEqKBsZ7eXVmrz6ZG5q4" createDate="1591389352664" name="MyPostMan" proxyUser="spadmin" secret="jBwje79xdhMO4AmI">
+              <TokenKey>1:ACP:RxvpAadQQi+BDbhUVuTSkj69PFZHRdp6EAqIY6glx+uj22HyQ3GPlCzuPTKCDMt5</TokenKey>
+            </OAuthClient>
+          </OAuthConfiguration>
+        </value>
+      </entry>
       <entry key="openCertsEmailTemplate" value="EmailTemplate-Framework-OpenCertifications"/>
       <entry key="passwordSpecialCharacters" value="~!@#$%^*_+-={}\\][:;?,."/>
       <entry key="pendingRoleRequestDeleteEmailTemplate" value="Pending Role Request Deleted"/>
@@ -419,7 +440,7 @@
       </entry>
       <entry key="redirectingEmailNotifierAddress" value="admin@example.com"/>
       <entry key="redirectingEmailNotifierFilename" value="/tmp/iiqmbox"/>
-      <entry key="registerForm" value="Self-service Registration Form"/>
+      <entry key="registerForm" value="Accelerator Pack Registration Identity"/>
       <entry key="remediationEmailTemplate" value="EmailTemplate-Framework-RemediationWorkItem"/>
       <entry key="remediationItemAssignmentEmailTemplate" value="EmailTemplate-FrameworkRemediationAssignment"/>
       <entry key="remediationItemAssignmentRemovalEmailTemplate" value="EmailTemplate-FrameworkRemediationAssignmentRemoval"/>
@@ -760,6 +781,7 @@
       <entry key="taskResultMaxAge" value="0"/>
       <entry key="unscopedObjectsGloballyAccessible" value="true"/>
       <entry key="unsupportedBrowserNotification" value="true"/>
+      <entry key="updateIdentityForm" value="Accelerator Pack Edit Identity"/>
       <entry key="useManagedAttributesForRemediation" value="true"/>
       <entry key="workItemArchiveTypes" value="Certification, Remediation, Delegation, Approval, ViolationReview, Form, PolicyViolation, Challenge, ImpactAnalysis, Signoff, ManualAction"/>
       <entry key="workItemAssignmentEmailTemplate" value="EmailTemplate-FrameworkWorkItemAssignment"/>
@@ -787,16 +809,16 @@
       <entry key="workflowLCMAccessRequest" value="Workflow-FrameWork-Wrapper"/>
       <entry key="workflowLCMAccountsRequest" value="Workflow-FrameWork-Wrapper"/>
       <entry key="workflowLCMEntitlementsRequest" value="Workflow-FrameWork-Wrapper"/>
-      <entry key="workflowLCMExpirePassword" value="LCM Manage Passwords"/>
-      <entry key="workflowLCMForgotPassword" value="LCM Manage Passwords"/>
-      <entry key="workflowLCMIdentityCreateRequest" value="LCM Create and Update"/>
-      <entry key="workflowLCMIdentityEditRequest" value="LCM Create and Update"/>
-      <entry key="workflowLCMPasswordsRequest" value="LCM Manage Passwords"/>
+      <entry key="workflowLCMExpirePassword" value="Workflow-FrameWork-Wrapper"/>
+      <entry key="workflowLCMForgotPassword" value="Workflow-FrameWork-Wrapper"/>
+      <entry key="workflowLCMIdentityCreateRequest" value="Workflow-FrameWork-Wrapper-Create"/>
+      <entry key="workflowLCMIdentityEditRequest" value="Workflow-FrameWork-Wrapper-Edit"/>
+      <entry key="workflowLCMPasswordsRequest" value="Workflow-FrameWork-Wrapper"/>
       <entry key="workflowLCMRolesRequest" value="Workflow-FrameWork-Wrapper"/>
-      <entry key="workflowLCMSelfServiceRegistrationRequest" value="LCM Registration"/>
+      <entry key="workflowLCMSelfServiceRegistrationRequest" value="Workflow-FrameWork-Registration"/>
       <entry key="workflowLCMUnlockAccount" value="Workflow-FrameWork-Wrapper"/>
       <entry key="workflowManagedAttribute" value="Entitlement Update"/>
-      <entry key="workflowPasswordIntercept" value="Password Intercept"/>
+      <entry key="workflowPasswordIntercept" value="Workflow-Intercept-Password"/>
       <entry key="workflowRoleApproval" value="Role Modeler - Impact Analysis"/>
       <entry key="workflowScheduledAssignment" value="Scheduled Assignment"/>
       <entry key="workflowScheduledRoleActivation" value="Scheduled Role Activation"/>

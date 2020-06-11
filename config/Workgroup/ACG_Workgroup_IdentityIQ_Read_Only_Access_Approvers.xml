@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Identity PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Identity name="IdentityIQ Read Only Access Approvers" workgroup="true">
+  <Attributes>
+    <Map>
+      <entry key="displayName" value="IdentityIQ Read Only Access Approvers"/>
+    </Map>
+  </Attributes>
+  <Preferences>
+    <Map>
+      <entry key="workgroupNotificationOption">
+        <value>
+          <WorkgroupNotifationOption>MembersOnly</WorkgroupNotifationOption>
+        </value>
+      </entry>
+    </Map>
+  </Preferences>
+</Identity>

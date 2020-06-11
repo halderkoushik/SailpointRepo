@@ -75,4 +75,8 @@
   <ObjectAttribute displayName="att_administrator" name="administrator" standard="true" type="sailpoint.object.Identity"/>
   <ObjectAttribute categoryName="Joiner" displayName="Implicit Joiner" editMode="ReadOnly" name="needsJoiner" namedColumn="true" type="string"/>
   <ObjectAttribute displayName="Middle Name" editMode="ReadOnly" name="middleName" namedColumn="true" type="string"/>
+  <ObjectAttribute categoryName="Contractor" displayName="Contractor Expiration Date" editMode="ReadOnly" name="ctrexpDt" namedColumn="true" type="string"/>
+  <ObjectAttribute categoryName="Contractor" displayName="Contractor Manager" editMode="ReadOnly" name="ctrMgr" namedColumn="true" type="string"/>
+  <ObjectAttribute categoryName="Service Account" displayName="Service Account Owner" editMode="ReadOnly" name="saccountOwnerone" namedColumn="true" type="string"/>
+  <ObjectAttribute categoryName="Service Account" displayName="Service Cube" editMode="ReadOnly" name="serviceCube" namedColumn="true" type="string"/>
 </ObjectConfig>

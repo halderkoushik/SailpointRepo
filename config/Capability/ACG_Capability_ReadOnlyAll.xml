@@ -1,0 +1,53 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Capability PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Capability displayName="Read Only All" name="ReadOnlyAll">
+  <Description>capability_desc_Read_Only_All</Description>
+  <RightRefs>
+    <Reference class="sailpoint.object.SPRight" name="ViewAccessRequest"/>
+    <Reference class="sailpoint.object.SPRight" name="ViewAccountGroups"/>
+    <Reference class="sailpoint.object.SPRight" name="ViewActivity"/>
+    <Reference class="sailpoint.object.SPRight" name="ViewAlert"/>
+    <Reference class="sailpoint.object.SPRight" name="ViewAlertDefinition"/>
+    <Reference class="sailpoint.object.SPRight" name="ViewAllIdentitiesCertificationOwnerStatus"/>
+    <Reference class="sailpoint.object.SPRight" name="ViewApplication"/>
+    <Reference class="sailpoint.object.SPRight" name="ViewApplicationCertificationStatus"/>
+    <Reference class="sailpoint.object.SPRight" name="ViewApplicationRiskScoreChart"/>
+    <Reference class="sailpoint.object.SPRight" name="ViewApplicationStatus"/>
+    <Reference class="sailpoint.object.SPRight" name="ViewAuditLog"/>
+    <Reference class="sailpoint.object.SPRight" name="ViewCertificationCompletionChart"/>
+    <Reference class="sailpoint.object.SPRight" name="ViewCertificationCompletionStatus"/>
+    <Reference class="sailpoint.object.SPRight" name="ViewCertificationDecisionChart"/>
+    <Reference class="sailpoint.object.SPRight" name="ViewCertificationOwnerStatus"/>
+    <Reference class="sailpoint.object.SPRight" name="ViewCertifications"/>
+    <Reference class="sailpoint.object.SPRight" name="ViewCertificationsDashboardGrid"/>
+    <Reference class="sailpoint.object.SPRight" name="ViewDashboardChooser"/>
+    <Reference class="sailpoint.object.SPRight" name="ViewGroupCertificationStatus"/>
+    <Reference class="sailpoint.object.SPRight" name="ViewGroups"/>
+    <Reference class="sailpoint.object.SPRight" name="ViewIdentity"/>
+    <Reference class="sailpoint.object.SPRight" name="ViewIdentityRequest"/>
+    <Reference class="sailpoint.object.SPRight" name="ViewLink"/>
+    <Reference class="sailpoint.object.SPRight" name="ViewOAuthClientConfiguration"/>
+    <Reference class="sailpoint.object.SPRight" name="ViewPolicy"/>
+    <Reference class="sailpoint.object.SPRight" name="ViewPolicyViolationChart"/>
+    <Reference class="sailpoint.object.SPRight" name="ViewPolicyViolationStatus"/>
+    <Reference class="sailpoint.object.SPRight" name="ViewPopulations"/>
+    <Reference class="sailpoint.object.SPRight" name="ViewProcessInstrumentation"/>
+    <Reference class="sailpoint.object.SPRight" name="ViewProvisioningTransaction"/>
+    <Reference class="sailpoint.object.SPRight" name="ViewQuickLinks"/>
+    <Reference class="sailpoint.object.SPRight" name="ViewRiskScoreChart"/>
+    <Reference class="sailpoint.object.SPRight" name="ViewRole"/>
+    <Reference class="sailpoint.object.SPRight" name="ViewScope"/>
+    <Reference class="sailpoint.object.SPRight" name="ViewSignoffStatus"/>
+    <Reference class="sailpoint.object.SPRight" name="ViewSyslog"/>
+    <Reference class="sailpoint.object.SPRight" name="ViewTaskManagement"/>
+    <Reference class="sailpoint.object.SPRight" name="ViewWorkgroup"/>
+    <Reference class="sailpoint.object.SPRight" name="ReadSCIMResourceType"/>
+    <Reference class="sailpoint.object.SPRight" name="ReadSCIMSchema"/>
+    <Reference class="sailpoint.object.SPRight" name="ReadSCIMUser"/>
+    <Reference class="sailpoint.object.SPRight" name="ReadTaskResults"/>
+    <Reference class="sailpoint.object.SPRight" name="MonitorIdentityActivity"/>
+    <Reference class="sailpoint.object.SPRight" name="MonitorIdentityEvents"/>
+    <Reference class="sailpoint.object.SPRight" name="MonitorIdentityHistory"/>
+    <Reference class="sailpoint.object.SPRight" name="MonitorIdentityPolicy"/>
+  </RightRefs>
+</Capability>

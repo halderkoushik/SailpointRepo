@@ -1,0 +1,835 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Form PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Form name="Accelerator Pack Edit Identity" type="UpdateIdentity">
+  <Attributes>
+    <Map>
+      <entry key="pageTitle" value="Edit Identity"/>
+    </Map>
+  </Attributes>
+  <Description>Edit Identity Form</Description>
+  <Section label="IDENTITY ATTRIBUTES" name="IDENTITY ATTRIBUTES">
+    <Field displayName="Is Service  Cube" name="serviceCube" type="string">
+      <Attributes>
+        <Map>
+          <entry key="hidden" value="true"/>
+          <entry key="readOnly" value="true"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Disable Service Accounts Fields" name="disableServiceCube" type="string">
+      <Attributes>
+        <Map>
+          <entry key="hidden" value="true"/>
+          <entry key="readOnly" value="true"/>
+        </Map>
+      </Attributes>
+      <RuleRef>
+        <Reference class="sailpoint.object.Rule" name="Rule-FieldValue-IsServiceCube"/>
+      </RuleRef>
+    </Field>
+    <Field displayName="Type" name="type" type="string">
+      <Attributes>
+        <Map>
+          <entry key="hidden" value="true"/>
+          <entry key="readOnly" value="true"/>
+        </Map>
+      </Attributes>
+      <RuleRef>
+        <Reference class="sailpoint.object.Rule" name="Rule-FieldValue-IsServiceCube"/>
+      </RuleRef>
+    </Field>
+    <Field displayName="First Name" name="firstname" required="true" type="string"/>
+    <Field displayName="Last Name" name="lastname" required="true" type="string"/>
+    <Field displayName="Middle Name" name="middleName" type="string">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+                if(form!=null && form.getField("serviceCube")!=null)
+     			{
+	              	String isServiceCube=form.getField("serviceCube").getValue();                                                          
+					if (null != isServiceCube && isServiceCube.equalsIgnoreCase("TRUE")) 
+					{   
+					return true;             
+					}
+					else
+					{
+					return false;
+					}
+				}
+				else
+				{
+					return true;
+				}
+				]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Email" name="email" required="true" type="string">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+                if(form!=null && form.getField("serviceCube")!=null)
+     			{
+	              	String isServiceCube=form.getField("serviceCube").getValue();                                                          
+					if (null != isServiceCube && isServiceCube.equalsIgnoreCase("TRUE")) 
+					{   
+						return true;             
+					}
+					else
+					{
+						return false;
+					}
+				}
+				else
+				{
+					return true;
+				}
+				]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Administrator" name="administrator" required="true" type="sailpoint.object.Identity">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+                import sailpoint.rapidapponboarding.rule.ObjectConfigAttributesRuleLibrary;
+                import org.apache.commons.logging.Log;
+			    import org.apache.commons.logging.LogFactory;
+			    import sailpoint.rapidapponboarding.logger.LogEnablement;
+			 	Log formLogger = LogFactory.getLog("rapidapponboarding.rules");
+                boolean identityTypeEnab=false;
+                boolean result=false;
+                String identityTypeEnabled = ObjectConfigAttributesRuleLibrary.extendedAttrIdentityTypeEnabled(context);
+				if(identityTypeEnabled!=null && identityTypeEnabled.length()>0 && identityTypeEnabled.equalsIgnoreCase("TRUE"))
+				{
+					identityTypeEnab=true;
+				}
+				LogEnablement.isLogDebugEnabled(formLogger,"identityTypeEnab...."+identityTypeEnab);
+				if(identityTypeEnab)
+				{
+					if(form.getField("serviceCube")!=null)
+	                {
+						String isServiceCube=form.getField("serviceCube").getValue();  
+						LogEnablement.isLogDebugEnabled(formLogger,"isServiceCube...."+isServiceCube);                                                        
+						if (null != isServiceCube && isServiceCube.equalsIgnoreCase("TRUE")) 
+						{   
+							form.getField("email").setRequired(false);
+							form.getField("manager").setRequired(false);
+							String disableServiceCube=null;
+							if(form.getField("disableServiceCube")!=null && form.getField("disableServiceCube").getValue()!=null)
+							{
+								disableServiceCube=form.getField("disableServiceCube").getValue();
+							}
+							LogEnablement.isLogDebugEnabled(formLogger,"disableServiceCube...."+disableServiceCube);
+							if(disableServiceCube!=null && disableServiceCube.equalsIgnoreCase("FALSE"))
+							{
+								result = true; 
+							}
+							else
+							{
+								result = false;
+							}            
+						}
+						else
+						{
+							result =true;
+						}
+					}
+					else
+					{
+						result = true;
+					}
+				}
+				else
+				{
+					result = true;
+				}
+				LogEnablement.isLogDebugEnabled(formLogger,"result....Administrator Field.."+result);
+				return result;
+				]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Service Account Owner" name="saccountOwnerone" required="true" type="sailpoint.object.Identity">
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+                import sailpoint.rapidapponboarding.rule.ObjectConfigAttributesRuleLibrary;
+                boolean identityTypeEnab=false;
+                boolean result=false;
+                String identityTypeEnabled = ObjectConfigAttributesRuleLibrary.extendedAttrIdentityTypeEnabled(context);
+				if(identityTypeEnabled!=null && identityTypeEnabled.length()>0 && identityTypeEnabled.equalsIgnoreCase("TRUE"))
+				{
+					identityTypeEnab=true;
+				}
+				if(!identityTypeEnab)
+				{
+	                if(form.getField("serviceCube")!=null)
+	                {
+						String isServiceCube=form.getField("serviceCube").getValue();                                                          
+						if (null != isServiceCube && isServiceCube.equalsIgnoreCase("TRUE")) 
+						{   
+							form.getField("email").setRequired(false);
+							form.getField("manager").setRequired(false);
+							String disableServiceCube=null;
+							if(form.getField("disableServiceCube")!=null && form.getField("disableServiceCube").getValue()!=null)
+							{
+								disableServiceCube=form.getField("disableServiceCube").getValue();
+							}
+							if(disableServiceCube!=null && disableServiceCube.equalsIgnoreCase("FALSE"))
+							{
+								result = true; 
+							}
+							else
+							{
+								result = false;
+							}
+						}
+					}
+					else
+					{
+					result = true;
+					}
+				}
+				else
+				{
+					result = true;
+				}
+				return result;
+				]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+  </Section>
+  <Section label="CONTRACTOR ATTRIBUTES" name="CONTRACTOR ATTRIBUTES">
+    <Attributes>
+      <Map>
+        <entry key="hidden">
+          <value>
+            <Script>
+              <Source><![CDATA[
+				
+				//Hide Whole Section for Service Accounts	
+				import sailpoint.rapidapponboarding.rule.ObjectConfigAttributesRuleLibrary;
+				boolean result=false;			
+				if(form != null && form.getField("serviceCube") != null)
+				{
+					String isServiceCube = form.getField("serviceCube").getValue();
+					if(null != isServiceCube && isServiceCube.equalsIgnoreCase("TRUE")) 
+					{   
+						result = true;             
+					}
+					else
+					{
+						result = false;
+					}
+				}
+				else
+				{
+					result = false;
+				}
+				if(!result)
+				{
+			        boolean identityTypeEnab=false;
+	                String identityTypeEnabled = ObjectConfigAttributesRuleLibrary.extendedAttrIdentityTypeEnabled(context);
+					if(identityTypeEnabled!=null && identityTypeEnabled.length()>0 && identityTypeEnabled.equalsIgnoreCase("TRUE"))
+					{
+						identityTypeEnab=true;
+					}
+					if(identityTypeEnab)
+					{
+						if(form != null && form.getField("type") != null && form.getField("type").getValue() !=null 
+						&& form.getField("type").getValue().equalsIgnoreCase("contractor")) 
+						{
+						result = false;
+						}
+						else
+						{
+						result = true;
+						}
+					}
+				}
+				return result;
+				
+				]]></Source>
+            </Script>
+          </value>
+        </entry>
+        <entry key="subtitle" value="Lifecycle Events can be  configured to kick off Leaver, Mover, and Attribute Synchronization process for Contractors"/>
+      </Map>
+    </Attributes>
+    <Field name="contractorPluginExists" postBack="true" type="boolean">
+      <Attributes>
+        <Map>
+          <entry key="hidden" value="true"/>
+          <entry key="readOnly" value="true"/>
+        </Map>
+      </Attributes>
+      <RuleRef>
+        <Reference class="sailpoint.object.Rule" name="Rule-FieldValue-ContractorPluginExists"/>
+      </RuleRef>
+    </Field>
+    <Field displayName="Assignment" displayType="combobox" name="ctrProfid" postBack="true" type="string">
+      <AllowedValuesDefinition>
+        <RuleRef>
+          <Reference class="sailpoint.object.Rule" name="Rule-AllowedValues-ContractorProfiles"/>
+        </RuleRef>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+					
+					//Hide for Independent Contractor - They are not going to have any ctrProfid
+					//Show - Hide for Contractor Plugin - Start
+					if(form != null && form.getField("contractorPluginExists") != null && form.getField("contractorPluginExists").getValue() && value!=null) 
+					{
+						return false;             
+					}
+					else
+					{
+						return true;
+					}
+					//Show - Hide for Contractor Plugin - End
+					
+					]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Department" dynamic="true" name="ctrDptid" postBack="true" type="string">
+      <AllowedValuesDefinition>
+        <RuleRef>
+          <Reference class="sailpoint.object.Rule" name="Rule-AllowedValues-ContractorDepartments"/>
+        </RuleRef>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+					
+					//Hide for Independent Contractor - They are not going to have any ctrDptid
+					//Show - Hide for Contractor Plugin - Start
+					if(form != null && form.getField("contractorPluginExists") != null && form.getField("contractorPluginExists").getValue() && value!=null) 
+					{
+						return false;             
+					}
+					else
+					{
+						return true;
+					}
+					//Show - Hide for Contractor Plugin - End
+					
+					]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Contractor Agency" dynamic="true" name="ctrVendorid" postBack="true" type="string">
+      <AllowedValuesDefinition>
+        <RuleRef>
+          <Reference class="sailpoint.object.Rule" name="Rule-AllowedValues-ContractorVendors"/>
+        </RuleRef>
+      </AllowedValuesDefinition>
+      <Attributes>
+        <Map>
+          <entry key="hidden">
+            <value>
+              <Script>
+                <Source><![CDATA[
+					
+					//Hide for Independent Contractor - They are not going to have any ctrVendorid
+					//Show - Hide for Contractor Plugin - Start
+					if(form != null && form.getField("contractorPluginExists") != null && form.getField("contractorPluginExists").getValue() && value!=null) 
+					{
+						return false;             
+					}
+					else
+					{
+						return true;
+					}
+					//Show - Hide for Contractor Plugin - End
+					
+					]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Contractor Sponsor Manager" name="manager" required="true" type="sailpoint.object.Identity">
+      <Attributes>
+        <Map>
+          <entry key="readOnly">
+            <value>
+              <Script>
+                <Source><![CDATA[
+						
+						import sailpoint.object.QueryOptions;
+						import sailpoint.object.Identity;
+						import sailpoint.object.Filter;
+						import sailpoint.tools.Util;
+						import sailpoint.search.ExternalAttributeFilterBuilder;
+						import sailpoint.rapidapponboarding.logger.LogEnablement;
+						import org.apache.commons.logging.Log;
+						import org.apache.commons.logging.LogFactory;
+					    Log formLogger = LogFactory.getLog("rapidapponboarding.rules");
+						if(form.getField("contractorPluginExists") != null && form.getField("contractorPluginExists").getValue()) 
+						{
+							LogEnablement.isLogDebugEnabled(formLogger,"Contractor Plugin Exists");
+							if(form.getField("ctrDptid") != null && form.getField("ctrDptid").getValue() != null && form.getField("ctrDptid").getValue().toString().trim().length() > 0
+							&& !form.getField("ctrDptid").isHidden()) 
+							{
+								String deptId = form.getField("ctrDptid").getValue().toString(); 
+								LogEnablement.isLogDebugEnabled(formLogger,"deptId..."+deptId);
+								Filter f = ExternalAttributeFilterBuilder.buildAndFilter(ExternalAttributeFilterBuilder.IDENTITY_EXTERNAL, ExternalAttributeFilterBuilder.IDENTITY_JOIN , "ctrAcctspndpids", Util.csvToList(deptId), "EQ");
+								QueryOptions qo = new QueryOptions();
+								qo.addFilter(f);
+								String id = "";
+								String name = "";
+								boolean currentValIsAllowed = false;
+								//Count how many identities fit the criteria for being profile manager
+								int objCount = context.countObjects(Identity.class, qo);
+								Iterator idResult = context.search(Identity.class, qo, "id, name"); 
+								while(idResult != null && idResult.hasNext()) 
+								{
+									Object[] obj = (Object[]) idResult.next();
+									if(obj != null && obj.length > 1) 
+									{
+										id = obj[0];
+										name = obj[1];
+										//Check if the current value is in the allowed values list
+										LogEnablement.isLogDebugEnabled(formLogger,"Contractor Sponsor/Manager field.getValue()."+field.getValue());
+										if(field.getValue() != null && (field.getValue().toString().equalsIgnoreCase(id)||field.getValue().toString().equalsIgnoreCase(name)))
+										 {
+											currentValIsAllowed = true;
+										}
+									}
+								}
+								LogEnablement.isLogDebugEnabled(formLogger,"currentValIsAllowed."+currentValIsAllowed);
+								if(objCount == 1) 
+								{
+								    LogEnablement.isLogDebugEnabled(formLogger," Contractor Sponsor/Manager Only One Selection is Allowed.");
+									field.setValue(id);
+								}
+								else
+								{
+									if(!currentValIsAllowed) 
+									{
+									    LogEnablement.isLogDebugEnabled(formLogger,"Contractor Sponsor/Manager Set Field Value To Null.");
+										field.setValue(null);
+									}
+								}
+								//Need to set the filter string here as well as in the value script because of IIQETN-6877
+								field.setFilterString(f.toString());
+								return false;
+							}
+							else if(form.getField("ctrDptid") != null && !form.getField("ctrDptid").isHidden())
+							{
+							    LogEnablement.isLogDebugEnabled(formLogger,"Set Field Value To Null...Make it Read Only");
+								field.setValue(null);
+								return true;
+							}
+						}
+						else 
+						{
+						 	LogEnablement.isLogDebugEnabled(formLogger,"Contractor Plugin Not Exists");
+							field.setFilterString("");
+							LogEnablement.isLogDebugEnabled(formLogger,"No Filtering and Read Only False");
+							return false;
+						}
+						
+						]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+      <Script>
+        <Source><![CDATA[
+				
+				import sailpoint.object.QueryOptions;
+				import sailpoint.object.Identity;
+				import sailpoint.object.Filter;
+				import sailpoint.tools.Util;
+				import sailpoint.search.ExternalAttributeFilterBuilder;
+				if(form.getField("contractorPluginExists") != null && form.getField("contractorPluginExists").getValue()) 
+				{
+					if(form.getField("ctrDptid") != null && form.getField("ctrDptid").getValue() != null && form.getField("ctrDptid").getValue().toString().trim().length() > 0
+					&& !form.getField("ctrDptid").isHidden()) 
+					{
+						String deptId = form.getField("ctrDptid").getValue().toString();
+						Filter f = ExternalAttributeFilterBuilder.buildAndFilter(ExternalAttributeFilterBuilder.IDENTITY_EXTERNAL, ExternalAttributeFilterBuilder.IDENTITY_JOIN , "ctrAcctspndpids", Util.csvToList(deptId), "EQ");
+						QueryOptions qo = new QueryOptions();
+						qo.addFilter(f);
+						//Count how many identities fit the criteria for being profile manager
+						int objCount = context.countObjects(Identity.class, qo);
+						//If exactly one match is found, set it as the value for this field.
+						//If multiple identities found, then set a filter so that user can choose
+						if(objCount == 1) 
+						{
+							String id = "";
+							String name = "";
+							Iterator idResult = context.search(Identity.class, qo, "id, name"); 
+							if(idResult != null && idResult.hasNext()) 
+							{
+								Object[] obj = (Object[]) idResult.next();
+								if(obj != null && obj.length > 1) 
+								{
+									id = obj[0];
+									name = obj[1];
+								}
+							}
+							field.setFilterString(f.toString());
+							return name;
+						}
+						else 
+						{
+							field.setFilterString(f.toString());
+							return null;
+						}
+					}
+					//Make Sure Field is not Hidden - Independent Contractors will not have this
+					else if(form.getField("ctrDptid") != null  && !form.getField("ctrDptid").isHidden())
+					{
+						//Create a Filter that will not return any results, if no Department is selected
+						Filter f = Filter.isnull("id");
+						field.setFilterString(f.toString());
+						return null;
+					}
+				}
+				else 
+				{
+					//If contractor plugin doesn't exist, then set an empty filter to make all Identity objects available for choosing
+					field.setFilterString("");
+					return null;
+				}
+				
+				]]></Source>
+      </Script>
+    </Field>
+    <Field displayName="Contractor Assignment Manager" dynamic="true" name="ctrMgr" required="true" type="Identity">
+      <Attributes>
+        <Map>
+          <entry key="readOnly">
+            <value>
+              <Script>
+                <Source><![CDATA[
+						
+						import sailpoint.object.QueryOptions;
+						import sailpoint.object.Identity;
+						import sailpoint.object.Filter;
+						import sailpoint.tools.Util;
+						import sailpoint.search.ExternalAttributeFilterBuilder;
+						if(form.getField("contractorPluginExists") != null && form.getField("contractorPluginExists").getValue()) 
+						{
+							if(form.getField("ctrDptid") != null && form.getField("ctrDptid").getValue() != null && form.getField("ctrDptid").getValue().toString().trim().length() > 0
+							&& !form.getField("ctrDptid").isHidden())
+							{
+								String deptId = form.getField("ctrDptid").getValue().toString(); 
+								Filter f = ExternalAttributeFilterBuilder.buildAndFilter(ExternalAttributeFilterBuilder.IDENTITY_EXTERNAL, ExternalAttributeFilterBuilder.IDENTITY_JOIN , "ctrPrfmgrdpids", Util.csvToList(deptId), "EQ");
+								QueryOptions qo = new QueryOptions();
+								qo.addFilter(f);
+								String id = "";
+								boolean currentValIsAllowed = false;
+								//Count how many identities fit the criteria for being profile manager
+								int objCount = context.countObjects(Identity.class, qo);
+								Iterator idResult = context.search(Identity.class, qo, "id, name"); 
+								while(idResult != null && idResult.hasNext()) {
+									Object[] obj = (Object[]) idResult.next();
+									if(obj != null && obj.length >= 1) {
+										id = obj[0];
+										//Check if the current value is in the allowed values list
+										if(field.getValue() != null && field.getValue().toString().equalsIgnoreCase(id)) {
+											currentValIsAllowed = true;
+										}
+									}
+								}
+								if(objCount == 1) 
+								{
+									field.setValue(id);
+								}
+								else 
+								{
+									if(!currentValIsAllowed) 
+									{
+										field.setValue(null);
+									}
+								}
+								//Need to set the filter string here as well as in the value script because of IIQETN-6877
+								field.setFilterString(f.toString());
+								return false;
+							}
+							else if(form.getField("ctrDptid") != null && !form.getField("ctrDptid").isHidden())
+							{
+								field.setValue(null);
+								return true;
+							}
+						}
+						else 
+						{
+							field.setFilterString("");
+							return false;
+						}
+						
+						]]></Source>
+              </Script>
+            </value>
+          </entry>
+          <entry key="valueProperty" value="name"/>
+        </Map>
+      </Attributes>
+      <Script>
+        <Source><![CDATA[
+				
+				import sailpoint.object.QueryOptions;
+				import sailpoint.object.Identity;
+				import sailpoint.object.Filter;
+				import sailpoint.tools.Util;
+				import sailpoint.search.ExternalAttributeFilterBuilder;
+				if(form.getField("contractorPluginExists") != null && form.getField("contractorPluginExists").getValue()) 
+				{
+					if(form.getField("ctrDptid") != null && form.getField("ctrDptid").getValue() != null && form.getField("ctrDptid").getValue().toString().trim().length() > 0
+					 && !form.getField("ctrDptid").isHidden()) 
+					{
+						String deptId = form.getField("ctrDptid").getValue().toString();
+						Filter f = ExternalAttributeFilterBuilder.buildAndFilter(ExternalAttributeFilterBuilder.IDENTITY_EXTERNAL, ExternalAttributeFilterBuilder.IDENTITY_JOIN , "ctrPrfmgrdpids", Util.csvToList(deptId), "EQ");
+						QueryOptions qo = new QueryOptions();
+						qo.addFilter(f);
+						//Count how many identities fit the criteria for being profile manager
+						int objCount = context.countObjects(Identity.class, qo);
+						//If exactly one match is found, set it as the value for this field.
+						//If multiple identities found, then set a filter so that user can choose
+						if(objCount == 1) 
+						{
+							String id = "";
+							String name = "";
+							Iterator idResult = context.search(Identity.class, qo, "id, name"); 
+							if(idResult != null && idResult.hasNext()) 
+							{
+								Object[] obj = (Object[]) idResult.next();
+								if(obj != null && obj.length > 1) 
+								{
+									id = obj[0];
+									name = obj[1];
+								}
+							}
+							field.setFilterString(f.toString());
+							return name;
+						}
+						else 
+						{
+							field.setFilterString(f.toString());
+							return null;
+						}
+					}
+					else if(form.getField("ctrDptid") != null  && !form.getField("ctrDptid").isHidden())
+					{
+						//Create a Filter that will not return any results, if no Department is selected
+						Filter f = Filter.isnull("id");
+						field.setFilterString(f.toString());
+						return null;
+					}
+				}
+				else 
+				{
+					//If contractor plugin doesn't exist, then set an empty filter to make all Identity objects available for choosing
+					field.setFilterString("");
+					return null;
+				}
+				
+				]]></Source>
+      </Script>
+    </Field>
+    <Field displayName="Contractor Expiration Date" dynamic="true" name="ctrexpDt" required="true" type="date">
+      <Attributes>
+        <Map>
+          <entry key="readOnly">
+            <value>
+              <Script>
+                <Source><![CDATA[
+					
+					import sailpoint.object.QueryOptions;
+					import sailpoint.object.ManagedAttribute;
+					import sailpoint.object.Filter;
+					import java.text.SimpleDateFormat;
+					import java.text.ParseException;
+					import sailpoint.rapidapponboarding.rule.ROADUtil;
+					import org.apache.commons.logging.Log;
+			 		import org.apache.commons.logging.LogFactory;
+			 		import sailpoint.rapidapponboarding.logger.LogEnablement;
+			 		Log formLogger = LogFactory.getLog("rapidapponboarding.rules");
+					Date expDate = null;
+					Map entryObj = ROADUtil.getCustomGlobalMap(context);
+				 	String createEditCtrDateFormat=null;
+				 	if (entryObj!= null && entryObj.get("createEditCtrDateFormat")!=null) 
+		         	{
+		                 createEditCtrDateFormat = entryObj.get("createEditCtrDateFormat").toString(); 
+		          	}
+		          	LogEnablement.isLogDebugEnabled(formLogger,"createEditCtrDateFormat..."+createEditCtrDateFormat);
+					if(form.getField("contractorPluginExists") != null && form.getField("contractorPluginExists").getValue()) 
+					{
+						//Set the value of the exp date based on selected Profile here, due to IIQETN-6877
+						if(form != null && form.getField("ctrProfid") != null && form.getField("ctrProfid").getValue() != null && form.getField("ctrProfid").getValue().toString()!=null
+						 && !form.getField("ctrProfid").isHidden()) 
+						{
+							String expDateStr = "";
+							String profileId = form.getField("ctrProfid").getValue().toString(); 
+							LogEnablement.isLogDebugEnabled(formLogger,"profileId..."+profileId);
+							QueryOptions qo = new QueryOptions();
+							qo.addFilter(Filter.eq("type","profile"));
+							qo.addFilter(Filter.eq("value", profileId));
+							Iterator profileResult = context.search(ManagedAttribute.class, qo); 
+							while(profileResult != null && profileResult.hasNext()) 
+							{
+								ManagedAttribute ma = (ManagedAttribute) profileResult.next();
+								if(ma.getAttribute("expiry_date") != null) 
+								{
+									expDateStr = ma.getAttribute("expiry_date").toString();
+								}
+							} 
+							if(expDateStr != null && expDateStr.trim().length() > 0) 
+							{
+								SimpleDateFormat sdf=null;
+							    if(createEditCtrDateFormat!=null)
+							    {
+								 sdf = new SimpleDateFormat(createEditCtrDateFormat);
+								}
+								else
+								{
+								 sdf = new SimpleDateFormat("MM/dd/yyyy K:m:s a z");
+								}
+								try 
+								{
+									expDate = sdf.parse(expDateStr);
+									//FETCH AND SET LATEST CHANGED DATE FROM PROFILE
+									field.setValue(expDate);
+								}
+								catch(ParseException pe) 
+								{
+									expDate = null;
+									return false;
+								}
+							}
+							return true;
+						}
+						else 
+						{
+							LogEnablement.isLogDebugEnabled(formLogger,"Read Only False...");
+							return false;
+						}
+					}
+					else 
+					{
+						LogEnablement.isLogDebugEnabled(formLogger,"Read Only False...");
+						return false;
+					}
+					
+					]]></Source>
+              </Script>
+            </value>
+          </entry>
+        </Map>
+      </Attributes>
+      <Script>
+        <Source><![CDATA[
+			
+		     import org.apache.commons.logging.Log;
+			 import org.apache.commons.logging.LogFactory;
+			 import sailpoint.object.QueryOptions;
+			 import sailpoint.object.ManagedAttribute;
+			 import sailpoint.object.Filter;
+			 import java.text.SimpleDateFormat;
+			 import java.text.ParseException;
+			 import sailpoint.rapidapponboarding.rule.ROADUtil;
+			 import sailpoint.rapidapponboarding.logger.LogEnablement;
+	   		 Log formLogger = LogFactory.getLog("rapidapponboarding.rules");
+			 Date expDate = null;
+			 Map entryObj = ROADUtil.getCustomGlobalMap(context);
+			 String createEditCtrDateFormat=null;
+			 if (entryObj!= null && entryObj.get("createEditCtrDateFormat")!=null) 
+	         {
+	                 createEditCtrDateFormat = entryObj.get("createEditCtrDateFormat").toString(); 
+	          }
+	        LogEnablement.isLogDebugEnabled(formLogger,"createEditCtrDateFormat..."+createEditCtrDateFormat);
+	        LogEnablement.isLogDebugEnabled(formLogger,"value..."+value);
+			if(form != null && form.getField("ctrProfid") != null && form.getField("ctrProfid").getValue() != null
+			 && !form.getField("ctrProfid").isHidden())
+			{
+				String expDateStr = "";
+				String profileId = form.getField("ctrProfid").getValue().toString(); 
+				QueryOptions qo = new QueryOptions();
+				qo.addFilter(Filter.eq("type","profile"));
+				qo.addFilter(Filter.eq("value", profileId));
+				Iterator profileResult = context.search(ManagedAttribute.class, qo); 
+				while(profileResult != null && profileResult.hasNext()) 
+				{
+					ManagedAttribute ma = (ManagedAttribute) profileResult.next();
+					if(ma.getAttribute("expiry_date") != null) 
+					{
+						expDateStr = ma.getAttribute("expiry_date").toString();
+					}
+				} 
+				if(expDateStr != null && expDateStr.trim().length() > 0) 
+				{
+					SimpleDateFormat sdf=null;
+				    if(createEditCtrDateFormat!=null)
+				    {
+					 sdf = new SimpleDateFormat(createEditCtrDateFormat);
+					}
+					else
+					{
+					 sdf = new SimpleDateFormat("MM/dd/yyyy K:m:s a z");
+					}
+					try 
+					{
+						expDate = sdf.parse(expDateStr);
+					}
+					catch(ParseException pe) 
+					{
+						expDate = null;
+					}
+				}
+			}
+			//FETCH LATEST CHANGED DATE FROM PROFILE
+			LogEnablement.isLogDebugEnabled(formLogger,"expDate..."+expDate);
+			return expDate;
+			
+			]]></Source>
+      </Script>
+    </Field>
+  </Section>
+</Form>

@@ -1,0 +1,176 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule-Framework-ServiceCubes-CertificationPreDelegation" type="CertificationPreDelegation">
+  <Description>A pre-delegation rule that is run on every CertificationEntity when the certification is generated in order to cause some entities to be pre-delegated.  As an example, a manager certification could pre-delegate the certification responsibility to each employee that reports to the manager.  This would allow each subordinate to first determine what they need access to, then allow the manager to review their decision.</Description>
+  <Signature returnType="Map">
+    <Inputs>
+      <Argument name="log">
+        <Description>
+          The log object associated with the SailPointContext.
+        </Description>
+      </Argument>
+      <Argument name="context">
+        <Description>
+          A sailpoint.api.SailPointContext object that can be used to query the database if necessary.
+        </Description>
+      </Argument>
+      <Argument name="certification">
+        <Description>
+          The sailpoint.object.Certification being created.
+        </Description>
+      </Argument>
+      <Argument name="entity">
+        <Description>
+          The sailpoint.object.CertificationEntity to possibly pre-delegate.
+        </Description>
+      </Argument>
+      <Argument name="certContext">
+        <Description>
+          The sailpoint.api.CertificationContext generating this certification.
+        </Description>
+      </Argument>
+      <Argument name="state">
+        <Description>
+          A Map containing state information.
+        </Description>
+      </Argument>
+    </Inputs>
+    <Returns>
+      <Argument name="recipientName">
+        <Description>
+        The name of the Identity that should certify this entity.  Either
+        this or 'recipient' should be non-null if pre-delegation should be
+        performed.
+        </Description>
+      </Argument>
+      <Argument name="recipient">
+        <Description>
+        The Identity that should certify this entity.  Either this or
+        'recipientName' should be non-null if pre-delegation should be
+        performed.
+        </Description>
+      </Argument>
+      <Argument name="description">
+        <Description>
+        Optional description to set on the delegation WorkItem.  If null, a
+        default description of 'Certify [entity name]' is used.
+        </Description>
+      </Argument>
+      <Argument name="comments">
+        <Description>
+        Optional comments to set on the delegation WorkItems.
+        </Description>
+      </Argument>
+      <Argument name="reassign">
+        <Description>
+        Optional boolean to specify to reassign rather than delegate.
+        </Description>
+      </Argument>
+      <Argument name="certificationName">
+        <Description>
+        Optional String to specify the name for the reassignment certification
+        if creating a new certification for reassignment.  This is ignored for
+        delegations.
+        </Description>
+      </Argument>
+    </Returns>
+  </Signature>
+  <Source><![CDATA[
+	
+	import sailpoint.object.CertificationItem;
+	import sailpoint.object.QueryOptions;
+	import sailpoint.object.Filter;
+	import sailpoint.object.Identity;
+	import sailpoint.object.ManagedAttribute;
+	import sailpoint.object.Attributes;
+	import sailpoint.tools.Util;
+	import org.apache.commons.logging.Log;
+	import org.apache.commons.logging.LogFactory;
+	import sailpoint.rapidapponboarding.logger.LogEnablement;
+	Log certlogger = LogFactory.getLog("rapidapponboarding.rules");
+	/** 
+	* A convenience function that tells IdentityIQ to ignore workgroup indexes 
+	* in queries issued against the backing relational database.  This can be 
+	* a performance boost for installations on relational engines with poor 
+	* index performance for bit-wise/boolean data columns like used on 
+	* "spt_identity.workgroup" 
+	*/  
+	public QueryOptions setIgnoreWorkgroupIndexes(QueryOptions qo) {  
+		ArrayList trueAndFalse = new ArrayList();  
+		trueAndFalse.add(new java.lang.Boolean(true));  
+		trueAndFalse.add(new java.lang.Boolean(false));  
+		qo.addFilter(Filter.in("workgroup", trueAndFalse));  
+		return qo;  
+	} 
+	 public List getServiceOwnerCubeNames (String identityName)
+    {
+    	List cubeNames= new ArrayList();
+    	Filter filter = Filter.eq("name", identityName);
+    	QueryOptions qo = new QueryOptions();  
+		setIgnoreWorkgroupIndexes(qo); // Performance optimization.
+		qo.addFilter(filter);
+		// Use a projection query first to return minimal data.  
+		ArrayList returnCols = new ArrayList();  
+		returnCols.add("saccountOwnerone");  
+		String saccountOwnerone = null;  
+  		// Execute the query against the IdentityIQ database.  
+		Iterator it = context.search(Identity.class, qo, returnCols);
+		if(it!=null)
+		{  
+			while (it.hasNext()) 
+			{  
+				Object[] retObjs = (Object[]) it.next();
+				if(retObjs!=null && retObjs.length==1)
+				{
+				saccountOwnerone = (String) retObjs[0];  
+				}  
+				if(saccountOwnerone!=null)
+				{
+				cubeNames.add(saccountOwnerone);
+				}
+			}  
+			Util.flushIterator(it); 
+		} 
+  	    return cubeNames;  
+    }
+   	List items = entity.getItems();
+	String serviceCubeName=entity.getIdentity();
+	if(items != null && serviceCubeName!=null) 
+	{
+			List serviceOwners=getServiceOwnerCubeNames(serviceCubeName);
+			String recipientName=null;
+			HashMap returnMap = new HashMap();
+			//Prefer First Service Owner Cube
+			if(serviceOwners!=null && serviceOwners.size()>0)
+			{
+				for(String serviceOwner:serviceOwners)
+				{
+					if(serviceOwner!=null)
+					{
+					recipientName=serviceOwner;
+					break;
+					}
+				}
+			}
+			//Let's Reassign
+		  	if (recipientName != null)
+             {
+               returnMap.put("recipientName", recipientName);
+               returnMap.put("description","Service Cube Certification");
+               returnMap.put("reassign", Boolean.TRUE);
+               LogEnablement.isLogDebugEnabled(certlogger,"returnMap..."+returnMap);
+               return returnMap;
+             }
+             else
+             {
+               LogEnablement.isLogWarningEnabled(certlogger,"Cannot pre-delegate, owner identity not found: "+ recipientName + " for user " + serviceCubeName);
+               returnMap.put("recipientName", "No Service Account Owner");
+               returnMap.put("description","Service Cube Certification");
+               returnMap.put("reassign", Boolean.TRUE);
+               return returnMap;
+             }
+	}
+	return null;
+	
+	]]></Source>
+</Rule>

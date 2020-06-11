@@ -1,0 +1,29 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule-Self-Service-Mine-Application-Schema">
+  <ReferencedRules>
+    <Reference class="sailpoint.object.Rule" name="Rule-Discover-ProvisioningPolicy-RuleLibrary"/>
+  </ReferencedRules>
+  <Source><![CDATA[
+  
+  import sailpoint.object.Form;
+  import sailpoint.object.Field;
+   if(roadApplicationSelect!=void)
+   {
+ 		return getApplicationSchemaAttributes(roadApplicationSelect);
+ 	}	
+ 	else
+ 	{
+	 	 if(form!=null)
+	  	{
+	  	   Field field =form.getField("roadApplicationSelect");
+	  	   if(field!=null && field.getValue()!=null)
+	  	   {
+	   			String roadApplicationSelect=field.getValue();
+	   			return getApplicationSchemaAttributes(roadApplicationSelect);
+	   		}
+	  	 }
+ 	}
+   
+	]]></Source>
+</Rule>

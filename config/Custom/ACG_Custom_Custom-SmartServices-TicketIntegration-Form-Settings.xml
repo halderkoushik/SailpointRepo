@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Custom PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Custom name="Custom-SmartServices-TicketIntegration-Form-Settings">
+  <Attributes>
+    <Map>
+      <entry key="HPServiceManagerIntegrationExecutor" value="multipleProvisioningSteps,lastProvisioningStep,       checkStatusProvisioningStep,catalogItem,catalogItemList,username,password,committedClosureCode,failureClosureCode,inProcessClosureCode"/>
+      <entry key="ROADTicketIntegrationExecutor"/>
+      <entry key="RemedyIntegrationExecutor" value="basicAuthType,httpUserName,httpUserPass"/>
+      <entry key="ServiceNowIntegrationExecutor" value="keystorePath,keystorePass,keystoreType,alias,keyPass,catalogItem,catalogItemList,username,password,authType"/>
+      <entry key="commonExecutor" value="executor,universalManager,planInitializerRule,multipleTicket,groupTicketBy,       retryableErrors,noProvisioningRequests,provisioningRequestExpiration,managedResources,operations,defaultAssignmentGroupName,defaultRequestedBy       ,inProcess,failure,committed"/>
+    </Map>
+  </Attributes>
+</Custom>

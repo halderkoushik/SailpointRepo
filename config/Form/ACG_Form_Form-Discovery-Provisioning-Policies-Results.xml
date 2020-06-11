@@ -1,0 +1,31 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Form PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Form name="Form-Discovery-Provisioning-Policies-Results" type="Workflow">
+  <Attributes>
+    <Map>
+      <entry key="pageTitle" value="Form-Discovery-Provisioning-Policies-Results"/>
+      <entry key="title" value="Mined Baseline Application Account Results"/>
+    </Map>
+  </Attributes>
+  <Description>Mine Provisioning Policy </Description>
+  <Section columns="2" label="Mined Application Schema Fields" name="roadDiscoveryProvisioningPolicyForm"/>
+  <Section label="UnMined Application Schema Fields" name="roadUnmined" type="datatable"/>
+  <Section label="Instructions" name="roadInformational" type="text">
+    <Field displayName="OVERWRITE/MERGE" name="overwrite" type="string" value="Save Mined Polices will either overwrite or merge existing policies">
+      <Script>
+        <Source><![CDATA[
+			 return  "Save Mined Polices will either overwrite or merge existing policies. This is based on selection during mining.";	
+			]]></Source>
+      </Script>
+    </Field>
+    <Field displayName="IGNORE" name="ignore" type="string">
+      <Script>
+        <Source><![CDATA[
+			 return  "Ignore Provisioning Policy option would not create or overwrite policy rule for the selected field";	
+			]]></Source>
+      </Script>
+    </Field>
+  </Section>
+  <Button action="cancel" label="Cancel"/>
+  <Button action="next" label="Save Mined Policies on Application"/>
+</Form>

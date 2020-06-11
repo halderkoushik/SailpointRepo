@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Bundle PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Bundle displayName="Read Only IdentityIQ Access" name="Read Only IdentityIQ Access" type="business">
+  <Attributes>
+    <Map>
+      <entry key="accountSelectorRules"/>
+      <entry key="additionalRoleBusApprovalRule"/>
+      <entry key="additionalRoleBusApprovers"/>
+      <entry key="allowDuplicateAccounts" value="false"/>
+      <entry key="allowMultipleAssignments" value="false"/>
+      <entry key="appName" value="IdentityIQ Access"/>
+      <entry key="isBirthright" value="false"/>
+      <entry key="mergeTemplates" value="false"/>
+      <entry key="roleBusApprovalRule"/>
+      <entry key="roleBusApprovers" value="IdentityIQ Read Only Access Approvers"/>
+      <entry key="rolePrivileged"/>
+      <entry key="sysDescriptions">
+        <value>
+          <Map>
+            <entry key="en_US"/>
+          </Map>
+        </value>
+      </entry>
+    </Map>
+  </Attributes>
+  <Inheritance>
+    <Reference class="sailpoint.object.Bundle" name="Business Application Roles"/>
+  </Inheritance>
+  <Owner>
+    <Reference class="sailpoint.object.Identity" name="spadmin"/>
+  </Owner>
+  <Requirements>
+    <Reference class="sailpoint.object.Bundle" name="Read Only IdentityIQ Access IT"/>
+  </Requirements>
+</Bundle>

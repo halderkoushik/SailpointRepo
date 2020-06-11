@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Custom PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Custom name="Custom-Epic-SER-Settings">
+  <Attributes>
+    <Map>
+      <entry key="epicAppName"/>
+      <entry key="epicIdAttr" value="LinkedProviderID"/>
+      <entry key="serAppName"/>
+      <entry key="serIdAttr"/>
+    </Map>
+  </Attributes>
+</Custom>

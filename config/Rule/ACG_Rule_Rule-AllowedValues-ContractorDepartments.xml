@@ -1,0 +1,47 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule-AllowedValues-ContractorDepartments" type="AllowedValues">
+  <Description>
+	Returns a List with the allowed values for Contractor Department, based on the currently selected "Profile" in the Create Identity form
+  </Description>
+  <ReferencedRules>
+    <Reference class="sailpoint.object.Rule" name="Rule-FrameWork-ContractorLibrary"/>
+  </ReferencedRules>
+  <Signature returnType="Object"/>
+  <Source><![CDATA[
+	
+	import sailpoint.tools.GeneralException;
+	String userName = context.getUserName();
+	String profId = "";
+	if(form != null && form.getField("ctrProfid") != null && form.getField("ctrProfid").getValue() != null) 
+	{
+		profId = form.getField("ctrProfid").getValue();
+	}
+	if(profId != null && profId.trim().length() > 0) 
+	{
+		List valueList = null;
+		try 
+		{
+			valueList = getDepartmentValues(context, userName, profId);
+		}
+		catch(GeneralException ge) 
+		{
+		throw new Exception(ge.getMessage());
+		}
+		if(valueList != null && valueList.size() == 1) 
+		{
+			List innerValueList = (List) valueList.get(0);
+			if(innerValueList != null && innerValueList.size() >= 1) 
+			{
+				field.setValue(innerValueList.get(0).toString()); 
+			}
+		}
+		return valueList;
+	}
+	else 
+	{
+		return null;
+	}
+	
+  ]]></Source>
+</Rule>

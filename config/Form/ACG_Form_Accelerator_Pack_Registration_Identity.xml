@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Form PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Form hidden="true" name="Accelerator Pack Registration Identity" type="RegisterIdentity">
+  <Attributes>
+    <Map>
+      <entry key="pageTitle" value="Self-service Registration Form"/>
+      <entry key="subtitle" value="new_user_registration_description"/>
+    </Map>
+  </Attributes>
+  <Description>This form is used to for self-service registration.</Description>
+  <Section>
+    <Field displayName="Unique Id" name="name" required="true" type="string">
+      <RuleRef>
+        <Reference class="sailpoint.object.Rule" name="Rule-FrameWork-Registration-Generate-Unique-Id"/>
+      </RuleRef>
+      <ValidationRule>
+        <Reference class="sailpoint.object.Rule" name="LCM Validate Identity Name"/>
+      </ValidationRule>
+    </Field>
+    <Field displayName="first_name" name="firstname" required="true" type="string"/>
+    <Field displayName="last_name" name="lastname" required="true" type="string"/>
+    <Field displayName="Middle Name" name="middleName" type="string"/>
+    <Field displayName="email" name="email" required="true" type="string">
+      <Attributes>
+        <Map>
+          <entry key="vtype" value="email"/>
+        </Map>
+      </Attributes>
+    </Field>
+    <Field displayName="Contractor Sponsor Manager" name="manager" required="true" type="sailpoint.object.Identity"/>
+    <Field displayName="Contractor Assignment Manager" name="ctrMgr" required="true" type="sailpoint.object.Identity"/>
+  </Section>
+  <Button action="next" label="register"/>
+  <Button action="cancel" label="nav_cancel"/>
+</Form>

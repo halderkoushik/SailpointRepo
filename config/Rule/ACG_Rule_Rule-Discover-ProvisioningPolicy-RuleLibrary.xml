@@ -1,0 +1,1919 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule-Discover-ProvisioningPolicy-RuleLibrary">
+  <Source><![CDATA[
+	
+	import org.apache.commons.logging.Log;
+	import org.apache.commons.logging.LogFactory;
+	import sailpoint.object.Workflow;
+	import sailpoint.object.Schema;
+	import sailpoint.object.ObjectConfig;
+	import sailpoint.object.ObjectAttribute;
+	import sailpoint.object.Application;
+	import sailpoint.object.Schema;
+	import sailpoint.object.AttributeDefinition;
+	import sailpoint.object.AttributeMetaData;
+	import sailpoint.object.Identity;
+	import sailpoint.object.Link;
+	import sailpoint.api.IdentityService;
+	import sailpoint.object.Form;
+	import sailpoint.object.Form.Type;
+	import sailpoint.object.Form.Section;
+	import sailpoint.object.Form.Button;
+	import sailpoint.object.ProvisioningPlan;
+	import sailpoint.object.Field;
+	import sailpoint.object.Rule;
+	import sailpoint.object.Resolver;
+	import sailpoint.tools.Util;
+	import sailpoint.object.Attributes;
+	import java.util.regex.Matcher;
+	import java.util.regex.Pattern;
+	import sailpoint.rapidapponboarding.rule.ROADUtil;
+	import sailpoint.rapidapponboarding.logger.LogEnablement;
+	import sailpoint.api.PersistenceManager;
+	import sailpoint.api.ObjectUtil;
+	Log logger = LogFactory.getLog("rapidapponboarding.rules");
+	/**
+	 * Initialize Mining Model Attributes
+	 * @param workflow
+	 */
+	public void initializeMiningModel(Workflow workflow)
+	{
+		LogEnablement.isLogDebugEnabled(logger,"Start initializeMiningModel ");
+	 	HashMap miningModel= new HashMap();
+	 	miningModel.put("transformerClass", "sailpoint.transformer.IdentityTransformer");
+		miningModel.put("transformerOptions", null);
+	 	workflow.put("roadMiningProvisioningPoliciesModel",miningModel);
+	}	
+	/**
+	 * Initialize Mining Model Results Attributes
+	 * @param workflo
+	 */
+	public void initializeMiningResultsModel(Workflow workflow)
+	{
+		LogEnablement.isLogDebugEnabled(logger,"Start initializeMiningResultsModel ");
+	 	HashMap miningResultsModel= new HashMap();
+	 	miningResultsModel.put("transformerClass", "sailpoint.transformer.IdentityTransformer");
+		miningResultsModel.put("transformerOptions", null);
+	 	workflow.put("roadMiningProvisioningResultsPoliciesModel",miningResultsModel);
+	}	
+	/**
+	 * Mine Provisioning Policies
+	 * @param roadMiningProvisioningPoliciesModel
+	 * @param roadMiningProvisioningResultsPoliciesModel
+	 * @return
+	 */
+	public List minePolicies(HashMap roadMiningProvisioningPoliciesModel, HashMap roadMiningProvisioningResultsPoliciesModel)
+	{
+	    String roadApplicationSelect=null;
+	    String roadIdentitySelect=null;
+	    String roadNativeIdSelect=null;
+	    String roadDateFormatSelect=null;
+	    String roadCommentSelect=null;
+	    String roadPasswordSelect=null;
+	    String roadPasssWordScramble=null;
+	    String roadStartField=null;
+	    String roadEndField=null;
+	    String roadPasssWordChangeField=null;
+	    String roadOverwriteOrMerge=null;
+	    Object roadTokensSelect=null;
+	    Link foundAppLink=null;
+	    List schemaComputedAttributes = new ArrayList();
+	    List allCubeAttributes=null;
+	    List schemaAttributes=null;
+	    Identity roadIdentitySelectCube=null;
+	    List miningResults = new ArrayList();
+	    List collectFoundSchemaAttrs = new ArrayList();
+	    if(roadMiningProvisioningPoliciesModel!=null)
+	    {
+		    if(roadMiningProvisioningPoliciesModel.containsKey("roadApplicationSelect"))
+		    {
+		    	roadApplicationSelect=roadMiningProvisioningPoliciesModel.get("roadApplicationSelect");
+		    }
+		    if(roadMiningProvisioningPoliciesModel.containsKey("roadIdentitySelect"))
+		    {
+		    	roadIdentitySelect=roadMiningProvisioningPoliciesModel.get("roadIdentitySelect");
+		    }
+		    if( roadMiningProvisioningPoliciesModel.containsKey("roadNativeIdSelect"))
+		    {
+		    	roadNativeIdSelect=roadMiningProvisioningPoliciesModel.get("roadNativeIdSelect");
+		    }
+		    if(roadMiningProvisioningPoliciesModel.containsKey("roadDateFormatSelect"))
+		    {
+		    	roadDateFormatSelect=roadMiningProvisioningPoliciesModel.get("roadDateFormatSelect");
+		    }
+		    if(roadMiningProvisioningPoliciesModel.containsKey("roadCommentSelect"))
+		    {
+		    	roadCommentSelect=roadMiningProvisioningPoliciesModel.get("roadCommentSelect");
+		    }
+		    if(roadMiningProvisioningPoliciesModel.containsKey("roadStartField"))
+		    {
+		    	roadStartField=roadMiningProvisioningPoliciesModel.get("roadStartField");
+		    }
+		    if(roadMiningProvisioningPoliciesModel.containsKey("roadEndField"))
+		    {
+		    	roadEndField=roadMiningProvisioningPoliciesModel.get("roadEndField");
+		    }
+		    if(roadMiningProvisioningPoliciesModel.containsKey("roadPasssWordChangeField"))
+		    {
+		    	roadPasssWordChangeField=roadMiningProvisioningPoliciesModel.get("roadPasssWordChangeField");
+		    }
+		    if(roadMiningProvisioningPoliciesModel.containsKey("roadOverwriteOrMerge"))
+		    {
+		    	roadOverwriteOrMerge=roadMiningProvisioningPoliciesModel.get("roadOverwriteOrMerge");
+		    }
+		    if(roadMiningProvisioningPoliciesModel.containsKey("roadPasssWordScramble") )
+		    {
+		       //If Scrambled ON	
+		    	roadPasssWordScramble=roadMiningProvisioningPoliciesModel.get("roadPasssWordScramble");
+		    	if(roadPasssWordScramble!=null && roadPasssWordScramble.equalsIgnoreCase("TRUE"))
+		    	{
+		    	    //Get Default Password
+			    	if(roadPasswordSelect==null || roadPasswordSelect.length()<=0)
+			    	{
+			    		roadPasswordSelect=ProvisioningPlan.ATT_PASSWORD;
+			    	}
+			    	//Else Use Input Password
+			    	else
+			    	{
+			    		roadPasswordSelect=roadMiningProvisioningPoliciesModel.get("roadPasswordSelect");
+			    	}
+		    	}
+		    }
+		    if(roadMiningProvisioningPoliciesModel.containsKey("roadTokensSelect"))
+		    {
+		    	roadTokensSelect=roadMiningProvisioningPoliciesModel.get("roadTokensSelect");
+		    }
+		    if(roadStartField!=null && roadStartField.length()>0 &&
+		    roadDateFormatSelect!=null && roadDateFormatSelect.length()>0)
+		    {
+		     miningResults.add("IIQDATEFORMATIIQ"+"IIQMineIIQ"+roadStartField);
+		    }
+		    if(roadEndField!=null && roadEndField.length()>0 &&
+		    roadDateFormatSelect!=null && roadDateFormatSelect.length()>0)
+		    {
+		     miningResults.add("IIQDATEFORMATIIQ"+"IIQMineIIQ"+roadEndField);
+		    }
+		    if(roadPasssWordChangeField!=null && roadPasssWordChangeField.length()>0 &&
+		    roadDateFormatSelect!=null && roadDateFormatSelect.length()>0)
+		    {
+		     miningResults.add("IIQDATEFORMATIIQ"+"IIQMineIIQ"+roadPasssWordChangeField);
+		    }
+		    if(roadPasswordSelect!=null && roadPasswordSelect.length()>0)
+		    {
+		     miningResults.add("IIQRANDOMPASSWORDGENERATORIIQ"+"IIQMineIIQ"+roadPasswordSelect);
+		    }
+		    if(roadCommentSelect!=null && roadCommentSelect.length()>0)
+		    {
+		     miningResults.add("IIQREQUESTNUMBERIIQ"+"IIQMineIIQ"+roadCommentSelect);
+		    }
+	    }
+	    if(roadApplicationSelect!=null && roadIdentitySelect!=null && roadNativeIdSelect!=null)
+	    {
+		    IdentityService idService = new IdentityService(context);
+			roadIdentitySelectCube =context.getObjectByName(Identity.class,roadIdentitySelect);
+			if(roadIdentitySelectCube!=null)
+			{
+				List links = idService.getLinks(roadIdentitySelectCube,0,0);
+				if(links!=null && links.size()>0)
+				{
+					for (Link link : links) 
+					{
+					    	if(link.getApplicationName()!=null && link.getApplicationName().equalsIgnoreCase(roadApplicationSelect))
+					    	{
+					    	   if(roadNativeIdSelect.equalsIgnoreCase(link.getNativeIdentity()))
+					    	   {
+					    		//Identity Needs to be done on Native Id
+					    	    //TO DO:Lets Just Collect Native Id from Baseline Form
+					    	    //TO DO:PSA Accounts :Need to identify them and provisioning policies will be different for them 
+					    		foundAppLink = link;
+					    		}
+					    	}
+					}
+				}
+			}
+			if(foundAppLink!=null)
+		    {
+			     schemaAttributes=getApplicationSchemaAttributes(roadApplicationSelect);
+			     allCubeAttributes=ROADUtil.getCubeAttributesList(context,false,true,false,true);
+			    if(roadIdentitySelectCube!=null && schemaAttributes!=null && schemaAttributes.size()>0 && allCubeAttributes!=null && allCubeAttributes.size()>0)
+			    {
+			 		       for(String schemaAttr:schemaAttributes)
+					       {
+					            	Object schemaAttrValue=foundAppLink.getAttribute(schemaAttr);
+						       		if(schemaAttrValue!=null && schemaAttrValue instanceof String && ((String)schemaAttrValue).trim().length()>0 )
+						       		{
+					       		     	   	   String schemaAttrValueUpperCase=((String)schemaAttrValue).toUpperCase().trim();
+									       	   for(String cubeAttr:allCubeAttributes)
+										       {
+										           if(roadIdentitySelectCube.getStringAttribute(cubeAttr)!=null && roadIdentitySelectCube.getStringAttribute(cubeAttr) instanceof String &&
+										           ((String)roadIdentitySelectCube.getStringAttribute(cubeAttr)).trim().length()>0)
+										           {
+										               String cubeAttrValue=roadIdentitySelectCube.getStringAttribute(cubeAttr);
+										               String cubeAttrValueUpperCase=cubeAttrValue.toUpperCase().trim();
+										               if(schemaAttrValueUpperCase.equalsIgnoreCase(cubeAttrValueUpperCase))
+											       		{
+											       			LogEnablement.isLogDebugEnabled(logger,"Found Match..");
+											       			if(!miningResults.contains(cubeAttr+"IIQMineIIQ"+schemaAttr))
+											       			{
+											       				miningResults.add(cubeAttr+"IIQMineIIQ"+schemaAttr);
+											       				collectFoundSchemaAttrs.add(schemaAttr);
+											       			}
+											       			//Lets Create Provisioning Policy for Cube Attribute
+											       			//One Cube Attribute can be mapped to multiple application schema attributes
+											       		}
+											       		else if(schemaAttrValueUpperCase.contains(cubeAttrValueUpperCase))
+											       		{
+											       		   //This could be full name
+											       		   if(!schemaComputedAttributes.contains(schemaAttr))
+											       		   {
+											       			 schemaComputedAttributes.add(schemaAttr);
+											       			}
+											       		}
+											     }
+											   }//Inner Loop Iterate through all identity cube attributes
+								       	 }
+					       }//Outer Loop Iterate through all schema attributes
+			     }
+		    }
+	    }
+	    if(schemaComputedAttributes!=null && schemaComputedAttributes.size()>0)
+		{
+		   for(String strComputeAttr:schemaComputedAttributes)
+		    {
+		        if(collectFoundSchemaAttrs!=null && !collectFoundSchemaAttrs.contains(strComputeAttr))
+		        {
+			        //Iterate for each computed attribute
+			        //Get List of each attribute value seperated by their tokens
+					List masterListTokenSchemaAttributeValues = buildComputedTokenSchemaAttributeValues( foundAppLink,  strComputeAttr, " ");
+					String replacedMinedSpaceAndToken=replaceSpecialWithGivenToken( foundAppLink,  strComputeAttr,  " ", false);
+					if(masterListTokenSchemaAttributeValues!=null && masterListTokenSchemaAttributeValues.size()>0 && replacedMinedSpaceAndToken!=null && replacedMinedSpaceAndToken.length()>0)
+					{
+					    //Compare Each Attribute Value with Identity Cube Attribute
+						mineComputedProvisioningPolicies( miningResults, masterListTokenSchemaAttributeValues, strComputeAttr, allCubeAttributes, roadIdentitySelectCube, "SPACE",replacedMinedSpaceAndToken,collectFoundSchemaAttrs);
+					}
+				}
+			}
+		}
+		if(schemaComputedAttributes!=null && schemaComputedAttributes.size()>0)
+		{
+		    LogEnablement.isLogDebugEnabled(logger,"Start Mine Round Two... ");
+		   for(String strComputeAttr:schemaComputedAttributes)
+		    {
+		       if(collectFoundSchemaAttrs!=null && !collectFoundSchemaAttrs.contains(strComputeAttr))
+		        {
+			        //Iterate for each computed attributed
+			        //Get List of each attribute value seperated by their tokens
+					if(roadTokensSelect!=null && roadTokensSelect instanceof List && ((List)roadTokensSelect).size()>0)
+					{
+					    List roadTokensSelectList=roadTokensSelect;
+					    for(String eachToken:roadTokensSelectList)
+					    { 
+					        //Iterate for each token
+					       //Get List of each attribute value seperated by their tokens
+					        LogEnablement.isLogDebugEnabled(logger,"Start Mine Token Rounds.."+eachToken);
+					        List masterListTokenSchemaAttributeValues = buildComputedTokenSchemaAttributeValues( foundAppLink,  strComputeAttr,  eachToken);
+					        String replacedMinedSpaceAndToken=replaceSpecialWithGivenToken( foundAppLink,  strComputeAttr,  eachToken, true);
+							if(masterListTokenSchemaAttributeValues!=null && masterListTokenSchemaAttributeValues.size()>0 && replacedMinedSpaceAndToken!=null && replacedMinedSpaceAndToken.length()>0)
+							{
+							    //Compare Each Attribute Value with Identity Cube Attribute
+							   	mineComputedProvisioningPolicies(miningResults, masterListTokenSchemaAttributeValues, strComputeAttr, allCubeAttributes, roadIdentitySelectCube,eachToken,replacedMinedSpaceAndToken,collectFoundSchemaAttrs);
+							}
+						}
+				    }
+			    }
+		    }
+	    }
+	   if(roadIdentitySelectCube!=null)
+		{
+		context.decache(roadIdentitySelectCube);
+		}
+		return miningResults;
+	}
+	/**
+	 * Build Computed Token Schema Attributes
+	 * @param foundAppLink
+	 * @param schemaComputedAttribute
+	 * @param token
+	 * @return
+	 */
+	public List buildComputedTokenSchemaAttributeValues(Link foundAppLink, String schemaComputedAttribute, String token)
+	{
+	     List masterTokenShemaAttrValues = new ArrayList();
+		if(schemaComputedAttribute!=null && schemaComputedAttribute.length()>0)
+		{
+			  Object schemaAttrValue=foundAppLink.getAttribute( schemaComputedAttribute);
+			  if(schemaAttrValue!=null && schemaAttrValue instanceof String && ((String)schemaAttrValue).trim().length()>0 )
+			  {
+			   //Remove Leading and Trailing Spaces and convert it into uppercase
+			    String schemaAttrTrimUpperValue  =  ((String)schemaAttrValue).toUpperCase().trim();
+			    if(schemaAttrTrimUpperValue!=null)
+			    {
+			        //One or More Times of Tokens
+			        if(token!=null && token.equalsIgnoreCase(" "))
+			        {
+			        masterTokenShemaAttrValues=listOfSchemaValuesBasedonSpace(schemaAttrTrimUpperValue);
+			        }
+			        else if(token!=null && token.equalsIgnoreCase("#"))
+			        {
+			        token="#";
+			        masterTokenShemaAttrValues=listOfSchemaValuesBasedonTokenAndSpace (schemaAttrTrimUpperValue,token);
+			        }
+			        else if(token!=null && token.equalsIgnoreCase("|"))
+			        {
+			        token="|";
+			        masterTokenShemaAttrValues=listOfSchemaValuesBasedonTokenAndSpace (schemaAttrTrimUpperValue,token);
+			        }
+			        else if(token!=null && token.equalsIgnoreCase("~"))
+			        {
+			        token="~";
+			        masterTokenShemaAttrValues=listOfSchemaValuesBasedonTokenAndSpace (schemaAttrTrimUpperValue,token);
+			        }
+			        else if(token!=null && token.equalsIgnoreCase("%"))
+			        {
+			        token="%";
+			        masterTokenShemaAttrValues=listOfSchemaValuesBasedonTokenAndSpace (schemaAttrTrimUpperValue,token);
+			        }
+			        else if(token!=null && token.equalsIgnoreCase("$"))
+			        {
+			        token="$";
+			        masterTokenShemaAttrValues=listOfSchemaValuesBasedonTokenAndSpace (schemaAttrTrimUpperValue,token);
+			        }
+			        else if(token!=null && token.equalsIgnoreCase("^"))
+			        {
+			        token="^";
+			        masterTokenShemaAttrValues=listOfSchemaValuesBasedonTokenAndSpace (schemaAttrTrimUpperValue,token);
+			        }
+			        else if(token!=null && token.equalsIgnoreCase("@"))
+			        {
+			        token="@";
+			        masterTokenShemaAttrValues=listOfSchemaValuesBasedonTokenAndSpace (schemaAttrTrimUpperValue,token);
+			        }
+			        else if(token!=null && token.equalsIgnoreCase(","))
+			        {
+			        token=",";
+			        masterTokenShemaAttrValues=listOfSchemaValuesBasedonTokenAndSpace (schemaAttrTrimUpperValue,token);
+			        }
+			  	}
+			  }
+		}
+		return masterTokenShemaAttrValues;
+	}
+	/**
+	 * Replace Spaces with minedSPACEmined
+	 * @param foundAppLink
+	 * @param schemaComputedAttribute
+	 * @param token
+	 * @param replaceSpace
+	 * @return
+	 */
+	public String replaceSpecialWithGivenToken(Link foundAppLink, String schemaComputedAttribute, String token , boolean replaceSpace)
+	{
+	   String result=null;
+	   if(schemaComputedAttribute!=null && schemaComputedAttribute.length()>0)
+		{
+			  Object schemaAttrValue=foundAppLink.getAttribute( schemaComputedAttribute);
+			  if(schemaAttrValue!=null && schemaAttrValue instanceof String && ((String)schemaAttrValue).trim().length()>0 )
+			  {
+			   //Remove Leading and Trailing Spaces and convert it into uppercase
+			    String schemaAttrTrimUpperValue  =  ((String)schemaAttrValue).toUpperCase().trim();
+			    if(schemaAttrTrimUpperValue!=null)
+			    {
+			        result=replaceSpecialWithGivenToken(schemaAttrTrimUpperValue,token,replaceSpace);
+			  	}
+			  }
+		}
+		LogEnablement.isLogDebugEnabled(logger,"End replaceSpecialWithGivenToken.."+result);
+		return result;
+	}
+	/**
+		 * Left Space Exists
+		 * @param str
+		 * @return
+		 */
+		public boolean leftSpace(String str)
+		{
+			String leftRemoved = str.replaceAll("^\\s+", "");
+	        if(leftRemoved.length()<str.length())
+			    {
+			    	return true;
+			    }
+	        return false;
+		}
+		/**
+		 * Right Space Exists
+		 * @param str
+		 * @return
+		 */
+		public boolean rightSpace(String str)
+		{
+			String rightRemoved = str.replaceAll("\\s+$", "");
+	        if(rightRemoved.length()<str.length())
+		    {
+		    	return true;
+		    }
+	        return false;
+		}
+		/**
+		 * Left and Right Space Exists
+		 * @param str
+		 * @return
+		 */
+		public boolean leftRightSpaceExists(String str)
+		{
+			if(leftSpace(str) && rightSpace(str))
+			{
+				return true;
+			}
+			return false;
+		}
+		/**
+		 * Return List of Schema Values Split Based on Space
+		 * @param str
+		 * @param token
+		 * @return
+		 */
+		public List listOfSchemaValuesBasedonSpace (String text)
+		{
+		 List list = new ArrayList();
+		 String patternString = "\\s+";
+		 Pattern pattern = Pattern.compile(patternString, Pattern.CASE_INSENSITIVE);
+		 String[] splitArr = pattern.split(text);
+		 if(splitArr!=null && splitArr.length>0)
+	     {
+	  	   for (int index=0;index<splitArr.length;index++)
+	  	   {
+	  		  if(splitArr[index]!=null && splitArr[index].length()>0)
+	  		  {
+	  			if(!list.contains(splitArr[index]))
+	  			 {
+	  				 list.add(splitArr[index]);
+	  			 }
+	  		  }
+	  	   }
+	     }
+	    return list;
+		}
+		/**
+		 * Return List of Schema Values To Compare Against Identity Attributes
+		 * @param str
+		 * @param token
+		 * @return
+		 */
+		public List listOfSchemaValuesBasedonTokenAndSpace (String text, String token)
+		{
+		 List list = new ArrayList();
+		 String patternString = "(\\s|"+"\\"+token+")"+"+";
+		 Pattern pattern = Pattern.compile(patternString, Pattern.CASE_INSENSITIVE);
+		 String[] splitArr = pattern.split(text);
+		 if(splitArr!=null && splitArr.length>0)
+	     {
+	  	   for (int index=0;index<splitArr.length;index++)
+	  	   {
+	  		  if(splitArr[index]!=null && splitArr[index].length()>0)
+	  		  {
+	  			if(!list.contains(splitArr[index]))
+	  			 {
+	  				 list.add(splitArr[index]);
+	  			 }
+	  		  }
+	  	   }
+	     }
+	    return list;
+		}
+		/**
+		 * Replace Spaces
+		 * @param text
+		 * @param token
+		 * @return
+		 */
+		public String replaceSpecialWithGivenToken(String text, String token, boolean replaceSpace)
+		{
+		 String minedText=text;
+		 if(replaceSpace)
+		 {
+			 minedText=text.replaceAll("\\s+","minedSPACEmined");
+		 }
+		 if(text!=null)
+		 {
+		    if(token!=null && token.equalsIgnoreCase(" "))
+		    {
+		 		minedText = text.replaceAll("\\s+","minedSPACEmined");
+		 	}
+		 	else if(token!=null && token.equalsIgnoreCase(","))
+		    {
+		 		minedText = minedText.replaceAll("\\,+","minedCOMMAmined");
+		 	}
+		 	else if(token!=null && token.equalsIgnoreCase("#"))
+		    {
+		 		minedText = minedText.replaceAll("\\#+","minedHASHEDmined");
+		 	}
+		 	else if(token!=null && token.equalsIgnoreCase("%"))
+		    {
+		 		minedText = minedText.replaceAll("\\%+","minedPERCENTAGEmined");
+		 	}
+		 	else if(token!=null && token.equalsIgnoreCase("~"))
+		    {
+		   	 minedText = minedText.replaceAll("\\~+","minedTILDEmined");
+		    }
+		    else if(token!=null && token.equalsIgnoreCase("|"))
+		    {
+		 		minedText = minedText.replaceAll("\\|+","minedPIPEmined");
+		 	}
+		 	else if(token!=null && token.equalsIgnoreCase("$"))
+		    {
+		 		minedText = minedText.replaceAll("\\$+","minedDOLLARmined");
+		 	}
+		 	else if(token!=null && token.equalsIgnoreCase("@"))
+		    {
+		 		minedText = minedText.replaceAll("\\@+","minedATTHERATEOFmined");
+		 	}
+		 	else if(token!=null && token.equalsIgnoreCase("^"))
+		    {
+		 		minedText = minedText.replaceAll("\\^+","minedCARETmined");
+		 	}
+		 	return minedText;
+		 }
+		 return minedText;    
+		}
+	/**
+	 * Mine Computed Provisioning Policies
+	 * @param miningResults
+	 * @param schemaValuesToCompare
+	 * @param computedSchemaAttr
+	 * @param allCubeAttributes
+	 * @param roadIdentitySelectCube
+	 * @param token
+	 * @param stringReplacedSpaceAndToken
+	 * @param collectFoundSchemaAttrs
+	 */
+	public void mineComputedProvisioningPolicies( List miningResults, List schemaValuesToCompare, String computedSchemaAttr, List allCubeAttributes, Identity roadIdentitySelectCube, String token, String stringReplacedSpaceAndToken, List collectFoundSchemaAttrs)
+	{
+		List matchedCubeAttributes = new ArrayList();
+		HashMap schemaValuesCubeAttributes = new HashMap();
+		if (allCubeAttributes!=null && allCubeAttributes.size()>0 &&
+		miningResults!=null && miningResults.size()>0 && 
+		schemaValuesToCompare!=null &&  schemaValuesToCompare.size()>0 && computedSchemaAttr!=null && computedSchemaAttr.length()>0 && stringReplacedSpaceAndToken!=null && stringReplacedSpaceAndToken.length()>0) 
+		{
+		   for(String schemaAttrValue:schemaValuesToCompare)
+			  {
+		          for(String cubeAttr:allCubeAttributes)
+				  {
+					if(roadIdentitySelectCube.getStringAttribute(cubeAttr)!=null && roadIdentitySelectCube.getStringAttribute(cubeAttr) instanceof String &&
+											           ((String)roadIdentitySelectCube.getStringAttribute(cubeAttr)).trim().length()>0)
+					{
+					   String cubeAttrValue=roadIdentitySelectCube.getStringAttribute(cubeAttr);
+		               String cubeAttrValueUpperCase=cubeAttrValue.toUpperCase().trim();
+		               if(schemaAttrValue!=null)
+		               {
+		               		    if( schemaAttrValue.equalsIgnoreCase(cubeAttrValueUpperCase))
+					       		{
+					       		 	matchedCubeAttributes.add(cubeAttr);
+					       		 	schemaValuesCubeAttributes.put(cubeAttr,schemaAttrValue);
+					       		}
+				   		}//Schema Attribute Value Not Null
+					}//Make Sure Cube Attribute Has Some Value
+				   }//Iterate through Cube Attributes
+			  }//Iterate Through Schema Attributes
+		    //All Schema Values Must Match
+			 boolean everythingReplaceProperly=true;
+			 String oldString=stringReplacedSpaceAndToken;
+			 String newString=null;
+			if(matchedCubeAttributes!=null && matchedCubeAttributes.size()>0 && matchedCubeAttributes.size()==schemaValuesToCompare.size())
+			{
+			   for (Map.Entry entry : schemaValuesCubeAttributes.entrySet()) 
+			   {  
+			     String cubeAttr = entry.getKey();
+			     String schemaValue = entry.getValue();
+			     newString=oldString.replaceAll(schemaValue,cubeAttr);
+			     if(newString.equalsIgnoreCase(oldString))
+			     {
+			      everythingReplaceProperly=false;
+			      break;
+			     }
+			     else
+			     {
+			     oldString=newString;
+			     }
+			   }
+			}
+				if(everythingReplaceProperly && newString!=null)
+				{
+				miningResults.add(newString+"IIQMineIIQ"+computedSchemaAttr);
+				collectFoundSchemaAttrs.add(computedSchemaAttr);
+				}
+			}
+	}	
+	/**
+	 * Get Application Schema Attributes
+	 * @param appName
+	 * @return
+	 * @throws Exception
+	 */
+	public List getApplicationSchemaAttributes (String appName) throws Exception 
+	{
+	  	LogEnablement.isLogDebugEnabled(logger,"Enter getApplicationSchemaAttributes.."+appName);
+	  	List masterList = new ArrayList();
+	  	if(appName!=null)
+	  	{
+	      masterList=ROADUtil.getApplicationSchemaAttributes(appName,context,false);
+		}
+	      return masterList;
+	  }
+	/**
+	 * Build Mined Results Form
+	 * @param miningResults
+	 * @param formName
+	 * @param roadMiningProvisioningPoliciesModel
+	 * @param roadMiningProvisioningResultsPoliciesModel
+	 * @return
+	 * @throws Exception
+	 */
+	 public Form buildMiningResultsForm (List miningResults, String formName, HashMap roadMiningProvisioningPoliciesModel,HashMap roadMiningProvisioningResultsPoliciesModel) throws Exception 
+	 {
+	    String roadApplicationSelect=null;
+	    String roadCommentSelect=null;
+	    String roadPasswordSelect=null;
+	    String roadStartField=null;
+	    String roadEndField=null;
+	    String roadPasssWordChangeField=null;
+	    String roadDateFormatSelect=null;
+	     //GET ALL APPLICATION SCHEMA ATTRIBUTES
+	     List applicationSchemaAttrbutes = new ArrayList();
+	     if(roadMiningProvisioningPoliciesModel!=null && roadMiningProvisioningPoliciesModel.containsKey("roadApplicationSelect"))
+		 {
+		    roadApplicationSelect=roadMiningProvisioningPoliciesModel.get("roadApplicationSelect");
+		    applicationSchemaAttrbutes=getApplicationSchemaAttributes (roadApplicationSelect);
+		 }
+		 if(roadApplicationSelect!=null)
+	     {
+	     	  if(roadMiningProvisioningPoliciesModel.containsKey("roadCommentSelect"))
+		    {
+		    	roadCommentSelect=roadMiningProvisioningPoliciesModel.get("roadCommentSelect");
+		    	 if(roadCommentSelect!=null && applicationSchemaAttrbutes!=null && applicationSchemaAttrbutes.size()>0)
+		           {
+			           if(applicationSchemaAttrbutes.contains(roadCommentSelect))
+			           {
+			           	applicationSchemaAttrbutes.remove(roadCommentSelect);
+			           }
+		           }
+		    }
+		    if(roadMiningProvisioningPoliciesModel.containsKey("roadStartField"))
+		    {
+		    	roadStartField=roadMiningProvisioningPoliciesModel.get("roadStartField");
+		    	if(roadStartField!=null && applicationSchemaAttrbutes!=null && applicationSchemaAttrbutes.size()>0)
+		           {
+			           if(applicationSchemaAttrbutes.contains(roadStartField))
+			           {
+			           	applicationSchemaAttrbutes.remove(roadStartField);
+			           }
+		           }
+		    }
+		    if(roadMiningProvisioningPoliciesModel.containsKey("roadEndField"))
+		    {
+		    	roadEndField=roadMiningProvisioningPoliciesModel.get("roadEndField");
+		    	if(roadEndField!=null && applicationSchemaAttrbutes!=null && applicationSchemaAttrbutes.size()>0)
+		           {
+			           if(applicationSchemaAttrbutes.contains(roadEndField))
+			           {
+			           	applicationSchemaAttrbutes.remove(roadEndField);
+			           }
+		           }
+		    }
+		     if(roadMiningProvisioningPoliciesModel.containsKey("roadPasssWordChangeField"))
+		    {
+		    	roadPasssWordChangeField=roadMiningProvisioningPoliciesModel.get("roadPasssWordChangeField");
+		    	if(roadPasssWordChangeField!=null && applicationSchemaAttrbutes!=null && applicationSchemaAttrbutes.size()>0)
+		           {
+			           if(applicationSchemaAttrbutes.contains(roadPasssWordChangeField))
+			           {
+			           	applicationSchemaAttrbutes.remove(roadPasssWordChangeField);
+			           }
+		           }
+		    }
+		    if(roadMiningProvisioningPoliciesModel.containsKey("roadPasswordSelect"))
+		    {
+		    	roadPasswordSelect=roadMiningProvisioningPoliciesModel.get("roadPasswordSelect");
+		    	if(roadPasswordSelect!=null && applicationSchemaAttrbutes!=null && applicationSchemaAttrbutes.size()>0)
+		           {
+			           if(applicationSchemaAttrbutes.contains(roadPasswordSelect))
+			           {
+			           	applicationSchemaAttrbutes.remove(roadPasswordSelect);
+			           }
+		           }
+		    }
+		    if(roadMiningProvisioningPoliciesModel.containsKey("roadDateFormatSelect"))
+		    {
+		    	roadDateFormatSelect=roadMiningProvisioningPoliciesModel.get("roadDateFormatSelect");
+		    }
+	     }
+		  //GET EXISTING FORM
+		 Form existingform=null;
+		 Form deepCpyForm=null;
+		 if(formName!=null)
+		 {
+			 existingform=context.getObjectByName(Form.class,formName);
+			 if(existingform!=null)
+			 {
+			  deepCpyForm=existingform.deepCopy((Resolver)context);
+			 }
+		 }
+		//BUILD mined RESULTS
+		Section sectionDiscoveryResults=null;
+		if(deepCpyForm!=null && miningResults!=null && miningResults.size()>0)
+	    {
+			 	   sectionDiscoveryResults=deepCpyForm.getSection("roadDiscoveryProvisioningPolicyForm");
+					if(sectionDiscoveryResults!=null)
+					{
+						List emptyItems = new ArrayList();
+						sectionDiscoveryResults.setItems(emptyItems);
+						if(sectionDiscoveryResults!=null)
+						{
+						    for (String minigResult : miningResults) 
+							{  
+									String key=minigResult;
+									if(minigResult!=null)
+							  		{
+										Field fieldDiscoveryResults = new Field();
+									    fieldDiscoveryResults.setName(key);
+									    if(key.contains("IIQMineIIQ"))
+									    {
+									        String[] keySplit=key.split("IIQMineIIQ");
+									        if(keySplit!=null && keySplit.length==2 && Util.isNotNullOrEmpty(keySplit[0]) 
+									     && Util.isNotNullOrEmpty(keySplit[1]))
+									        {
+									           if(applicationSchemaAttrbutes!=null && applicationSchemaAttrbutes.size()>0)
+									           {
+										           if(applicationSchemaAttrbutes.contains(keySplit[1]))
+										           {
+										           	applicationSchemaAttrbutes.remove(keySplit[1]);
+										           }
+									           }
+									            fieldDiscoveryResults.setDisplayName("Application Schema Attribute "+keySplit[1]);
+												fieldDiscoveryResults.setType("String");
+												fieldDiscoveryResults.setReadOnly(true);
+												if(roadMiningProvisioningResultsPoliciesModel!=null)
+												{
+													if (key.contains("IIQRANDOMPASSWORDGENERATORIIQ"))
+													{
+													roadMiningProvisioningResultsPoliciesModel.put(key,"IdentityIQ Random Password Generator based on Application Password Policy");
+													}
+												    else if (key.contains("IIQDATEFORMATIIQ"))
+												    {
+												    roadMiningProvisioningResultsPoliciesModel.put(key,"Date will be generated based on the dateformat "+"\""+roadDateFormatSelect+"\"");
+													}
+												    else if (key.contains("IIQREQUESTNUMBERIIQ"))
+												    {
+												    roadMiningProvisioningResultsPoliciesModel.put(key,"IdentityIQ request number will be passed to create, enable, disable, update, unlock account actions");
+												    }
+												    else 
+												    {
+													    roadMiningProvisioningResultsPoliciesModel.put(key,keySplit[0]);
+													    if(keySplit[0]!=null)
+														{
+															String helpKey=keySplit[0].replaceAll("minedSPACEmined", " SPACE ");
+															helpKey=helpKey.replaceAll("minedCOMMAmined", ",");
+															helpKey=helpKey.replaceAll("minedHASHEDmined", "#");
+															helpKey=helpKey.replaceAll("minedPERCENTAGEmined", "%");
+															helpKey=helpKey.replaceAll("minedTILDEmined", "~");
+															helpKey=helpKey.replaceAll("minedPIPEmined", "|");
+															helpKey=helpKey.replaceAll("minedDOLLARmined", "$");
+															helpKey=helpKey.replaceAll("minedATTHERATEOFmined", "@");
+															helpKey=helpKey.replaceAll("minedCARETmined", "^");
+															fieldDiscoveryResults.setHelpKey("Provisioning Policy Rule Format "+helpKey);
+														}
+												    }
+												}
+												//ADD FIELD TO SECTION
+												sectionDiscoveryResults.add(fieldDiscoveryResults);
+												//Add Mine / Un Mine Option
+												Field fieldMine = new Field();
+												fieldMine.setDisplayName("Ignore Generation of Provisioning Policy Rule");
+												fieldMine.setName(keySplit[1]);
+												fieldMine.setType("boolean");
+												fieldMine.setReadOnly(false);
+												fieldMine.setPostBack(true);
+												if(roadMiningProvisioningResultsPoliciesModel!=null)
+												{
+												roadMiningProvisioningResultsPoliciesModel.put(keySplit[1],false);
+												}
+												sectionDiscoveryResults.add(fieldMine);
+											}
+										}
+									}
+							}
+					}
+				}
+			}
+			//BUILD UNmined RESULTS
+			Section sectionUnmined=null;
+			if(deepCpyForm!=null && applicationSchemaAttrbutes!=null)
+			{
+			      sectionUnmined=deepCpyForm.getSection("roadUnmined");
+			      sectionUnmined.setColumns(4);
+			      if(sectionUnmined!=null)
+			      {
+			     	   for(String unMinedAttr:applicationSchemaAttrbutes)
+					   {
+							Field fieldUnMined = new Field();
+							fieldUnMined.setDisplayName("Unmined Field");
+							fieldUnMined.setName(unMinedAttr);
+							fieldUnMined.setType("string");
+							if(roadMiningProvisioningResultsPoliciesModel!=null)
+							{
+							roadMiningProvisioningResultsPoliciesModel.put(unMinedAttr,unMinedAttr);
+							}
+							sectionUnmined.add(fieldUnMined);
+						}
+				}
+			}
+		 return deepCpyForm;
+	 }
+	 	/**
+		 * Collect List of Identity Cube Attributes
+		 * @param string
+		 * @return
+		 */
+		public List collectListOfIdentityAttributes(String string)
+		{
+			List collectCubeAttributes= new ArrayList();
+			if(string!=null && string.contains("minedCOMMAmined"))
+	         {
+	         	String[] stringArray=string.split("minedCOMMAmined");
+	         	for(int index=0;index<stringArray.length;index++)
+	         	{
+	         	 collectCubeAttributes.add(stringArray[index]);
+	         	  if (index < stringArray.length - 1)
+		            	 {
+		            	 collectCubeAttributes.add(",");
+		            	 }
+	         	}
+	         }
+	         else if(string!=null && string.contains("minedPERCENTAGEmined"))
+	         {
+	         	String[] stringArray=string.split("minedPERCENTAGEmined");
+	         	for(int index=0;index<stringArray.length;index++)
+	         	{
+	         	 collectCubeAttributes.add(stringArray[index]);
+	         	 if (index < stringArray.length - 1)
+		            	 {
+		            	 collectCubeAttributes.add("%");
+		            	 }
+	         	}
+	         }
+	         else if(string!=null && string.contains("minedCARETmined"))
+	         {
+	         	String[] stringArray=string.split("minedCARETmined");
+	         	for(int index=0;index<stringArray.length;index++)
+	         	{
+	         	 collectCubeAttributes.add(stringArray[index]);
+	         	 if (index < stringArray.length - 1)
+		            	 {
+		            	 collectCubeAttributes.add("^");
+		            	 }
+	         	}
+	         }
+	         else if(string!=null && string.contains("minedHASHEDmined"))
+	         {
+	         	String[] stringArray=string.split("minedHASHEDmined");
+	         	for(int index=0;index<stringArray.length;index++)
+	         	{
+	         	 collectCubeAttributes.add(stringArray[index]);
+	         	 if (index < stringArray.length - 1)
+		            	 {
+		            	 collectCubeAttributes.add("#");
+		            	 }
+	         	}
+	         }
+	         else if(string!=null && string.contains("minedTILDEmined"))
+	         {
+	         	String[] stringArray=string.split("minedTILDEmined");
+	         	for(int index=0;index<stringArray.length;index++)
+	         	{
+	         	 collectCubeAttributes.add(stringArray[index]);
+	         	 if (index < stringArray.length - 1)
+		            	 {
+		            	 collectCubeAttributes.add("~");
+		            	 }
+	         	}
+	         }
+	         else if(string!=null && string.contains("minedATTHERATEOFmined"))
+	         {
+	         	String[] stringArray=string.split("minedATTHERATEOFmined");
+	         	for(int index=0;index<stringArray.length;index++)
+	         	{
+	         	 collectCubeAttributes.add(stringArray[index]);
+	         	 if (index < stringArray.length - 1)
+		            	 {
+		            	 collectCubeAttributes.add("@");
+		            	 }
+	         	}
+	         }
+	         else if(string!=null && string.contains("minedPIPEmined"))
+	         {
+	         	String[] stringArray=string.split("minedPIPEmined");
+	         	for(int index=0;index<stringArray.length;index++)
+	         	{
+	         	  collectCubeAttributes.add(stringArray[index]);
+	         	  if (index < stringArray.length - 1)
+		            	 {
+		            	 collectCubeAttributes.add("|");
+		            	 }
+	         	}
+	         }
+	         else if(string!=null && string.contains("minedDOLLARmined"))
+	         {
+	         	String[] stringArray=string.split("minedDOLLARmined");
+	         	for(int index=0;index<stringArray.length;index++)
+	         	{
+		            	 collectCubeAttributes.add(stringArray[index]);
+		            	 if (index < stringArray.length - 1)
+		            	 {
+		            	 collectCubeAttributes.add("$");
+		            	 }
+	         	}
+	         }
+	         else 
+	         {
+	         	 collectCubeAttributes.add(string);
+	         }
+	        return collectCubeAttributes;
+		}
+		/**
+		 * Build Bean Shell String
+		 * @param collectCubeAttributes
+		 * @return
+		 */
+		public String buildBeanShellString(List collectCubeAttributes)
+		{
+			 StringBuilder beanShellBuilder = new StringBuilder();
+	         if(collectCubeAttributes!=null && collectCubeAttributes.size()>0)
+	          { 
+	            int indexCollectAttrs=0;
+	            for(String singleCubeAttribute:collectCubeAttributes)
+	            {
+	               if(singleCubeAttribute!=null && singleCubeAttribute.contains("~"))
+	              {
+	                beanShellBuilder.append("\""+"~"+"\"");
+	              }
+	              else if(singleCubeAttribute!=null && singleCubeAttribute.contains("@"))
+	              {
+	                beanShellBuilder.append("\""+"@"+"\"");
+	              }
+	              else if(singleCubeAttribute!=null && singleCubeAttribute.contains(","))
+	              {
+	                beanShellBuilder.append("\""+","+"\"");
+	              }
+	              else if(singleCubeAttribute!=null && singleCubeAttribute.contains("|"))
+	              {
+	                beanShellBuilder.append("\""+"|"+"\"");
+	              }
+	              else if(singleCubeAttribute!=null && singleCubeAttribute.contains("^"))
+	              {
+	               beanShellBuilder.append("\""+"^"+"\"");
+	              }
+	               else if(singleCubeAttribute!=null && singleCubeAttribute.contains("%"))
+	              {
+	               beanShellBuilder.append("\""+"%"+"\"");
+	              }
+	               else if(singleCubeAttribute!=null && singleCubeAttribute.contains("$"))
+	              {
+	                beanShellBuilder.append("\""+"$"+"\"");
+	              }
+	               else if(singleCubeAttribute!=null && singleCubeAttribute.contains("#"))
+	              {
+	                 beanShellBuilder.append("\""+"#"+"\"");
+	              }
+	              else if(singleCubeAttribute!=null)
+	              {
+	                 //More than Two Tokens
+	                	if(singleCubeAttribute!=null &&singleCubeAttribute.contains("minedSPACEmined"))
+			            {
+			            	String[] stringArray=singleCubeAttribute.split("minedSPACEmined+");
+			            	if(stringArray.length>=2)
+			            	{
+				            	for(int index=0;index<stringArray.length;index++)
+				            	{
+				            		 if(stringArray[index]!=null && stringArray[index].length()>0)
+				            	     {
+				            			 beanShellBuilder.append("identity.getStringAttribute(");
+					            		 beanShellBuilder.append("\"");
+					            		 beanShellBuilder.append(stringArray[index]);
+					            		 beanShellBuilder.append("\"");
+					            		 beanShellBuilder.append(")");
+					            		 if (index < stringArray.length-1 ) 
+					            		 {
+					            		 //Multiple cube attributes don't add space to the last one
+					            		 beanShellBuilder.append("+");
+						            	 beanShellBuilder.append("\""+" "+"\"");
+					            		 beanShellBuilder.append("+");
+					            		 }
+				            	     }
+				            		 //When length is zero , This could happen when string starts with space just add space
+				            		 else if(stringArray[index]!=null) 
+				            		 {
+				            			 beanShellBuilder.append("\""+" "+"\"");
+					            		 beanShellBuilder.append("+");
+				            		 }
+				                }
+				            	if(singleCubeAttribute.endsWith("minedSPACEmined"))
+				            	{
+				            		 beanShellBuilder.append("+");
+					            	 beanShellBuilder.append("\""+" "+"\"");
+				            	}
+				            }
+			            	//This could happen when there is only cube attribute and it ends with space
+			            	else if (stringArray.length==1)
+				            {
+			            	  beanShellBuilder.append("identity.getStringAttribute(");
+			                  beanShellBuilder.append("\"");
+			                  beanShellBuilder.append(stringArray[0]);
+			                  beanShellBuilder.append("\"");
+			                  beanShellBuilder.append(")");
+			                  beanShellBuilder.append("+");
+			                  beanShellBuilder.append("\""+" "+"\"");
+			            	}
+			            	//This could happen when space follows token for example @#,%~|^@ etc
+			            	else if (stringArray.length==0)
+				            {
+			                  beanShellBuilder.append("\""+" "+"\"");
+			                }
+				        }
+	                  //No Space
+			            else
+			            {
+		            	  beanShellBuilder.append("identity.getStringAttribute(");
+		                  beanShellBuilder.append("\"");
+		                  beanShellBuilder.append(singleCubeAttribute);
+		                  beanShellBuilder.append("\"");
+		                  beanShellBuilder.append(")");
+			            }
+	              }
+	               if (indexCollectAttrs < collectCubeAttributes.size() - 1) 
+					 {
+					 	beanShellBuilder.append("+");
+					 }
+					 indexCollectAttrs=indexCollectAttrs+1;
+	            }
+	          }
+	         return beanShellBuilder.toString();
+		}
+		/**
+		 * Save Provisioning Policies
+		 * @param roadMiningProvisioningPoliciesModel
+		 * @param roadMiningProvisioningResultsPoliciesModel
+		 */
+	 public void saveMinedResuls( HashMap roadMiningProvisioningPoliciesModel, HashMap roadMiningProvisioningResultsPoliciesModel)
+	 {
+	    String roadApplicationSelect=null;
+	    String roadDateFormatSelect=null;
+	    String roadCommentSelect=null;
+	    String roadPasswordSelect=null;
+	    String roadStartField=null;
+	    String roadEndField=null;
+	    String roadPasssWordChangeField=null;
+	    String roadPasssWordScramble=null;
+	    String roadOverwriteOrMerge=null;
+	    //Calculate Password Field
+	    if(roadMiningProvisioningPoliciesModel!=null && roadMiningProvisioningPoliciesModel.containsKey("roadPasssWordScramble") )
+		{
+		       //If Scrambled ON	
+		    	roadPasssWordScramble=roadMiningProvisioningPoliciesModel.get("roadPasssWordScramble");
+		    	if(roadPasssWordScramble!=null && roadPasssWordScramble.equalsIgnoreCase("TRUE"))
+		    	{
+		    	    //Get Default Password
+			    	if(roadPasswordSelect==null || roadPasswordSelect.length()<=0)
+			    	{
+			    		roadPasswordSelect=ProvisioningPlan.ATT_PASSWORD;
+			    	}
+			    	//Else Use Input Password
+			    	else
+			    	{
+			    		roadPasswordSelect=roadMiningProvisioningPoliciesModel.get("roadPasswordSelect");
+			    	}
+		    	}
+		    }
+	    List mineFieldsIgnore = new ArrayList();
+	    //Build Ignore Mine Fields ArrayList
+	    if(roadMiningProvisioningResultsPoliciesModel!=null)
+		{
+			for (Map.Entry entry : roadMiningProvisioningResultsPoliciesModel.entrySet()) 
+			{  
+			    Object value=entry.getValue();
+			    String name=entry.getKey();
+		    	if(value!=null && value instanceof Boolean)
+			    {
+			    	  	  Boolean remove=value;
+				    	  if(remove!=null && remove.booleanValue())
+				    	  {
+				    	   mineFieldsIgnore.add(name);
+				    	  }
+			    }
+			}
+		}
+	   LogEnablement.isLogDebugEnabled(logger,"mineFieldsIgnore...."+mineFieldsIgnore);		
+	    Application roadApplicationSelectObj=null;
+	    if(roadMiningProvisioningPoliciesModel!=null)
+	    {
+	        	if(roadMiningProvisioningPoliciesModel.containsKey("roadDateFormatSelect"))
+			    {
+			    	roadDateFormatSelect=roadMiningProvisioningPoliciesModel.get("roadDateFormatSelect");
+			    }
+			    if(roadMiningProvisioningPoliciesModel.containsKey("roadCommentSelect"))
+			    {
+			    	roadCommentSelect=roadMiningProvisioningPoliciesModel.get("roadCommentSelect");
+			    }
+			    if(roadMiningProvisioningPoliciesModel.containsKey("roadStartField"))
+			    {
+			    	roadStartField=roadMiningProvisioningPoliciesModel.get("roadStartField");
+			    }
+			    if(roadMiningProvisioningPoliciesModel.containsKey("roadEndField"))
+			    {
+			    	roadEndField=roadMiningProvisioningPoliciesModel.get("roadEndField");
+			    }
+			    if(roadMiningProvisioningPoliciesModel.containsKey("roadPasssWordChangeField"))
+			    {
+			    	roadPasssWordChangeField=roadMiningProvisioningPoliciesModel.get("roadPasssWordChangeField");
+			    }
+			    if(roadMiningProvisioningPoliciesModel.containsKey("roadOverwriteOrMerge"))
+			    {
+			    	roadOverwriteOrMerge=roadMiningProvisioningPoliciesModel.get("roadOverwriteOrMerge");
+			    }
+			    if(roadMiningProvisioningPoliciesModel.containsKey("roadApplicationSelect"))
+		    	{
+		    	roadApplicationSelect=roadMiningProvisioningPoliciesModel.get("roadApplicationSelect");
+		    	if(roadApplicationSelect!=null)
+		    	{
+			    	try
+			    	{
+		    	    String removedSpecialCharactersAppName=roadApplicationSelect.replaceAll("[^a-zA-Z0-9]", "");
+		    	    String createSectionName="Mined Create "+ removedSpecialCharactersAppName+ " Section";
+		    	    String disableSectionName="Mined Disable "+ removedSpecialCharactersAppName+ " Section";
+		    	    String enableSectionName="Mined Enable "+ removedSpecialCharactersAppName+ " Section";
+		    	    String unlockSectionName="Mined Unlock "+ removedSpecialCharactersAppName+ " Section";
+		    	    String updateSectionName="Mined Update "+ removedSpecialCharactersAppName+ " Section";
+		    	    String changePasswordSectionName="Mined Change Password "+ removedSpecialCharactersAppName+ " Section";
+		    	    String createFormName="Mined Create "+ removedSpecialCharactersAppName+ " Form";
+		    	    String disableFormName="Mined Disable "+ removedSpecialCharactersAppName+ " Form";
+		    	    String enableFormName="Mined Enable "+ removedSpecialCharactersAppName+ " Form";
+		    	    String unlockFormName="Mined Unlock "+ removedSpecialCharactersAppName+ " Form";
+		    	    String updateFormName="Mined Update "+ removedSpecialCharactersAppName+ " Form";
+		    	    String changePasswordFormName="Mined Change Password "+ removedSpecialCharactersAppName+ " Form";
+		    	    String passwordFieldName="Mined Create "+ removedSpecialCharactersAppName+ " Password Field";
+		    	    String startDateFieldName="Mined Create "+ removedSpecialCharactersAppName+ " Start Date Field";
+		    	    String endDateFieldName="Mined Disable "+ removedSpecialCharactersAppName+ " End Date Field";
+		    	    String passWorChangeDateFieldName="Mined Change Password "+ removedSpecialCharactersAppName+ " Password Change Date Field";
+		    	    String commentsCreateFieldName="Mined Create "+ removedSpecialCharactersAppName+ " IdentityIQ Tracking Id Field";
+		    	    String commentsEnableFieldName="Mined Enable "+ removedSpecialCharactersAppName+ " IdentityIQ Tracking Id Field";
+		    	    String commentsDisableFieldName="Mined Disable "+ removedSpecialCharactersAppName+ " IdentityIQ Tracking Id Field";
+		    	    String commentsChangePasswordFieldName="Mined Change Password "+ removedSpecialCharactersAppName+ " IdentityIQ Tracking Id Field";
+		    	    String commentsUnlockFieldName="Mined Unlock "+ removedSpecialCharactersAppName+ " IdentityIQ Tracking Id Field";
+		    	    String commentsUpdateFieldName="Mined Update "+ removedSpecialCharactersAppName+ " IdentityIQ Tracking Id Field";
+		    	    String createRuleName="Rule-Mined-Create-"+ removedSpecialCharactersAppName+"-";
+		    	    String updateRuleName="Rule-Mined-Update-"+ removedSpecialCharactersAppName+"-";
+		    	    String changePasswordRuleName="Rule-Mined-Change-Password-"+ removedSpecialCharactersAppName+"-";
+		    	    String enableRuleName="Rule-Mined-Enable-"+ removedSpecialCharactersAppName+"-";
+		    	    String disableRuleName="Rule-Mined-Disable-"+ removedSpecialCharactersAppName+"-";
+		    	    String unlockRuleName="Rule-Mined-Disable-"+ removedSpecialCharactersAppName+"-";
+		    	    String commentsRuleName="Rule-Mined-All-Policy-"+ removedSpecialCharactersAppName+"-";
+		    	    String lockMode = PersistenceManager.LOCK_TYPE_TRANSACTION;
+		    	    LogEnablement.isLogDebugEnabled(logger,"Lock Application Object...");
+		    	    roadApplicationSelectObj = ObjectUtil.lockObject(context, Application.class,null, roadApplicationSelect, lockMode);
+		    	    boolean merge=false;
+		    	    if(roadOverwriteOrMerge!=null && roadOverwriteOrMerge.equalsIgnoreCase("MERGE"))
+		    	    {
+		    	   	 merge=true;
+		    	    }
+		    	    LogEnablement.isLogDebugEnabled(logger,"Merge..."+merge);
+		    	    List provisioningExistingForms=null;
+	            	if(roadApplicationSelectObj!=null)
+	            	{
+	            	provisioningExistingForms = roadApplicationSelectObj.getProvisioningForms();
+	            	}
+			    	List provisioningForms = new ArrayList();
+			    	//Build New Create Form
+			    	Form newForm = new Form();
+			    	LogEnablement.isLogDebugEnabled(logger,"New Form...");
+		    		newForm.setName(createFormName);
+		    		newForm.setType(Type.Create);
+		    		newForm.setObjectType("account");
+		    		//Build Create Form Attributes
+		    		Attributes createFormAttributes = new Attributes();
+		    		createFormAttributes.put("pageTitle",createFormName);
+		    		newForm.setAttributes(createFormAttributes);
+			    	if(provisioningExistingForms!=null && provisioningExistingForms.size()>0)
+			        {
+				        for (Form provisioningExistingForm:provisioningExistingForms)
+				        {
+				           if(provisioningExistingForm.getType()!=null && provisioningExistingForm.getType().equals(Type.Create) &&  provisioningExistingForm.getObjectType()!=null
+				           &&  provisioningExistingForm.getObjectType().equals("account") && provisioningExistingForm.getSections()!=null && merge)
+				           {
+				           newForm=provisioningExistingForm;
+				           LogEnablement.isLogDebugEnabled(logger,"New Existing Form...");
+				           break;
+				           }
+				         }
+				     }
+			  		//Build Disable Form
+					Form disableForm = new Form();
+					disableForm.setName(disableFormName);
+					disableForm.setType(Type.Disable);
+					disableForm.setObjectType("account");
+					//Build Disable Form Attributes
+		    		Attributes disableFormAttributes = new Attributes();
+		    		disableFormAttributes.put("pageTitle",disableFormName);
+		    		disableForm.setAttributes(disableFormAttributes);
+		    		if(provisioningExistingForms!=null && provisioningExistingForms.size()>0)
+			        {
+				        for (Form provisioningExistingForm:provisioningExistingForms)
+				        {
+				           if(provisioningExistingForm.getType()!=null && provisioningExistingForm.getType().equals(Type.Disable) &&  provisioningExistingForm.getObjectType()!=null
+				           &&  provisioningExistingForm.getObjectType().equals("account") && provisioningExistingForm.getSections()!=null && merge)
+				           {
+				           disableForm=provisioningExistingForm;
+				           LogEnablement.isLogDebugEnabled(logger,"Disable Existing Form...");
+				           break;
+				           }
+				         }
+				     }
+		    		//Build Enable Form
+					Form enableForm = new Form();
+					enableForm.setName(enableFormName);
+					enableForm.setType(Type.Enable);
+					enableForm.setObjectType("account");
+					//Build Enable Form Attributes
+		    		Attributes enableFormAttributes = new Attributes();
+		    		enableFormAttributes.put("pageTitle",enableFormName);
+		    		enableForm.setAttributes(enableFormAttributes);
+		    		if(provisioningExistingForms!=null && provisioningExistingForms.size()>0)
+			        {
+				        for (Form provisioningExistingForm:provisioningExistingForms)
+				        {
+				           if(provisioningExistingForm.getType()!=null && provisioningExistingForm.getType().equals(Type.Enable) &&  provisioningExistingForm.getObjectType()!=null
+				           &&  provisioningExistingForm.getObjectType().equals("account") && provisioningExistingForm.getSections()!=null && merge)
+				           {
+				           enableForm=provisioningExistingForm;
+				           LogEnablement.isLogDebugEnabled(logger,"Enable Existing Form...");
+				           break;
+				           }
+				         }
+				     }
+		    		//Build Change Password Form
+					Form changePasswordForm = new Form();
+					changePasswordForm.setName(changePasswordFormName);
+					changePasswordForm.setType(Type.ChangePassword);
+					changePasswordForm.setObjectType("account");
+					//Build Change Password Form Attributes
+		    		Attributes changePasswordFormAttributes = new Attributes();
+		    		changePasswordFormAttributes.put("pageTitle",changePasswordFormName);
+		    		changePasswordForm.setAttributes(changePasswordFormAttributes);
+		    		if(provisioningExistingForms!=null && provisioningExistingForms.size()>0)
+			        {
+				        for (Form provisioningExistingForm:provisioningExistingForms)
+				        {
+				           if(provisioningExistingForm.getType()!=null && provisioningExistingForm.getType().equals(Type.ChangePassword) &&  provisioningExistingForm.getObjectType()!=null
+				           &&  provisioningExistingForm.getObjectType().equals("account") && provisioningExistingForm.getSections()!=null && merge)
+				           {
+				           changePasswordForm=provisioningExistingForm;
+				           LogEnablement.isLogDebugEnabled(logger,"Change Password Existing Form...");
+				           break;
+				           }
+				         }
+				     }
+		    		//Build Unlock  Form
+					Form unlockForm = new Form();
+					unlockForm.setName(unlockFormName);
+					unlockForm.setType(Type.Unlock);
+					unlockForm.setObjectType("account");
+					//Build Unlock Form Attributes
+		    		Attributes unlockFormAttributes = new Attributes();
+		    		unlockFormAttributes.put("pageTitle",unlockFormName);
+		    		unlockForm.setAttributes(unlockFormAttributes);
+		    		if(provisioningExistingForms!=null && provisioningExistingForms.size()>0)
+			        {
+				        for (Form provisioningExistingForm:provisioningExistingForms)
+				        {
+				           if(provisioningExistingForm.getType()!=null && provisioningExistingForm.getType().equals(Type.Unlock) &&  provisioningExistingForm.getObjectType()!=null
+				           &&  provisioningExistingForm.getObjectType().equals("account") && provisioningExistingForm.getSections()!=null && merge)
+				           {
+				           unlockForm=provisioningExistingForm;
+				           LogEnablement.isLogDebugEnabled(logger,"Unlock Existing Form...");
+				           break;
+				           }
+				         }
+				     }
+		    		//Build Update  Form
+					Form updateForm = new Form();
+					updateForm.setName(updateFormName);
+					updateForm.setType(Type.Update);
+					updateForm.setObjectType("account");
+					//Build Update Form Attributes
+		    		Attributes updateFormAttributes = new Attributes();
+		    		updateFormAttributes.put("pageTitle",updateFormName);
+		    		updateForm.setAttributes(updateFormAttributes);
+		    		if(provisioningExistingForms!=null && provisioningExistingForms.size()>0)
+			        {
+				        for (Form provisioningExistingForm:provisioningExistingForms)
+				        {
+				           if(provisioningExistingForm.getType()!=null && provisioningExistingForm.getType().equals(Type.Update) &&  provisioningExistingForm.getObjectType()!=null
+				           &&  provisioningExistingForm.getObjectType().equals("account") && provisioningExistingForm.getSections()!=null && merge)
+				           {
+				           updateForm=provisioningExistingForm;
+				           LogEnablement.isLogDebugEnabled(logger,"Upddate Existing Form...");
+				           break;
+				           }
+				         }
+				     }
+			    	//Build New Section
+			    	Section newSection = new Section();
+			    	newSection.setName(createSectionName);
+			    	//Add Section To Form
+			    	newForm.add(newSection);
+			    	//Build Disable Section
+			    	Section disableSection = new Section();
+			    	disableSection.setName(disableSectionName);
+			    	//Add Section To Form
+			    	disableForm.add(disableSection);
+			    	//Build Enable Section
+			    	Section enableSection = new Section();
+			    	enableSection.setName(enableSectionName);
+			    	//Add Section To Form
+			    	enableForm.add(enableSection);
+			    	//Build ChangePassword Section
+			    	Section changePasswordSection = new Section();
+			    	changePasswordSection.setName(changePasswordSectionName);
+			    	//Add Section To Form
+			    	changePasswordForm.add(changePasswordSection);
+			    	//Build Unlock Section
+			    	Section unlockSection = new Section();
+			    	unlockSection.setName(unlockSectionName);
+			    	//Add Section To Form
+			    	unlockForm.add(unlockSection);
+			    	//Build Update Section
+			    	Section updateSection = new Section();
+			    	updateSection.setName(updateSectionName);
+			    	//Add Section To Form
+			    	updateForm.add(updateSection);
+			    	//Build New Password Field
+			    	if(roadPasswordSelect!=null && roadPasswordSelect.length()>0 && !mineFieldsIgnore.contains(roadPasswordSelect))
+			    	{
+				    	//Build New Password Field
+				    	Field newField= new Field();
+				    	LogEnablement.isLogDebugEnabled(logger,"New Password Field...");
+			    		newField.setName(roadPasswordSelect);
+			    		newField.setDisplayName(passwordFieldName);
+			    		newField.setType("secret");
+			    		//Add Field To Section
+			    		newSection.add(newField);
+				    	//Build New Rule
+			    		Rule newFieldRule = new Rule();
+			    		newFieldRule.setType(Rule.Type.FieldValue);
+			    		//Find Existing Rule
+			    		String name=createRuleName+roadPasswordSelect;
+			    		Rule existingRule=context.getObjectByName(Rule.class,name);
+			    		if(existingRule!=null)
+			    		{
+			    		    newFieldRule=existingRule;
+			    			//Set Rule on Field
+			    			newField.setRule(newFieldRule);
+			    		}
+			    		else
+			    		{
+			    			newFieldRule.setName(name);
+							//Set Rule on Field
+			    			newField.setRule(newFieldRule);
+			    		}
+			    		//Build New Script
+			    	   StringBuilder randomPasswordScript = new StringBuilder();
+			    	   randomPasswordScript.append(System.getProperty("line.separator"));
+			    	   randomPasswordScript.append("import sailpoint.api.PasswordGenerator;");
+			    	   randomPasswordScript.append("import sailpoint.tools.GeneralException;");
+			    	   randomPasswordScript.append(System.getProperty("line.separator"));
+			    	   randomPasswordScript.append("String value=\"\";");
+			    	   randomPasswordScript.append(System.getProperty("line.separator"));
+			    	   randomPasswordScript.append("PasswordGenerator pg = new PasswordGenerator(context);");
+			    	   randomPasswordScript.append(System.getProperty("line.separator"));
+			    	   randomPasswordScript.append("try");
+			    	   randomPasswordScript.append(System.getProperty("line.separator"));
+			    	   randomPasswordScript.append("{");
+			    	   randomPasswordScript.append(System.getProperty("line.separator"));
+			    	   randomPasswordScript.append("value=pg.generatePassword(identity, application);");
+			    	   randomPasswordScript.append(System.getProperty("line.separator"));
+			    	   randomPasswordScript.append("}");
+			    	   randomPasswordScript.append(System.getProperty("line.separator"));
+			    	   randomPasswordScript.append("catch (GeneralException ex)");
+			    	   randomPasswordScript.append(System.getProperty("line.separator"));
+			    	   randomPasswordScript.append("{");
+			    	   randomPasswordScript.append(System.getProperty("line.separator"));
+			    	   randomPasswordScript.append("value=pg.generatePassword();");
+			    	   randomPasswordScript.append(System.getProperty("line.separator"));
+			    	   randomPasswordScript.append("}");
+			    	   randomPasswordScript.append(System.getProperty("line.separator"));
+			    	   randomPasswordScript.append("if(value!=null)");
+			    	   randomPasswordScript.append(System.getProperty("line.separator"));
+			    	   randomPasswordScript.append("{");
+			    	   randomPasswordScript.append(System.getProperty("line.separator"));
+			    	   randomPasswordScript.append("if(value.length()>0)");
+			    	   randomPasswordScript.append(System.getProperty("line.separator"));
+			    	   randomPasswordScript.append("{");
+			    	   randomPasswordScript.append(System.getProperty("line.separator"));
+			    	   randomPasswordScript.append("return value;");
+			    	   randomPasswordScript.append(System.getProperty("line.separator"));
+			    	   randomPasswordScript.append("}");
+			    	   randomPasswordScript.append(System.getProperty("line.separator"));
+			    	   randomPasswordScript.append("}");
+			    	   randomPasswordScript.append(System.getProperty("line.separator"));
+			    	   newFieldRule.setSource(randomPasswordScript.toString());
+			    	  //Save New Rule
+			    	   context.saveObject(newFieldRule);
+			    	}
+			    	//Build New Start Field
+			    	if(roadStartField!=null && roadStartField.length()>0 && roadDateFormatSelect!=null && roadDateFormatSelect.length()>0 && !mineFieldsIgnore.contains(roadStartField))
+			    	{
+				    	//Build New Start Field
+				    	Field newField= new Field();
+				    	newField.setName(roadStartField);
+			    		newField.setDisplayName(startDateFieldName);
+			    		newField.setType("string");
+			    		//Add Field To Section
+			    		newSection.add(newField);
+			    		//Build New Rule
+			    		Rule newFieldRule = new Rule();
+			    		newFieldRule.setType(Rule.Type.FieldValue);
+			    		//Find Existing Rule
+			    		String name=createRuleName+roadStartField;
+			    		Rule existingRule=context.getObjectByName(Rule.class,name);
+			    		if(existingRule!=null)
+			    		{
+			    			newFieldRule=existingRule;
+			    			//Set Rule on Field
+			    			newField.setRule(newFieldRule);
+			    		}
+			    		else
+			    		{
+			    			newFieldRule.setName(name);
+			    			//Set Rule on Field
+			    			newField.setRule(newFieldRule);
+			    		}
+			    		//Build New Script
+			    	   StringBuilder startFieldScript = new StringBuilder();
+			    	   startFieldScript.append(System.getProperty("line.separator"));
+			    	   startFieldScript.append("import java.text.ParseException;");
+			    	   startFieldScript.append(System.getProperty("line.separator"));
+			    	   startFieldScript.append("import java.text.SimpleDateFormat;");
+			    	   startFieldScript.append(System.getProperty("line.separator"));
+			    	   startFieldScript.append("String value=\"\";");
+			    	   startFieldScript.append(System.getProperty("line.separator"));
+			    	   startFieldScript.append("try");
+			    	   startFieldScript.append(System.getProperty("line.separator"));
+			    	   startFieldScript.append("{");
+			    	   startFieldScript.append(System.getProperty("line.separator"));
+			    	   startFieldScript.append("SimpleDateFormat sdf = new SimpleDateFormat("+"\""+roadDateFormatSelect+"\""+");");
+			    	   startFieldScript.append(System.getProperty("line.separator"));
+			    	   startFieldScript.append("Date today = Calendar.getInstance().getTime();");
+			    	   startFieldScript.append(System.getProperty("line.separator"));
+			    	   startFieldScript.append("String todayDate = sdf.format(today);");
+			    	   startFieldScript.append(System.getProperty("line.separator"));
+			    	   startFieldScript.append("value=todayDate;");
+			    	   startFieldScript.append(System.getProperty("line.separator"));
+			    	   startFieldScript.append("}");
+			    	   startFieldScript.append(System.getProperty("line.separator"));
+			    	   startFieldScript.append("catch (ParseException e)");
+			    	   startFieldScript.append(System.getProperty("line.separator"));
+			    	   startFieldScript.append("{");
+			    	   startFieldScript.append(System.getProperty("line.separator"));
+			    	   startFieldScript.append("}");
+			    	   startFieldScript.append(System.getProperty("line.separator"));
+			    	   startFieldScript.append("if(value!=null && value.length()>0)");
+			    	   startFieldScript.append(System.getProperty("line.separator"));
+			    	   startFieldScript.append("{");
+			    	   startFieldScript.append(System.getProperty("line.separator"));
+			    	   startFieldScript.append("return value;");
+			    	   startFieldScript.append(System.getProperty("line.separator"));
+			    	   startFieldScript.append("}");
+			    	   startFieldScript.append(System.getProperty("line.separator"));
+			    	   newFieldRule.setSource(startFieldScript.toString());
+			    	   //Save New Rule
+			    	   context.saveObject(newFieldRule);
+			    	}
+			    	//Build New End Field
+			    	if(roadEndField!=null && roadEndField.length()>0 && roadDateFormatSelect!=null && roadDateFormatSelect.length()>0 && !mineFieldsIgnore.contains(roadEndField))
+			    	{
+				    	//Build New Start Field
+				    	Field disableField= new Field();
+				    	disableField.setName(roadEndField);
+			    		disableField.setDisplayName(endDateFieldName);
+			    		disableField.setType("string");
+			    		//Add Field To Section
+			    		disableSection.add(disableField);
+			    		//Build New Rule
+			    		Rule disableFieldRule = new Rule();
+			    		disableFieldRule.setType(Rule.Type.FieldValue);
+			    		//Find Existing Rule
+			    		String name=disableRuleName+roadEndField;
+			    		Rule existingRule=context.getObjectByName(Rule.class,name);
+			    		if(existingRule!=null)
+			    		{
+			    			disableFieldRule=existingRule;
+			    			//Set Rule on Field
+			    			disableField.setRule(disableFieldRule);
+			    		}
+			    		else
+			    		{
+			    			disableFieldRule.setName(name);
+			    			//Set Rule on Field
+			    			disableField.setRule(disableFieldRule);
+			    		}
+			    		//Build New Script
+			    	   StringBuilder endFieldScript = new StringBuilder();
+			    	   endFieldScript.append(System.getProperty("line.separator"));
+			    	   endFieldScript.append("import java.text.ParseException;");
+			    	   endFieldScript.append(System.getProperty("line.separator"));
+			    	   endFieldScript.append("import java.text.SimpleDateFormat;");
+			    	   endFieldScript.append(System.getProperty("line.separator"));
+			    	   endFieldScript.append("String value=\"\";");
+			    	   endFieldScript.append(System.getProperty("line.separator"));
+			    	   endFieldScript.append("try");
+			    	   endFieldScript.append(System.getProperty("line.separator"));
+			    	   endFieldScript.append("{");
+			    	   endFieldScript.append(System.getProperty("line.separator"));
+			    	   endFieldScript.append("SimpleDateFormat sdf = new SimpleDateFormat("+"\""+roadDateFormatSelect+"\""+");\"");
+			    	   endFieldScript.append(System.getProperty("line.separator"));
+			    	   endFieldScript.append("Date today = Calendar.getInstance().getTime();");
+			    	   endFieldScript.append(System.getProperty("line.separator"));
+			    	   endFieldScript.append("String todayDate = sdf.format(today);");
+			    	   endFieldScript.append(System.getProperty("line.separator"));
+			    	   endFieldScript.append("value=todayDate;");
+			    	   endFieldScript.append(System.getProperty("line.separator"));
+			    	   endFieldScript.append("}");
+			    	   endFieldScript.append(System.getProperty("line.separator"));
+			    	   endFieldScript.append("catch (ParseException e)");
+			    	   endFieldScript.append(System.getProperty("line.separator"));
+			    	   endFieldScript.append("{");
+			    	   endFieldScript.append(System.getProperty("line.separator"));
+			    	   endFieldScript.append("}");
+			    	   endFieldScript.append(System.getProperty("line.separator"));
+			    	   endFieldScript.append("if(value!=null && value.length()>0)");
+			    	   endFieldScript.append(System.getProperty("line.separator"));
+			    	   endFieldScript.append("{");
+			    	   endFieldScript.append(System.getProperty("line.separator"));
+			    	   endFieldScript.append("return value;");
+			    	   endFieldScript.append(System.getProperty("line.separator"));
+			    	   endFieldScript.append("}");
+			    	   endFieldScript.append(System.getProperty("line.separator"));
+			    	   disableFieldRule.setSource(endFieldScript.toString());
+			    	   //Save New Rule
+			    	   context.saveObject(disableFieldRule);
+			    	}
+			    	//Build New Password Change Field
+			    	if(roadPasssWordChangeField!=null && roadPasssWordChangeField.length()>0 && roadDateFormatSelect!=null && roadDateFormatSelect.length()>0 && !mineFieldsIgnore.contains(roadPasssWordChangeField))
+			    	{
+				    	//Build New Start Field
+				    	Field passwordChangeField= new Field();
+				    	passwordChangeField.setName(roadPasssWordChangeField);
+			    		passwordChangeField.setDisplayName(passWorChangeDateFieldName);
+			    		passwordChangeField.setType("string");
+			    		//Add Field To Section
+			    		changePasswordSection.add(passwordChangeField);
+			    		//Build New Rule
+			    		Rule changePasswordDateRule = new Rule();
+			    		changePasswordDateRule.setType(Rule.Type.FieldValue);
+			    		//Find Existing Rule
+			    		String name=changePasswordRuleName+roadPasssWordChangeField;
+			    		Rule existingRule=context.getObjectByName(Rule.class,name);
+			    		if(existingRule!=null)
+			    		{
+			    			changePasswordDateRule=existingRule;
+			    			//Set Rule on Field
+			    			passwordChangeField.setRule(changePasswordDateRule);
+			    		}
+			    		else
+			    		{
+			    			changePasswordDateRule.setName(name);
+			    			//Set Rule on Field
+			    			passwordChangeField.setRule(changePasswordDateRule);
+			    		}
+			    		//Build New Script
+			    	   StringBuilder changePsswordFieldScript = new StringBuilder();
+			    	   changePsswordFieldScript.append(System.getProperty("line.separator"));
+			    	   changePsswordFieldScript.append("import java.text.ParseException;");
+			    	   changePsswordFieldScript.append(System.getProperty("line.separator"));
+			    	   changePsswordFieldScript.append("import java.text.SimpleDateFormat;");
+			    	   changePsswordFieldScript.append(System.getProperty("line.separator"));
+			    	   changePsswordFieldScript.append("String value=\"\";");
+			    	   changePsswordFieldScript.append(System.getProperty("line.separator"));
+			    	   changePsswordFieldScript.append("try");
+			    	   changePsswordFieldScript.append(System.getProperty("line.separator"));
+			    	   changePsswordFieldScript.append("{");
+			    	   changePsswordFieldScript.append(System.getProperty("line.separator"));
+			    	   changePsswordFieldScript.append("SimpleDateFormat sdf = new SimpleDateFormat("+"\""+roadDateFormatSelect+"\""+");\"");
+			    	   changePsswordFieldScript.append(System.getProperty("line.separator"));
+			    	   changePsswordFieldScript.append("Date today = Calendar.getInstance().getTime();");
+			    	   changePsswordFieldScript.append(System.getProperty("line.separator"));
+			    	   changePsswordFieldScript.append("String todayDate = sdf.format(today);");
+			    	   changePsswordFieldScript.append(System.getProperty("line.separator"));
+			    	   changePsswordFieldScript.append("value=todayDate;");
+			    	   changePsswordFieldScript.append(System.getProperty("line.separator"));
+			    	   changePsswordFieldScript.append("}");
+			    	   changePsswordFieldScript.append(System.getProperty("line.separator"));
+			    	   changePsswordFieldScript.append("catch (ParseException e)");
+			    	   changePsswordFieldScript.append(System.getProperty("line.separator"));
+			    	   changePsswordFieldScript.append("{");
+			    	   changePsswordFieldScript.append(System.getProperty("line.separator"));
+			    	   changePsswordFieldScript.append("}");
+			    	   changePsswordFieldScript.append(System.getProperty("line.separator"));
+			    	   changePsswordFieldScript.append("if(value!=null && value.length()>0)");
+			    	   changePsswordFieldScript.append(System.getProperty("line.separator"));
+			    	   changePsswordFieldScript.append("{");
+			    	   changePsswordFieldScript.append(System.getProperty("line.separator"));
+			    	   changePsswordFieldScript.append("return value;");
+			    	   changePsswordFieldScript.append(System.getProperty("line.separator"));
+			    	   changePsswordFieldScript.append("}");
+			    	   changePsswordFieldScript.append(System.getProperty("line.separator"));
+			    	   changePasswordDateRule.setSource(changePsswordFieldScript.toString());
+			    	   //Save New Rule
+			    	   context.saveObject(changePasswordDateRule);
+			    	}
+			    	//Build New IdentityIQ Tracking Id Field
+			    	if(roadCommentSelect!=null && roadCommentSelect.length()>0 && !mineFieldsIgnore.contains(roadCommentSelect))
+			    	{
+				    	//Build New Comments Field
+				    	Field newField= new Field();
+				    	newField.setName(roadCommentSelect);
+			    		newField.setDisplayName(commentsCreateFieldName);
+			    		newField.setType("string");
+			    		//Add Field To Section
+			    		newSection.add(newField);
+			    		//Build Disable Comments Field
+				    	Field disableField= new Field();
+				    	disableField.setName(roadCommentSelect);
+			    		disableField.setDisplayName(commentsDisableFieldName);
+			    		disableField.setType("string");
+			    		//Add Field To Section
+			    		disableSection.add(disableField);
+			    		//Build Enable Comments Field
+				    	Field enableField= new Field();
+				    	enableField.setName(roadCommentSelect);
+			    		enableField.setDisplayName(commentsEnableFieldName);
+			    		enableField.setType("string");
+			    		//Add Field To Section
+			    		enableSection.add(enableField);
+			    		//Build Unlock Comments Field
+				    	Field unlockField= new Field();
+				    	unlockField.setName(roadCommentSelect);
+			    		unlockField.setDisplayName(commentsUnlockFieldName);
+			    		unlockField.setType("string");
+			    		//Add Field To Section
+			    		unlockSection.add(unlockField);
+			    		//Build ChangePassword Comments Field
+				    	Field changePasswordField= new Field();
+				    	changePasswordField.setName(roadCommentSelect);
+			    		changePasswordField.setDisplayName(commentsChangePasswordFieldName);
+			    		changePasswordField.setType("string");
+			    		//Add Field To Section
+			    		changePasswordSection.add(changePasswordField);
+			    		//Build Update Comments Field
+				    	Field updateField= new Field();
+				    	updateField.setName(roadCommentSelect);
+			    		updateField.setDisplayName(commentsUpdateFieldName);
+			    		updateField.setType("string");
+			    		//Add Field To Section
+			    	    updateSection.add(updateField);
+			    		//Build New Rule
+			    		Rule newFieldRule = new Rule();
+			    		newFieldRule.setType(Rule.Type.FieldValue);
+			    		//Find Existing Rule
+			    		String name=commentsRuleName+roadCommentSelect;
+			    		Rule existingRule=context.getObjectByName(Rule.class,name);
+			    		if(existingRule!=null)
+			    		{
+			    			newFieldRule=existingRule;
+			    			//Set Rule on Field
+			    			newField.setRule(newFieldRule);
+			    			//Set Rule on Field
+			    			enableField.setRule(newFieldRule);
+			    			//Set Rule on Field
+			    			disableField.setRule(newFieldRule);
+			    			//Set Rule on Field
+			    			changePasswordField.setRule(newFieldRule);
+			    			//Set Rule on Field
+			    			updateField.setRule(newFieldRule);
+			    			//Set Rule on Field
+			    			unlockField.setRule(newFieldRule);
+			    		}
+			    		else
+			    		{
+			    			newFieldRule.setName(name);
+			    			//Set Rule on Field
+			    			newField.setRule(newFieldRule);
+			    			//Set Rule on Field
+			    			enableField.setRule(newFieldRule);
+			    			//Set Rule on Field
+			    			disableField.setRule(newFieldRule);
+			    			//Set Rule on Field
+			    			changePasswordField.setRule(newFieldRule);
+			    			//Set Rule on Field
+			    			updateField.setRule(newFieldRule);
+			    			//Set Rule on Field
+			    			unlockField.setRule(newFieldRule);
+			    			 LogEnablement.isLogDebugEnabled(logger,"New COMMENTS Rule..."+name);
+			    		}
+			    		//Build New Script
+			    	   StringBuilder commentScript = new StringBuilder();
+			    	   commentScript.append(System.getProperty("line.separator"));
+			    	   commentScript.append("import sailpoint.object.Attributes;");
+			    	   commentScript.append(System.getProperty("line.separator"));
+			    	   commentScript.append("String value=\"IdentityIQ Created \";");
+			    	   commentScript.append(System.getProperty("line.separator"));
+			    	   commentScript.append("if(spExtAttrs!=void)");
+			    	   commentScript.append(System.getProperty("line.separator"));
+			    	   commentScript.append("{");
+			    	   commentScript.append(System.getProperty("line.separator"));
+			    	   commentScript.append("if(spExtAttrs!=null)");
+			    	   commentScript.append(System.getProperty("line.separator"));
+			    	   commentScript.append("{");
+			    	   commentScript.append(System.getProperty("line.separator"));
+			    	   commentScript.append("if(spExtAttrs.containsKey(\"identityRequestId\"))");
+			    	   commentScript.append(System.getProperty("line.separator"));
+			    	   commentScript.append("{");
+			    	   commentScript.append(System.getProperty("line.separator"));
+			    	   commentScript.append("if(spExtAttrs.get(\"identityRequestId\")!=null)");
+			    	   commentScript.append(System.getProperty("line.separator"));
+			    	   commentScript.append("{");
+			    	   commentScript.append(System.getProperty("line.separator"));
+			    	   commentScript.append("value=value+spExtAttrs.get(\"identityRequestId\");");
+			    	   commentScript.append(System.getProperty("line.separator"));
+			    	   commentScript.append("return value;");
+			    	   commentScript.append(System.getProperty("line.separator"));
+			    	   commentScript.append("}");
+			    	   commentScript.append(System.getProperty("line.separator"));
+			    	   commentScript.append("}");
+			    	   commentScript.append(System.getProperty("line.separator"));
+			    	   commentScript.append("}");
+			    	   commentScript.append(System.getProperty("line.separator"));
+			    	   commentScript.append("}");
+			    	   commentScript.append(System.getProperty("line.separator"));
+			    	   newFieldRule.setSource(commentScript.toString());
+			    	   //Save New Rule
+			    	   context.saveObject(newFieldRule);
+			    	}
+			    	//Build Simple and Compute Attribues for Provisioning Policies
+			    	 boolean atleasOneFieldMined=false;
+			    	 if(roadMiningProvisioningResultsPoliciesModel!=null)
+				    	{
+				    		for (Map.Entry entry : roadMiningProvisioningResultsPoliciesModel.entrySet()) 
+							{  
+						    	Object value=entry.getValue();
+					    	    String key=entry.getKey();
+				    	    	if(key!=null && key.length()>0 && !key.contains("IIQRANDOMPASSWORDGENERATORIIQ") && 
+				    	    	!key.contains("IIQDATEFORMATIIQ")  && !key.contains("IIQREQUESTNUMBERIIQ")  && key.contains("IIQMineIIQ")
+				    	    	)
+				    	    	{
+					    	    	String[] keySplit=key.split("IIQMineIIQ");
+							        if(keySplit!=null && keySplit.length==2 && Util.isNotNullOrEmpty(keySplit[0]) 
+							     && Util.isNotNullOrEmpty(keySplit[1]) && !mineFieldsIgnore.contains(keySplit[1]))
+							        {
+							            List collectCubeAttributes= new ArrayList();
+							   			collectCubeAttributes= collectListOfIdentityAttributes(keySplit[0]);
+							            String sbuildBeanShellString=buildBeanShellString(collectCubeAttributes);
+							        	Field newField= new Field();
+								    	newField.setName(keySplit[1]);
+							    		newField.setDisplayName("Mined Create "+ removedSpecialCharactersAppName+" "+keySplit[1]+"");
+							    		newField.setType("string");
+							    		//Add Field To Section
+							    		if(sbuildBeanShellString!=null && sbuildBeanShellString.length()>0)
+							    		{
+							    			newSection.add(newField);
+							    			atleasOneFieldMined=true;
+								    		//Build New Rule
+								    		Rule newFieldRule = new Rule();
+								    		newFieldRule.setType(Rule.Type.FieldValue);
+								    		//Find Existing Rule
+								    		String name=createRuleName+keySplit[1];
+								    		Rule existingRule=context.getObjectByName(Rule.class,name);
+								    		if(existingRule!=null)
+								    		{
+								    		   newFieldRule=existingRule;
+								    			//Set Rule on Field
+								    			newField.setRule(newFieldRule);
+								    		}
+								    		else
+								    		{
+								    			newFieldRule.setName(name);
+								    			//Set Rule on Field
+								    			newField.setRule(newFieldRule);
+								    		}
+								    		//Build New Script
+								    	   StringBuilder simpleComputedAttributeScript = new StringBuilder();
+								    	   simpleComputedAttributeScript.append(System.getProperty("line.separator"));
+								    	   simpleComputedAttributeScript.append("import sailpoint.object.Attributes;");
+								    	   simpleComputedAttributeScript.append(System.getProperty("line.separator"));
+								    	   simpleComputedAttributeScript.append("String value=\"\";");
+								    	   simpleComputedAttributeScript.append(System.getProperty("line.separator"));
+								    	   simpleComputedAttributeScript.append("value="+sbuildBeanShellString+";");
+								    	   simpleComputedAttributeScript.append(System.getProperty("line.separator"));
+								    	   simpleComputedAttributeScript.append("if(value!=null)");
+								    	   simpleComputedAttributeScript.append(System.getProperty("line.separator"));
+								    	   simpleComputedAttributeScript.append("{");
+								    	   simpleComputedAttributeScript.append(System.getProperty("line.separator"));
+								    	   simpleComputedAttributeScript.append("if(value.length()>0)");
+								    	   simpleComputedAttributeScript.append(System.getProperty("line.separator"));
+								    	   simpleComputedAttributeScript.append("{");
+								    	   simpleComputedAttributeScript.append(System.getProperty("line.separator"));
+								    	   simpleComputedAttributeScript.append("return value;");
+								    	   simpleComputedAttributeScript.append(System.getProperty("line.separator"));
+								    	   simpleComputedAttributeScript.append("}");
+								    	   simpleComputedAttributeScript.append(System.getProperty("line.separator"));
+								    	   simpleComputedAttributeScript.append("}");
+								    	   simpleComputedAttributeScript.append(System.getProperty("line.separator"));
+								    	   newFieldRule.setSource(simpleComputedAttributeScript.toString());
+								    	  //Save New Rule
+								    	   context.saveObject(newFieldRule);
+							    	   }
+									}
+								}
+							}
+				    	}
+			        //Add Forms to List of Provisioning Forms
+			    	//Comments, Start Date and Password are applied to Create Policy
+			    	if((roadCommentSelect!=null && roadCommentSelect.length()>0) || (roadPasswordSelect!=null && roadPasswordSelect.length()>0)
+			    	|| (roadStartField!=null && roadStartField.length()>0) || atleasOneFieldMined)
+			    	{
+			    	   if(newForm!=null && newForm.getSection(createSectionName)!=null && 
+				    	newForm.getSection(createSectionName).getFields()!=null &&
+				    	newForm.getSection(createSectionName).getFields().size()>0)
+				    	{
+				    	provisioningForms.add(newForm);
+				    	}
+			    	}
+			    	//Comments and End Date are applied to Disable Policy
+			    	if((roadCommentSelect!=null && roadCommentSelect.length()>0) || (roadEndField!=null && roadEndField.length()>0) )
+			    	{
+			    		if(disableForm!=null && disableForm.getSection(disableSectionName)!=null && 
+				    	disableForm.getSection(disableSectionName).getFields()!=null &&
+				    	disableForm.getSection(disableSectionName).getFields().size()>0)
+				    		{
+			    			provisioningForms.add(disableForm);
+			    			}
+			    	}
+			    	//Comments are applied to Update Policy
+			    	if(roadCommentSelect!=null && roadCommentSelect.length()>0)
+			    	{
+			    		if(updateForm!=null && updateForm.getSection(updateSectionName)!=null && 
+				    	updateForm.getSection(updateSectionName).getFields()!=null &&
+				    	updateForm.getSection(updateSectionName).getFields().size()>0)
+				    	{
+			    			provisioningForms.add(updateForm);
+			    		}
+			    	}
+			    	//Comments are applied to Enable Policy
+			    	if(roadCommentSelect!=null && roadCommentSelect.length()>0)
+			    	{
+			    		if(enableForm!=null && enableForm.getSection(enableSectionName)!=null && 
+				    	enableForm.getSection(enableSectionName).getFields()!=null &&
+				    	enableForm.getSection(enableSectionName).getFields().size()>0)
+				    	{
+			    		provisioningForms.add(enableForm);
+			    		}
+			    	}
+			    	//Comments are applied to Unlock Policy
+			    	if(roadCommentSelect!=null && roadCommentSelect.length()>0)
+			    	{
+			    		if(unlockForm!=null && unlockForm.getSection(unlockSectionName)!=null && 
+				    	unlockForm.getSection(unlockSectionName).getFields()!=null &&
+				    	unlockForm.getSection(unlockSectionName).getFields().size()>0)
+				    	{
+			    			provisioningForms.add(unlockForm);
+			    		}
+			    	}
+			    	//Comments, Password Change Field are applied to Change Password Policy
+			    	if(roadCommentSelect!=null && roadCommentSelect.length()>0 || (roadPasssWordChangeField!=null && roadPasssWordChangeField.length()>0))
+			    	{
+			    		if(changePasswordForm!=null && changePasswordForm.getSection(changePasswordSectionName)!=null && 
+				    	changePasswordForm.getSection(changePasswordSectionName).getFields()!=null &&
+				    	changePasswordForm.getSection(changePasswordSectionName).getFields().size()>0)
+				    	{
+			    		provisioningForms.add(changePasswordForm);
+			    		}
+			    	}
+			    	//Set Provisioning Forms
+			    	roadApplicationSelectObj.setProvisioningForms(provisioningForms);
+			    	context.saveObject(roadApplicationSelectObj);
+			    	}
+			    	finally
+			    	{
+			    		LogEnablement.isLogDebugEnabled(logger,"UnLock Application Object...");
+			    		context.commitTransaction();
+			    	}
+			    	}
+			    	if(roadApplicationSelectObj!=null)
+			    	{
+			    	context.decache(roadApplicationSelectObj);
+			    	}
+		    	}
+		 }
+		LogEnablement.isLogDebugEnabled(logger,"End save");
+	 }
+	
+	]]></Source>
+</Rule>

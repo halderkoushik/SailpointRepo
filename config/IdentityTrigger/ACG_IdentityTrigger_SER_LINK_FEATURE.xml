@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE IdentityTrigger PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<IdentityTrigger handler="sailpoint.api.WorkflowTriggerHandler" name="SER LINK FEATURE" type="Rule">
+  <Description>An existing Identity has a SER Link or Unlink detection in IdentityIQ.</Description>
+  <HandlerParameters>
+    <Attributes>
+      <Map>
+        <entry key="workflow" value="Workflow-Lifecycle-SER-Link-Unlink-RequestObject-Wrapper"/>
+      </Map>
+    </Attributes>
+  </HandlerParameters>
+  <TriggerRule>
+    <Reference class="sailpoint.object.Rule" name="Rule-IdentityTrigger-SERLink"/>
+  </TriggerRule>
+</IdentityTrigger>

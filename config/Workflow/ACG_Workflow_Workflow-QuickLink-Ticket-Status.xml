@@ -1,0 +1,62 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Workflow PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Workflow explicitTransitions="true" handler="sailpoint.api.StandardWorkflowHandler" name="Workflow-QuickLink-Ticket-Status" type="LCMProvisioning">
+  <Variable initializer="true" name="transient"/>
+  <Variable initializer="ref:launcher" name="owner">
+    <Description>Name of the user that will recieve the forms.</Description>
+  </Variable>
+  <Variable name="roadTicketStatusForm">
+    <Script>
+      <Source><![CDATA[
+     
+     	return "Form-Ticket-Status";
+			
+      ]]></Source>
+    </Script>
+  </Variable>
+  <Variable name="autoSelectIntegrationConfig"/>
+  <Variable name="multipleIntergationConfig">
+    <Script>
+      <Source><![CDATA[
+     
+     		import sailpoint.rapidapponboarding.rule.CheckTicketStatusExecutor;
+     		return CheckTicketStatusExecutor.multipleIntegrationConfigs(context,workflow,"autoSelectIntegrationConfig");
+    		
+      ]]></Source>
+    </Script>
+  </Variable>
+  <Description>Accelerator Pack Check Ticket Status Workflow</Description>
+  <Step icon="Start" name="Start" posX="28" posY="10">
+    <Transition to="Show Ticket Integration Selection Form" when="script:isTrue(multipleIntergationConfig)"/>
+    <Transition to="Show Ticket Status Form"/>
+  </Step>
+  <Step name="Show Ticket Integration Selection Form">
+    <Approval name="Ticket-Integration" owner="ref:requester" return="roadIntegrationConfigSelect">
+      <Form name="Ticket-Integration" type="Workflow">
+        <Description>Ticket Integration</Description>
+        <Section label="Integration Configuration" name="roadIntegrationConfig">
+          <Field displayName="Select Ticket Integration Configuration" name="roadIntegrationConfigSelect" required="true" type="IntegrationConfig">
+            <Attributes>
+              <Map>
+                <entry key="valueProperty" value="name"/>
+              </Map>
+            </Attributes>
+          </Field>
+        </Section>
+        <Button action="cancel" label="Cancel"/>
+        <Button action="next" label="Next"/>
+      </Form>
+    </Approval>
+    <Transition to="End" when="!approved"/>
+    <Transition to="Show Ticket Status Form" when="approved"/>
+  </Step>
+  <Step name="Show Ticket Status Form">
+    <Approval mode="serial" owner="ref:requester" send="roadIntegrationConfigSelect,autoSelectIntegrationConfig">
+      <Arg name="workItemType" value="Form"/>
+      <Arg name="workItemDescription" value="Check Ticket Status"/>
+      <Arg name="workItemForm" value="ref:roadTicketStatusForm"/>
+    </Approval>
+    <Transition to="Stop"/>
+  </Step>
+  <Step icon="Stop" name="End"/>
+</Workflow>

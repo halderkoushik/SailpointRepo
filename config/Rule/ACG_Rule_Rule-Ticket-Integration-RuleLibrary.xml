@@ -1,0 +1,440 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Rule-Ticket-Integration-RuleLibrary">
+  <Source><![CDATA[
+	
+	import org.apache.commons.logging.Log;
+	import org.apache.commons.logging.LogFactory;
+ 	import sailpoint.object.IntegrationConfig;
+ 	import sailpoint.object.Workflow;
+    import sailpoint.object.Attributes;
+    import sailpoint.object.Custom;
+    import sailpoint.tools.Util;
+    import sailpoint.object.ManagedResource;
+    import sailpoint.object.Rule;
+    import sailpoint.object.Application;
+    import sailpoint.object.ManagedResource;
+    import sailpoint.object.Form;
+    import sailpoint.api.ObjectUtil;
+    import sailpoint.rapidapponboarding.logger.LogEnablement;
+	Log logger = LogFactory.getLog("rapidapponboarding.rules");
+	/**
+	 * Initialize Accelerator Pack Model for Ticket Integration
+	 * @param workflow
+	 * @param integrationConfigName
+	 */
+	public void initializeTicketIntegrationRoadModel(Workflow workflow, String integrationConfigName)
+	{
+	  	HashMap ticketIntegrationRoadModelMap= new HashMap();
+	 	String executor=null;
+		if(integrationConfigName!=null && workflow!=null)
+		{
+		    IntegrationConfig config = context.getObjectByName(IntegrationConfig.class,integrationConfigName);
+		    if(config!=null &&  config.getAttributes()!=null &&  config.getAttributes().getMap()!=null)
+		    {
+		        List appNames= new ArrayList();
+		        List managedResources= config.getResources();
+		        if(managedResources!=null && managedResources.size()>0)
+		        {
+			         for (ManagedResource mResources:managedResources)
+			         {
+			           if(mResources.getApplication()!=null)
+			           {
+			            appNames.add( mResources.getApplication().getName());
+			           }
+			         }
+		        }
+		        executor= config.getExecutor();
+		        Rule rule= config.getPlanInitializer();
+			    Map configMap=(Map)config.getAttributes().getMap();
+		    	ticketIntegrationRoadModelMap.put("transformerClass", "sailpoint.transformer.IdentityTransformer");
+				ticketIntegrationRoadModelMap.put("transformerOptions", null);
+				if(executor!=null)
+		        {
+		        ticketIntegrationRoadModelMap.put("executor", executor);
+		        }
+		        else 
+		        {
+		        ticketIntegrationRoadModelMap.put("executor", null);
+		        }
+		        if(rule!=null)
+		        {
+		        ticketIntegrationRoadModelMap.put("planInitializerRule", rule.getName());
+		        }
+		        else
+		        {
+		        ticketIntegrationRoadModelMap.put("planInitializerRule", null);
+		        }
+		        if(appNames!=null)
+		        {
+		        ticketIntegrationRoadModelMap.put("managedResources", appNames);
+		        }
+				for (Map.Entry entry : configMap.entrySet()) 
+				{
+				    String key=(String) entry.getKey();
+				    Object value=entry.getValue();
+				    List inProgressList = new ArrayList();
+					List committedList = new ArrayList();
+					List failedList = new ArrayList();
+					List inProgressListClosureCode = new ArrayList();
+					List committedListClosureCode = new ArrayList();
+					List failedListClosureCode = new ArrayList();
+					List catalogItemList = new ArrayList();
+					if(key.equalsIgnoreCase("operations") && value!=null && value instanceof String)
+					{
+						String valueStr=(String) value;
+						List listOps=Util.csvToList(valueStr);
+						value=listOps;
+					}
+					if(key.equalsIgnoreCase("statusMap") && value!=null && value instanceof Map)
+					{
+						Map valueMap=(Map) value;
+						if(valueMap!=null)
+						{
+							for (Map.Entry entryStatus : valueMap.entrySet()) 
+							{
+								if(((String)entryStatus.getValue())!=null && ((String)entryStatus.getValue()).equalsIgnoreCase("inProcess"))
+								{
+									if(entryStatus.getKey()!=null)
+									{
+									inProgressList.add(entryStatus.getKey());
+									}
+								}
+								else if(((String)entryStatus.getValue())!=null && ((String)entryStatus.getValue()).equalsIgnoreCase("failure"))
+								{
+									if(entryStatus.getKey()!=null)
+									{
+									failedList.add(entryStatus.getKey());
+									}
+								}
+								else if(((String)entryStatus.getValue())!=null && ((String)entryStatus.getValue()).equalsIgnoreCase("committed"))
+								{
+									if(entryStatus.getKey()!=null)
+									{
+									committedList.add(entryStatus.getKey());
+									}
+								}
+							}
+						}
+					}
+					if(key.equalsIgnoreCase("statusMapClosureCode") && value!=null && value instanceof Map)
+					{
+						Map valueMap=(Map) value;
+						if(valueMap!=null)
+						{
+							for (Map.Entry entryStatus : valueMap.entrySet()) 
+							{
+								if(((String)entryStatus.getValue())!=null && ((String)entryStatus.getValue()).equalsIgnoreCase("inProcess"))
+								{
+									if(entryStatus.getKey()!=null)
+									{
+									inProgressListClosureCode.add(entryStatus.getKey());
+									}
+								}
+								else if(((String)entryStatus.getValue())!=null && ((String)entryStatus.getValue()).equalsIgnoreCase("failure"))
+								{
+									if(entryStatus.getKey()!=null)
+									{
+									failedListClosureCode.add(entryStatus.getKey());
+									}
+								}
+								else if(((String)entryStatus.getValue())!=null && ((String)entryStatus.getValue()).equalsIgnoreCase("committed"))
+								{
+									if(entryStatus.getKey()!=null)
+									{
+									committedListClosureCode.add(entryStatus.getKey());
+									}
+								}
+							}
+						}
+					}
+					if(key.equalsIgnoreCase("catalogItem") && value!=null && value instanceof Map)
+					{
+						Map valueMap=(Map) value;
+						if(valueMap!=null)
+						{
+							for (Map.Entry entryStatus : valueMap.entrySet()) 
+							{
+								catalogItemList.add(entryStatus.getKey()+":"+entryStatus.getValue());
+							}
+						}
+					}
+					//Status keys
+					if(committedList!=null && committedList.size()>0)
+					ticketIntegrationRoadModelMap.put( "committed" ,committedList);
+					if(failedList!=null && failedList.size()>0)
+					ticketIntegrationRoadModelMap.put( "failure" ,failedList);
+					if(inProgressList!=null && inProgressList.size()>0)
+					ticketIntegrationRoadModelMap.put( "inProcess" ,inProgressList);
+					//Closure Code Keys
+					if(committedListClosureCode!=null && committedListClosureCode.size()>0)
+					ticketIntegrationRoadModelMap.put( "committedClosureCode" ,committedListClosureCode);
+					if(failedListClosureCode!=null && failedListClosureCode.size()>0)
+					ticketIntegrationRoadModelMap.put( "failureClosureCode" ,failedListClosureCode);
+					if(inProgressListClosureCode!=null && inProgressListClosureCode.size()>0)
+					ticketIntegrationRoadModelMap.put( "inProcessClosureCode" ,inProgressListClosureCode);
+					//Catalog Items List
+					if(catalogItemList!=null && catalogItemList.size()>0)
+					ticketIntegrationRoadModelMap.put( "catalogItemList" ,catalogItemList);
+					//All Keys
+					ticketIntegrationRoadModelMap.put( key ,value);
+				}
+		 		workflow.put("roadTicketModel",ticketIntegrationRoadModelMap);
+	 		}
+ 		}
+ 		initializeTicketIntegrationFieldHiddenAttrs(workflow,executor);
+	}	
+	/**
+	 * Initialize Form Field Hidden Property Attributes
+	 * @param workflow
+	 * @param executor
+	 */
+	public void initializeTicketIntegrationFieldHiddenAttrs(Workflow workflow, String executor)
+		{
+	        Attributes ticketIntegrationFieldHiddenAttrs = new Attributes();
+	        if(executor!=null)
+	        {
+		 		Attributes mapAttr = new Attributes();
+		 		Custom mappingObj = context.getObjectByName(Custom.class, "Custom-SmartServices-TicketIntegration-Form-Settings");
+		        if(mappingObj!=null && mappingObj.getAttributes()!=null)
+		        {
+			         mapAttr = mappingObj.getAttributes();	
+			         Map confiGMap = mappingObj.getAttributes().getMap();
+			         if(confiGMap!=null)
+			         {
+				        for (Map.Entry entry : confiGMap.entrySet()) 
+						{
+						  if(executor.contains(((String)entry.getKey())) || ((String)entry.getKey()).contains("commonExecutor"))
+							{
+								if(entry.getValue()!=null &&((String)entry.getValue()).contains(","))
+								{
+									List list=Util.csvToList(((String)entry.getValue()));
+									if(list!=null && list.size()>0)
+									{
+										for (String str:list)
+										{
+											if(str!=null && str.length()>0)
+											{
+											ticketIntegrationFieldHiddenAttrs.put(str,str);
+											}
+										}
+									}
+								}
+								else if(entry.getValue()!=null && ((String)entry.getValue()).length()>0)
+								{
+									ticketIntegrationFieldHiddenAttrs.put(entry.getValue(),entry.getValue());
+								}
+							}
+						}
+					}
+			         context.decache(mappingObj);
+			         workflow.put("ticketIntegrationFieldHiddenAttrs",ticketIntegrationFieldHiddenAttrs);
+			    }
+		    }
+		}		
+		/**
+		 * Save Integration Configuration Properties
+		 * @param confirmationForm
+		 * @param roadTicketModel
+		 * @param integrationConfigName
+		 * @param ticketIntegrationFieldHiddenAttrs
+		 */
+		public void saveIntegrationConfig(Form confirmationForm, HashMap roadTicketModel, String integrationConfigName, HashMap ticketIntegrationFieldHiddenAttrs)
+		{
+			List commaSeparatedKeys = new ArrayList();
+			commaSeparatedKeys.add("operations");
+			List generatedKeys = new ArrayList();
+			generatedKeys.add("transformerClass");
+			generatedKeys.add("transformerOptions");
+			generatedKeys.add("planInitializerRule");
+			generatedKeys.add("managedResources");
+			generatedKeys.add("catalogItemList");
+			generatedKeys.add("catalogItem");
+			generatedKeys.add("committed");
+			generatedKeys.add("failure");
+			generatedKeys.add("inProcess");
+			generatedKeys.add("committedClosureCode");
+			generatedKeys.add("failureClosureCode");
+			generatedKeys.add("inProcessClosureCode");
+			generatedKeys.add("committed");
+			generatedKeys.add("failure");
+			generatedKeys.add("inProcess");
+			if(roadTicketModel!=null && integrationConfigName!=null)
+			{
+				try
+				{
+				IntegrationConfig config =  ObjectUtil.transactionLock(context,IntegrationConfig.class,integrationConfigName);
+				Attributes attrToSave=null;
+				HashMap statusMapClosureCode = new HashMap();
+				HashMap statusMap = new HashMap();
+				HashMap catalogMap = new HashMap();
+			    if(config!=null &&  config.getAttributes()!=null &&  config.getAttributes().getMap()!=null)
+			    {
+			    	attrToSave=config.getAttributes();
+			    	for (Map.Entry entry : roadTicketModel.entrySet()) 
+					{
+						if(attrToSave!=null && ticketIntegrationFieldHiddenAttrs!=null && ticketIntegrationFieldHiddenAttrs.containsKey(entry.getKey()))
+						{
+							//Override Here
+							 String key=(String) entry.getKey();
+							 Object value=entry.getValue();
+							 LogEnablement.isLogDebugEnabled(logger,"key.. "+key);
+							 if(key!=null && commaSeparatedKeys.contains(key) && value!=null && value instanceof List && ((List)value).size()>0)
+							 {
+							    List valueList=(List)value;
+							 	value=Util.listToCsv(valueList);
+							 	attrToSave.put( key ,value);
+							 }
+							 else if(key!=null && commaSeparatedKeys.contains(key) && value!=null && value instanceof List && ((List)value).size()<=0)
+							 {
+							     value=null;
+							     attrToSave.put( key ,value);
+							 }
+							 else if(key!=null && key.equalsIgnoreCase("planInitializerRule") && value!=null)
+							 {
+							 	 String valueStr=(String)value;
+							     Rule rule = context.getObjectByName(Rule.class,valueStr);
+							     if(rule!=null)
+							     {
+							     config.setPlanInitializer(rule);
+							     context.decache(rule);
+							     }
+							 }
+							 else if(key!=null && key.equalsIgnoreCase("committed") && value!=null && value instanceof List  && ((List)value).size()>0)
+							 {
+							    LogEnablement.isLogDebugEnabled(logger,"Working on .. "+key);
+							    List valueList=(List)value;
+							 	for(String str:valueList)
+							 	{
+							    statusMap.put(str,"committed");
+							    }
+							 }
+							 else if(key!=null && key.equalsIgnoreCase("inProcess") && value!=null && value instanceof List  && ((List)value).size()>0)
+							 {
+							 	LogEnablement.isLogDebugEnabled(logger,"Working on .. "+key);
+							    List valueList=(List)value;
+							 	for(String str:valueList)
+							 	{
+							    	statusMap.put(str,"inProcess");
+							    }
+							 }
+							 else if(key!=null && key.equalsIgnoreCase("failure") && value!=null && value instanceof List  && ((List)value).size()>0)
+							 {
+							  	LogEnablement.isLogDebugEnabled(logger,"Working on .. "+key);
+							    List valueList=(List)value;
+							 	for(String str:valueList)
+							 	{
+							   	 statusMap.put(str,"failure");
+							    }
+							 }
+							 else if(key!=null && key.equalsIgnoreCase("committedClosureCode") && value!=null && value instanceof List  && ((List)value).size()>0)
+							 {
+							     List valueList=(List)value;
+							 	for(String str:valueList)
+							 	{
+							    statusMapClosureCode.put(str,"committed");
+							    }
+							 }
+							 else if(key!=null && key.equalsIgnoreCase("inProcessClosureCode") && value!=null && value instanceof List  && ((List)value).size()>0)
+							 {
+							     List valueList=(List)value;
+							 	for(String str:valueList)
+							 	{
+							    statusMapClosureCode.put(str,"inProcess");
+							    }
+							 }
+							 else if(key!=null && key.equalsIgnoreCase("failureClosureCode") && value!=null && value instanceof List  && ((List)value).size()>0)
+							 {
+							     List valueList=(List)value;
+							 	for(String str:valueList)
+							 	{
+							    statusMapClosureCode.put(str,"failure");
+							    }
+							 }
+							 else if(key!=null && key.equalsIgnoreCase("planInitializerRule") && value==null)
+							 {
+							     config.setPlanInitializer(null);
+							 }
+							 else if(key!=null && key.equalsIgnoreCase("catalogItemList") && value!=null && value instanceof List  && ((List)value).size()>0)
+							 {
+							 	List valueList=(List)value;
+							    for(String str:valueList)
+							 	{
+							 		if(str!=null && str.contains(":"))
+							 		{
+							    		String[] arrCatalog = str.split(":");
+							    		if(arrCatalog!=null && arrCatalog.length==2 && arrCatalog[0]!=null && arrCatalog[1]!=null)
+							    		{
+							    			catalogMap.put(arrCatalog[0],arrCatalog[1]);
+							    		}
+							    	}
+							    }
+							 }
+							 else if(key!=null && key.equalsIgnoreCase("managedResources") && value!=null && value instanceof List && ((List)value).size()>0)
+							 {
+							    //Prepare List of Managed Resources
+							    List manangedResources = new ArrayList();
+							    List valueList=(List)value;
+							    for (String appResource:valueList)
+							    {
+							        Application app=null;
+							        if(appResource!=null)
+							        {
+							        	app = context.getObjectByName(Application.class,appResource);
+							        	if(app!=null)
+							        	{
+							        		ManagedResource mgRes = new ManagedResource();
+							    			mgRes.setApplication(app);
+							    			manangedResources.add(mgRes);
+							    			context.decache(app);
+							    		}
+							        }
+							    }
+							    config.setResources(manangedResources);
+							 }
+							 else if(key!=null && key.equalsIgnoreCase("managedResources") && value!=null && value instanceof List && ((List)value).size()<=0)
+							 {
+							    //Prepare List of Managed Resources
+							    List manangedResources = new ArrayList();
+							    config.setResources(manangedResources);
+							 }
+							  else if(key!=null && key.equalsIgnoreCase("managedResources") && value==null)
+							 {
+							    //Prepare List of Managed Resources
+							    List manangedResources = new ArrayList();
+							    config.setResources(manangedResources);
+							 }
+							 else
+							 {
+							    if(!generatedKeys.contains(entry.getKey()))
+							    {
+							 		attrToSave.put( key ,value);
+							 	}
+							 }
+						}
+					}
+					if(statusMapClosureCode!=null && ticketIntegrationFieldHiddenAttrs!=null && ticketIntegrationFieldHiddenAttrs.containsKey("catalogItem"))
+				    {
+				    	attrToSave.put("statusMapClosureCode" ,statusMapClosureCode);
+				    }
+				    if(statusMap!=null && ticketIntegrationFieldHiddenAttrs!=null && ticketIntegrationFieldHiddenAttrs.containsKey("committed"))
+				    {
+				   	 	attrToSave.put("statusMap" ,statusMap);
+				    }
+				    if(catalogMap!=null && ticketIntegrationFieldHiddenAttrs!=null && ticketIntegrationFieldHiddenAttrs.containsKey("committedClosureCode"))
+				    {
+				    	attrToSave.put("catalogItem" ,catalogMap);
+				    }
+			    }
+			    context.saveObject(config);
+				}
+				finally
+				{
+			    context.commitTransaction();
+				}
+			}
+			LogEnablement.isLogDebugEnabled(logger,"End saveIntegrationConfig ");
+		}
+	
+	]]></Source>
+</Rule>
